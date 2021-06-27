@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="pro.chenggang.project.reactivemybatissupport.mybatisr2dbcspring.application.UserMapper">
+<mapper namespace="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.UserMapper">
     <resultMap id="UserResultMap" type="User">
         <id column="id" property="id"/>
         <result column="nick" property="nick"/>

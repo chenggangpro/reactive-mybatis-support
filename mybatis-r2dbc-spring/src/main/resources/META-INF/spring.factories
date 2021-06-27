@@ -1,4 +1,4 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
- pro.chenggang.project.reactivemybatissupport.mybatisr2dbcspring.configuration.R2dbcMybatisAutoConfiguration
+ pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.configuration.R2dbcMybatisAutoConfiguration
 org.springframework.boot.autoconfigure.AutoConfigurationImportFilter=\
-  pro.chenggang.project.reactivemybatissupport.mybatisr2dbcspring.configuration.AutoExclusionFilter
+  pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.configuration.AutoExclusionFilter
