@@ -1,0 +1,41 @@
+# NOTE -->  generate type
+generateType:
+  - SIMPLE
+  - DYNAMIC
+# NOTE --> target trim Regex pattern Note:Must start with ^ ,otherwise it'll replace all string matched the pattern
+# tableTrimPattern: ^Sys
+# NOTE --> basePackage of all target package
+# basePackage:
+# NOTE --> javaLocation and mapperXmlLocation 's parentLocation (Absolute DIR)
+#parentLocation:
+javaLocation: src/main/java
+mapperXmlLocation: src/main/resources
+# NOTE --> model location
+modelPackage: entity.model
+# NOTE --> mapper package
+mapperInterfacePackage: mapper
+# NOTE --> xml package
+mapperXmPackage: mapper
+# NOTE --> jdbc driver class name
+driverClass: com.mysql.cj.jdbc.Driver
+# NOTE --> jdbc connection url
+connectionUrl: jdbc:mysql://127.0.0.1:3306/database_name?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
+# NOTE --> jdbc username
+username: root
+# NOTE --> jdbc password
+password: 123456
+extendDynamicMapper: true
+overwrite: true
+# NOTE --> lombok
+lombok:
+  - ToString
+  - Getter
+  - Setter
+  - AccessorsChain
+  - NoArgsConstructor
+  - AllArgsConstructor
+  - Builder
+  - EqualsAndHashCode
+# NOTE --> if empty then generate all tables
+tableName:
+  - table_name
