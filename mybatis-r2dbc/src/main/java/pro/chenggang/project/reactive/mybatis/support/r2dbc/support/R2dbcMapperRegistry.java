@@ -2,10 +2,9 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.support;
 
 import org.apache.ibatis.binding.BindingException;
 import org.apache.ibatis.binding.MapperRegistry;
-import org.apache.ibatis.builder.annotation.MapperAnnotationBuilder;
 import org.apache.ibatis.session.Configuration;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.core.binding.MapperProxyFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.core.ReactiveSqlSession;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.core.binding.MapperProxyFactory;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -56,7 +55,7 @@ public class R2dbcMapperRegistry extends MapperRegistry {
             boolean loadCompleted = false;
             try {
                 knownMappers.put(type, new MapperProxyFactory<>(type));
-                MapperAnnotationBuilder parser = new MapperAnnotationBuilder(config, type);
+                R2dbcMapperAnnotationBuilder parser = new R2dbcMapperAnnotationBuilder(config, type);
                 parser.parse();
                 loadCompleted = true;
             } finally {

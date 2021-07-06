@@ -1,6 +1,7 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanNameGenerator;
@@ -21,8 +22,9 @@ import java.util.List;
  * R2dbcMapperScannerRegistrar
  * @author evans
  */
-@Slf4j
 public class R2dbcMapperScannerRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware {
+
+    private static final Logger log = LoggerFactory.getLogger(R2dbcMapperFactoryBean.class);
 
     private ResourceLoader resourceLoader;
 

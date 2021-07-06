@@ -52,8 +52,9 @@ import java.util.function.UnaryOperator;
  * @author Jeff Butler
  *
  */
-public class MyBatis3Utils {
-    private MyBatis3Utils() {}
+public class ReactiveMyBatis3Utils {
+
+    private ReactiveMyBatis3Utils() {}
 
     public static Mono<Long> count(ToMonoLongFunction<SelectStatementProvider> mapper, BasicColumn column, SqlTable table,
                                    CountDSLCompleter completer) {

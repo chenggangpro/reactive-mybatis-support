@@ -18,13 +18,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.Resource;
+import org.springframework.data.r2dbc.connectionfactory.R2dbcTransactionManager;
+import org.springframework.data.r2dbc.connectionfactory.TransactionAwareConnectionFactoryProxy;
+import org.springframework.transaction.ReactiveTransactionManager;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.core.ReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.core.impl.DefaultReactiveSqlSessionFactory;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcConnectionFactoryProperties;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcConnectionFactoryProperties.Pool;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcMybatisProperties;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.R2dbcAutoConfiguredMapperScannerRegistrar;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.R2dbcMapperScannerRegistrar;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.R2dbcMybatisConfiguration;
 
 import static org.springframework.util.StringUtils.hasText;
 import static org.springframework.util.StringUtils.tokenizeToStringArray;
@@ -93,19 +97,20 @@ public class R2dbcMybatisAutoConfiguration {
         if (connectionFactory instanceof ConnectionPool) {
             return (ConnectionPool) connectionFactory;
         }
+        Pool pool = r2dbcConnectionFactoryProperties.getPool();
         ConnectionPoolConfiguration.Builder builder = ConnectionPoolConfiguration.builder(connectionFactory)
                 .name(r2dbcConnectionFactoryProperties.determineConnectionFactoryName())
-                .maxSize(r2dbcConnectionFactoryProperties.getMaxSize())
-                .initialSize(r2dbcConnectionFactoryProperties.getInitialSize())
-                .maxIdleTime(r2dbcConnectionFactoryProperties.getMaxIdleTime())
-                .acquireRetry(r2dbcConnectionFactoryProperties.getAcquireRetry())
-                .backgroundEvictionInterval(r2dbcConnectionFactoryProperties.getBackgroundEvictionInterval())
-                .maxAcquireTime(r2dbcConnectionFactoryProperties.getMaxAcquireTime())
-                .maxCreateConnectionTime(r2dbcConnectionFactoryProperties.getMaxCreateConnectionTime())
-                .maxLifeTime(r2dbcConnectionFactoryProperties.getMaxLifeTime())
-                .validationDepth(r2dbcConnectionFactoryProperties.getValidationDepth());
-        if(hasText(r2dbcConnectionFactoryProperties.getValidationQuery())){
-            builder.validationQuery(r2dbcConnectionFactoryProperties.getValidationQuery());
+                .maxSize(pool.getMaxSize())
+                .initialSize(pool.getInitialSize())
+                .maxIdleTime(pool.getMaxIdleTime())
+                .acquireRetry(pool.getAcquireRetry())
+                .backgroundEvictionInterval(pool.getBackgroundEvictionInterval())
+                .maxAcquireTime(pool.getMaxAcquireTime())
+                .maxCreateConnectionTime(pool.getMaxCreateConnectionTime())
+                .maxLifeTime(pool.getMaxLifeTime())
+                .validationDepth(pool.getValidationDepth());
+        if(hasText(pool.getValidationQuery())){
+            builder.validationQuery(pool.getValidationQuery());
         }else{
             builder.validationDepth(ValidationDepth.LOCAL);
         }
@@ -115,9 +120,16 @@ public class R2dbcMybatisAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean
-    public ReactiveSqlSessionFactory reactiveSqlSessionFactory(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory) {
-        return new DefaultReactiveSqlSessionFactory(configuration, connectionFactory);
+    @ConditionalOnMissingBean(ReactiveTransactionManager.class)
+    public R2dbcTransactionManager connectionFactoryTransactionManager(ConnectionFactory connectionFactory) {
+        return new R2dbcTransactionManager(connectionFactory);
+    }
+
+
+    @Bean
+    @ConditionalOnMissingBean(ReactiveSqlSessionFactory.class)
+    public ReactiveSqlSessionFactory reactiveSqlSessionFactoryWithTransaction(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory) {
+        return new DefaultReactiveSqlSessionFactory(configuration, new TransactionAwareConnectionFactoryProxy(connectionFactory));
     }
 
 }

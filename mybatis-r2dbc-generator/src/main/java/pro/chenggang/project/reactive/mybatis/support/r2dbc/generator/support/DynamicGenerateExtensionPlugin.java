@@ -62,10 +62,10 @@ public class DynamicGenerateExtensionPlugin extends PluginAdapter {
             interfaze.addImportedType(commonSelectMapperType);
         }
         interfaze.getImportedTypes().removeIf(item-> StringUtils.equals(item.getFullyQualifiedName(),"org.mybatis.dynamic.sql.update.UpdateDSL<org.mybatis.dynamic.sql.update.UpdateModel>"));
-        interfaze.getImportedTypes().removeIf(item-> StringUtils.equals(item.getFullyQualifiedName(),"org.mybatis.dynamic.sql.util.mybatis3.MyBatis3Utils"));
+        interfaze.getImportedTypes().removeIf(item-> StringUtils.equals(item.getFullyQualifiedName(),"org.mybatis.dynamic.sql.util.mybatis3.ReactiveMyBatis3Utils"));
         interfaze.addImportedType(new FullyQualifiedJavaType("reactor.core.publisher.Mono"));
         interfaze.addImportedType(new FullyQualifiedJavaType("reactor.core.publisher.Flux"));
-        interfaze.addImportedType(new FullyQualifiedJavaType("pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.MyBatis3Utils"));
+        interfaze.addImportedType(new FullyQualifiedJavaType("pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.ReactiveMyBatis3Utils"));
         return true;
     }
 

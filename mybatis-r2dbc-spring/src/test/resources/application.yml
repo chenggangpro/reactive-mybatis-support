@@ -8,8 +8,14 @@ spring:
     jdbc-url: r2dbc:mysql://127.0.0.1:3306/mac
     username: root
     password: 123456
-    max-idle-time: PT5M
-    validation-query: SELECT 1 FROM DUAL
+    pool:
+      max-idle-time: PT5M
+      validation-query: SELECT 1 FROM DUAL
+      initial-size: 1
+      max-size: 3
 logging:
   level:
     pro.chenggang: DEBUG
+    org.springframework.data.r2dbc: DEBUG
+  file:
+    path: ./logs

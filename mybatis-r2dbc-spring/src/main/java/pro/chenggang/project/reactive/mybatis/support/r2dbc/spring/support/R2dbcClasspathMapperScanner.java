@@ -1,5 +1,7 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
@@ -21,6 +23,8 @@ import java.util.Set;
  * @author evans
  */
 public class R2dbcClasspathMapperScanner extends ClassPathBeanDefinitionScanner {
+
+    private static final Logger log = LoggerFactory.getLogger(R2dbcClasspathMapperScanner.class);
 
     private ReactiveSqlSessionFactory sqlSessionFactory;
 
@@ -75,7 +79,7 @@ public class R2dbcClasspathMapperScanner extends ClassPathBeanDefinitionScanner 
         Set<BeanDefinitionHolder> beanDefinitions = super.doScan(basePackages);
 
         if (beanDefinitions.isEmpty()) {
-            logger.warn("No MyBatis mapper was found in '" + Arrays.toString(basePackages) + "' package. Please check your configuration.");
+            log.warn("No MyBatis mapper was found in '" + Arrays.toString(basePackages) + "' package. Please check your configuration.");
         } else {
             processBeanDefinitions(beanDefinitions);
         }
@@ -88,8 +92,8 @@ public class R2dbcClasspathMapperScanner extends ClassPathBeanDefinitionScanner 
         for (BeanDefinitionHolder holder : beanDefinitions) {
             definition = (GenericBeanDefinition) holder.getBeanDefinition();
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("Creating MapperFactoryBean with name '" + holder.getBeanName()
+            if (log.isDebugEnabled()) {
+                log.debug("Creating MapperFactoryBean with name '" + holder.getBeanName()
                         + "' and '" + definition.getBeanClassName() + "' mapperInterface");
             }
 
@@ -108,8 +112,8 @@ public class R2dbcClasspathMapperScanner extends ClassPathBeanDefinitionScanner 
             }
 
             if (!explicitFactoryUsed) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Enabling autowire by type for MapperFactoryBean with name '" + holder.getBeanName() + "'.");
+                if (log.isDebugEnabled()) {
+                    log.debug("Enabling autowire by type for MapperFactoryBean with name '" + holder.getBeanName() + "'.");
                 }
                 definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
             }
@@ -132,7 +136,7 @@ public class R2dbcClasspathMapperScanner extends ClassPathBeanDefinitionScanner 
         if (super.checkCandidate(beanName, beanDefinition)) {
             return true;
         } else {
-            logger.warn("Skipping MapperFactoryBean with name '" + beanName
+            log.warn("Skipping MapperFactoryBean with name '" + beanName
                     + "' and '" + beanDefinition.getBeanClassName() + "' mapperInterface"
                     + ". Bean already defined with the same name!");
             return false;

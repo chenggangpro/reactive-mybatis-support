@@ -53,64 +53,9 @@ public class R2dbcConnectionFactoryProperties {
     private String password;
 
     /**
-     * r2dbc connection factory initial size
-     * default 1
+     * r2dbc factory pull
      */
-    private Integer initialSize = 1;
-
-    /**
-     * r2dbc connection factory max size
-     * default 10
-     */
-    private Integer maxSize = 10;
-
-    /**
-     * r2dbc connection factory max idle time
-     */
-    private Duration maxIdleTime = Duration.ofMinutes(30);
-
-    /**
-     * r2dbc connection factory max create connection time
-     * ZERO indicates no-timeout
-     */
-    private Duration maxCreateConnectionTime = Duration.ZERO;
-    /**
-     * r2dbc connection factory max acquire time
-     * ZERO indicates no-timeout
-     */
-    private Duration maxAcquireTime = Duration.ZERO;
-
-    /**
-     * r2dbc connection factory max life time
-     * ZERO indicates no-lifetime
-     */
-    private Duration maxLifeTime = Duration.ZERO;
-    /**
-     * r2dbc connection factory validation query
-     */
-    @Nullable
-    private String validationQuery;
-
-    /**
-     * r2dbc connection factory validation depth
-     * LOCAL Perform a client-side only validation
-     * REMOTE Perform a remote connection validations
-     * {@link ValidationDepth}
-     */
-    private ValidationDepth validationDepth = ValidationDepth.REMOTE;
-
-    /**
-     * r2dbc connection factory acquire retry
-     * ZERO indicates no-retry
-     * default 1
-     */
-    private int acquireRetry = 1;
-
-    /**
-     * r2dbc connection factory background eviction interval
-     * ZERO indicates no-timeout, negative marks unconfigured.
-     */
-    private Duration backgroundEvictionInterval = Duration.ofNanos(-1);
+    private Pool pool = new Pool();
 
     /**
      * r2dbc connection factory metrics enabled
@@ -144,6 +89,73 @@ public class R2dbcConnectionFactoryProperties {
         this.r2dbcUrl = this.jdbcUrl.replace("r2dbc:mysql:", "r2dbc:mariadb:");
         this.r2dbcUrl = r2dbcUrl.replace("//", "//" + credential + "@");
         return this.r2dbcUrl;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class Pool {
+
+        /**
+         * r2dbc connection factory initial size
+         * default 1
+         */
+        private Integer initialSize = 1;
+
+        /**
+         * r2dbc connection factory max size
+         * default 10
+         */
+        private Integer maxSize = 10;
+
+        /**
+         * r2dbc connection factory max idle time
+         */
+        private Duration maxIdleTime = Duration.ofMinutes(30);
+
+        /**
+         * r2dbc connection factory max create connection time
+         * ZERO indicates no-timeout
+         */
+        private Duration maxCreateConnectionTime = Duration.ZERO;
+        /**
+         * r2dbc connection factory max acquire time
+         * ZERO indicates no-timeout
+         */
+        private Duration maxAcquireTime = Duration.ZERO;
+
+        /**
+         * r2dbc connection factory max life time
+         * ZERO indicates no-lifetime
+         */
+        private Duration maxLifeTime = Duration.ZERO;
+        /**
+         * r2dbc connection factory validation query
+         */
+        @Nullable
+        private String validationQuery;
+
+        /**
+         * r2dbc connection factory validation depth
+         * LOCAL Perform a client-side only validation
+         * REMOTE Perform a remote connection validations
+         * {@link ValidationDepth}
+         */
+        private ValidationDepth validationDepth = ValidationDepth.REMOTE;
+
+        /**
+         * r2dbc connection factory acquire retry
+         * ZERO indicates no-retry
+         * default 1
+         */
+        private int acquireRetry = 1;
+
+        /**
+         * r2dbc connection factory background eviction interval
+         * ZERO indicates no-timeout, negative marks unconfigured.
+         */
+        private Duration backgroundEvictionInterval = Duration.ofNanos(-1);
+
     }
 
 }

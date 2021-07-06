@@ -1,4 +1,4 @@
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.generator.mapper.dynamic;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.dynamic;
 
 import org.apache.ibatis.annotations.DeleteProvider;
 import org.apache.ibatis.annotations.InsertProvider;
@@ -24,17 +24,17 @@ import org.mybatis.dynamic.sql.util.SqlProviderAdapter;
 import org.mybatis.dynamic.sql.where.WhereApplier;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.CommonSelectMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.ReactiveMyBatis3Utils;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.generator.entity.model.People;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.entity.model.People;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
 
 import static org.mybatis.dynamic.sql.SqlBuilder.isEqualTo;
-import static pro.chenggang.project.reactive.mybatis.support.r2dbc.generator.mapper.dynamic.PeopleDynamicSqlSupport.createdAt;
-import static pro.chenggang.project.reactive.mybatis.support.r2dbc.generator.mapper.dynamic.PeopleDynamicSqlSupport.id;
-import static pro.chenggang.project.reactive.mybatis.support.r2dbc.generator.mapper.dynamic.PeopleDynamicSqlSupport.nick;
-import static pro.chenggang.project.reactive.mybatis.support.r2dbc.generator.mapper.dynamic.PeopleDynamicSqlSupport.people;
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.dynamic.PeopleDynamicSqlSupport.createdAt;
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.dynamic.PeopleDynamicSqlSupport.id;
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.dynamic.PeopleDynamicSqlSupport.nick;
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.dynamic.PeopleDynamicSqlSupport.people;
 
 /**
  * auto generated

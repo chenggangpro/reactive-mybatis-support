@@ -21,9 +21,6 @@ public class AutoExclusionFilter implements AutoConfigurationImportFilter {
 
     public AutoExclusionFilter() {
         SHOULD_SKIP.add("org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration");
-        SHOULD_SKIP.add("org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration");
-        SHOULD_SKIP.add("org.springframework.boot.autoconfigure.r2dbc.R2dbcRepositoriesAutoConfiguration");
-        SHOULD_SKIP.add("org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration");
     }
 
     @Override
