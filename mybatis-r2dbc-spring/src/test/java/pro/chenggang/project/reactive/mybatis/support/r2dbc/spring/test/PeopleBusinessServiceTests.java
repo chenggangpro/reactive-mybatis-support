@@ -2,7 +2,6 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.test;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.PeopleMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.service.PeopleBusinessService;
 import reactor.test.StepVerifier;
 
@@ -16,9 +15,6 @@ public class PeopleBusinessServiceTests extends TestApplicationTests {
 
     @Autowired
     private PeopleBusinessService peopleBusinessService;
-
-    @Autowired
-    private PeopleMapper peopleMapper;
 
     @Test
     public void testDoWithTransactionBusiness(){
