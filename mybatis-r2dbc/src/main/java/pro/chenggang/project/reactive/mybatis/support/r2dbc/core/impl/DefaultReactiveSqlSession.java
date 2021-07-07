@@ -22,7 +22,6 @@ import org.apache.ibatis.type.TypeHandler;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
 import org.springframework.data.r2dbc.connectionfactory.ConnectionFactoryUtils;
 import org.springframework.data.r2dbc.connectionfactory.ConnectionProxy;
 import org.springframework.lang.Nullable;
@@ -393,9 +392,8 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
      *
      * @param action must not be {@literal null}.
      * @return the resulting {@link Mono}.
-     * @throws DataAccessException when during construction of the {@link Mono} a problem occurs.
      */
-    public <T> Mono<T> inConnection(Function<Connection, Mono<T>> action) throws DataAccessException {
+    public <T> Mono<T> inConnection(Function<Connection, Mono<T>> action) {
         Mono<ConnectionCloseHolder> connectionMono = Mono.from(this.connectionFactory.create())
                 .doOnNext(connection -> log.debug("Execute Statement With Mono,Get Connection [{}] From Connection Factory ",connection))
                 .map(it -> new ConnectionCloseHolder(it, this::closeConnection));
@@ -418,15 +416,14 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
      *
      * @param action must not be {@literal null}.
      * @return the resulting {@link Flux}.
-     * @throws DataAccessException when during construction of the {@link Mono} a problem occurs.
      */
-    public <T> Flux<T> inConnectionMany(Function<Connection, Flux<T>> action) throws DataAccessException {
+    public <T> Flux<T> inConnectionMany(Function<Connection, Flux<T>> action) {
         Mono<ConnectionCloseHolder> connectionMono = Mono.from(this.connectionFactory.create())
                 .doOnNext(connection -> log.debug("Execute Statement With Flux,Get Connection [{}] From Connection Factory ",connection))
                 .map(it -> new ConnectionCloseHolder(it, this::closeConnection));
         return Flux.usingWhen(connectionMono,
                 it -> {
-                    // Create close-suppressing Connection proxy, also preparing returned Statements.
+                    // Create close-suppressing Connection proxy
                     Connection connectionToUse = this.createConnectionProxy(it.connection);
                     return action.apply(connectionToUse);
                 },
@@ -454,12 +451,13 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
      * @return a {@link Publisher} that completes successfully when the connection is closed.
      */
     protected Publisher<Void> closeConnection(Connection connection) {
-        return ConnectionFactoryUtils.currentConnectionFactory(this.connectionFactory).then()
+        return ConnectionFactoryUtils.currentConnectionFactory(this.connectionFactory)
+                .then()
                 .onErrorResume(Exception.class, e -> Mono.from(connection.close()));
     }
 
     /**
-     * Invocation handler that suppresses close calls on R2DBC Connections. Also prepares returned Statement
+     * Invocation handler that suppresses close calls on R2DBC Connections.
      * (Prepared/CallbackStatement) objects.
      *
      * @see Connection#close()
@@ -506,6 +504,8 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
      * Holder for a connection that makes sure the close action is invoked atomically only once.
      */
     static class ConnectionCloseHolder extends AtomicBoolean {
+
+        private static final long serialVersionUID = 4340810880320706499L;
 
         final Connection connection;
         final Function<Connection, Publisher<Void>> closeFunction;
