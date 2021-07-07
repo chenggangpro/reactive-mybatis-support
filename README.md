@@ -7,7 +7,7 @@
 * Using `mybatis-generator` adapt `mybatis-dynamic-sql` to  reactive project
 * Support SpringBoot AutoConfiguration,AutoMapperScan and so on.
 * Support Spring's Transaction .
-* This project only work fine with `Spring Data R2dbc`.
+* This project only works fine with `Spring Data R2dbc`.
 
 #### Examples
 
