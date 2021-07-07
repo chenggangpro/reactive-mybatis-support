@@ -20,10 +20,12 @@
           <dependency>
               <groupId>mysql</groupId>
               <artifactId>mysql-connector-java</artifactId>
+              <scope>test</scope>
           </dependency>
           <dependency>
               <groupId>org.apache.commons</groupId>
               <artifactId>commons-pool2</artifactId>
+              <scope>test</scope>
           </dependency>
           <dependency>
               <groupId>org.mybatis.dynamic-sql</groupId>
@@ -33,6 +35,7 @@
               <groupId>pro.chenggang</groupId>
               <artifactId>mybatis-r2dbc-generator</artifactId>
               <version>${version}</version>
+              <scope>test</scope>
           </dependency>
     </dependencies>
     ```
