@@ -5,8 +5,8 @@
 * Aimed to adapt mybatis to reactive project (aka WebFlux/Reactor3)
 * `mybatis-r2dbc` Base on [linux-china/mybatis-r2dbc](https://github.com/linux-china/mybatis-r2dbc) 
 * Using `mybatis-generator` adapt `mybatis-dynamic-sql` to  reactive project
-* Support SpringBoot AutoConfiguration,Mapper Scan and so on.
-* Support SpringBoot's Transaction .
+* Support SpringBoot AutoConfiguration,AutoMapperScan and so on.
+* Support Spring's Transaction .
 * This project only work fine with `Spring Data R2dbc`.
 
 #### Examples
@@ -91,9 +91,9 @@
 
 * In the original project [linux-china/mybatis-r2dbc](https://github.com/linux-china/mybatis-r2dbc) ,
 the `ReactiveSqlSession` get the `Connection` use the `ConnecionFactory` directly.This cause an issue when you used in
-spring environment and multiple database operation in one transaction.In reactive environment,is you want handle with resource 
+spring environment and multiple database operation in one transaction.In reactive environment,if you want handle with resource 
 ,you should use `Mono.usingWhen() or Flux.usingWhen()` and not `doFinally()`.
-* To resolve above issue,  Refer the `spring-data-r2dbc` project .
+* To resolve above issue, refer to the `spring-data-r2dbc` project .
 Found the [DefaultDatabaseClient](https://github.com/spring-projects/spring-data-r2dbc/blob/main/src/main/java/org/springframework/data/r2dbc/core/DefaultDatabaseClient.java)
  resolve this issue perfectly
 
