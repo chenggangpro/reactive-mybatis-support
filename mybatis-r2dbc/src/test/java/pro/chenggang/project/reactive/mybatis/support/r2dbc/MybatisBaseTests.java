@@ -1,74 +1,85 @@
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.configuration;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc;
 
 import io.r2dbc.pool.ConnectionPool;
 import io.r2dbc.pool.ConnectionPoolConfiguration;
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ValidationDepth;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.executor.ErrorContext;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.io.Resource;
-import org.springframework.data.r2dbc.connectionfactory.R2dbcTransactionManager;
-import org.springframework.data.r2dbc.connectionfactory.TransactionAwareConnectionFactoryProxy;
-import org.springframework.transaction.ReactiveTransactionManager;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.properties.R2dbcConnectionFactoryProperties;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.properties.R2dbcConnectionFactoryProperties.Pool;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.properties.R2dbcMybatisProperties;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.session.ReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.session.defaults.DefaultReactiveSqlSessionFactory;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.R2dbcAutoConfiguredMapperScannerRegistrar;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.R2dbcMapperScannerRegistrar;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.executor.SpringR2dbcReactiveSqlSessionExecutor;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.R2dbcMybatisConfiguration;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveSqlSessionExecutor;
+import reactor.core.publisher.Hooks;
 
-import static org.springframework.util.StringUtils.hasText;
+import java.time.Duration;
+
+import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 import static org.springframework.util.StringUtils.tokenizeToStringArray;
 
 /**
- * R2dbc Mybatis Auto Configuration
- * @author evans
+ * @author: chenggang
+ * @date 7/11/21.
  */
-@Slf4j
-@Configuration
-@AutoConfigureBefore(DataSourceAutoConfiguration.class)
-@Import({ R2dbcAutoConfiguredMapperScannerRegistrar.class,R2dbcMapperScannerRegistrar.class})
-@ConditionalOnClass(ConnectionFactory.class)
-public class R2dbcMybatisAutoConfiguration {
+@TestInstance(PER_CLASS)
+public class MybatisBaseTests {
 
-    @ConfigurationProperties(R2dbcMybatisProperties.PREFIX)
-    @Bean
+    protected R2dbcMybatisProperties r2dbcMybatisProperties;
+    protected R2dbcConnectionFactoryProperties r2dbcConnectionFactoryProperties;
+    protected R2dbcMybatisConfiguration r2dbcMybatisConfiguration;
+    protected ConnectionFactory connectionFactory;
+    protected ReactiveSqlSessionFactory reactiveSqlSessionFactory;
+
+    @BeforeAll
+    public void setUp() throws Exception{
+        Hooks.onOperatorDebug();
+        this.r2dbcMybatisProperties = this.r2dbcMybatisProperties();
+        this.r2dbcConnectionFactoryProperties = this.r2dbcConnectionFactoryProperties();
+        this.r2dbcMybatisConfiguration = this.configuration(this.r2dbcMybatisProperties);
+        this.r2dbcMybatisConfiguration.initR2dbcTypeHandler();
+        this.connectionFactory = this.connectionFactory(this.r2dbcConnectionFactoryProperties);
+        this.reactiveSqlSessionFactory = this.reactiveSqlSessionFactory(this.r2dbcMybatisConfiguration,this.connectionFactory);
+    }
+
     public R2dbcMybatisProperties r2dbcMybatisProperties(){
-        return new R2dbcMybatisProperties();
+        R2dbcMybatisProperties r2dbcMybatisProperties = new R2dbcMybatisProperties();
+        r2dbcMybatisProperties.setMapperLocations(new String[]{"classpath:mapper/*.xml"});
+        r2dbcMybatisProperties.setMapUnderscoreToCamelCase(true);
+        r2dbcMybatisProperties.setTypeAliasesPackage("pro.chenggang.project.reactive.mybatis.support.r2dbc.application.model");
+        return r2dbcMybatisProperties;
     }
 
-    @ConfigurationProperties(R2dbcConnectionFactoryProperties.PREFIX)
-    @Bean
     public R2dbcConnectionFactoryProperties r2dbcConnectionFactoryProperties(){
-        return new R2dbcConnectionFactoryProperties();
+        R2dbcConnectionFactoryProperties r2dbcConnectionFactoryProperties = new R2dbcConnectionFactoryProperties();
+        r2dbcConnectionFactoryProperties.setEnableMetrics(true);
+        r2dbcConnectionFactoryProperties.setName("test-r2dbc");
+        r2dbcConnectionFactoryProperties.setJdbcUrl("r2dbc:mysql://127.0.0.1:3306/mac");
+        r2dbcConnectionFactoryProperties.setUsername("root");
+        r2dbcConnectionFactoryProperties.setPassword("123456");
+        R2dbcConnectionFactoryProperties.Pool pool = new R2dbcConnectionFactoryProperties.Pool();
+        pool.setMaxIdleTime(Duration.parse("PT5M"));
+        pool.setValidationQuery("SELECT 1 FROM DUAL");
+        pool.setInitialSize(1);
+        pool.setMaxSize(3);
+        r2dbcConnectionFactoryProperties.setPool(pool);
+        return r2dbcConnectionFactoryProperties;
     }
 
-    @Bean
+
     public R2dbcMybatisConfiguration configuration(R2dbcMybatisProperties properties) {
         R2dbcMybatisConfiguration configuration = new R2dbcMybatisConfiguration();
-        if (hasText(properties.getTypeAliasesPackage())) {
+        if (properties.getTypeAliasesPackage() != null) {
             String[] typeAliasPackageArray = tokenizeToStringArray(properties.getTypeAliasesPackage(),
                     ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
             for (String packageToScan : typeAliasPackageArray) {
                 configuration.getTypeAliasRegistry().registerAliases(packageToScan, Object.class);
             }
-        } else {
-            log.info("Type Alias Package Is Empty");
         }
         Resource[] mapperLocations = properties.resolveMapperLocations();
         if(mapperLocations != null && mapperLocations.length > 0) {
@@ -89,18 +100,15 @@ public class R2dbcMybatisAutoConfiguration {
         } else {
             throw new IllegalArgumentException("mapperLocations cannot be empty...");
         }
-        configuration.initR2dbcTypeHandler();
         return configuration;
     }
 
-    @ConditionalOnMissingBean(ConnectionFactory.class)
-    @Bean(destroyMethod = "dispose")
     public ConnectionPool connectionFactory(R2dbcConnectionFactoryProperties r2dbcConnectionFactoryProperties){
         ConnectionFactory connectionFactory = ConnectionFactories.get(r2dbcConnectionFactoryProperties.determineConnectionFactoryUrl());
         if (connectionFactory instanceof ConnectionPool) {
             return (ConnectionPool) connectionFactory;
         }
-        Pool pool = r2dbcConnectionFactoryProperties.getPool();
+        R2dbcConnectionFactoryProperties.Pool pool = r2dbcConnectionFactoryProperties.getPool();
         ConnectionPoolConfiguration.Builder builder = ConnectionPoolConfiguration.builder(connectionFactory)
                 .name(r2dbcConnectionFactoryProperties.determineConnectionFactoryName())
                 .maxSize(pool.getMaxSize())
@@ -112,33 +120,16 @@ public class R2dbcMybatisAutoConfiguration {
                 .maxCreateConnectionTime(pool.getMaxCreateConnectionTime())
                 .maxLifeTime(pool.getMaxLifeTime())
                 .validationDepth(pool.getValidationDepth());
-        if(hasText(pool.getValidationQuery())){
+        if(pool.getValidationQuery() != null){
             builder.validationQuery(pool.getValidationQuery());
         }else{
             builder.validationDepth(ValidationDepth.LOCAL);
         }
         ConnectionPool connectionPool = new ConnectionPool(builder.build());
-        log.info("Initial Connection Pool Bean Success");
         return connectionPool;
     }
 
-    @Bean
-    @ConditionalOnMissingBean(ReactiveTransactionManager.class)
-    public R2dbcTransactionManager connectionFactoryTransactionManager(ConnectionFactory connectionFactory) {
-        return new R2dbcTransactionManager(connectionFactory);
+    public ReactiveSqlSessionFactory reactiveSqlSessionFactory(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory) {
+        return new DefaultReactiveSqlSessionFactory(configuration, connectionFactory);
     }
-
-    @Bean
-    @ConditionalOnMissingBean(ReactiveSqlSessionExecutor.class)
-    public ReactiveSqlSessionExecutor reactiveSqlSessionExecutor(){
-        return new SpringR2dbcReactiveSqlSessionExecutor();
-    }
-
-
-    @Bean
-    @ConditionalOnMissingBean(ReactiveSqlSessionFactory.class)
-    public ReactiveSqlSessionFactory reactiveSqlSessionFactoryWithTransaction(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory,ReactiveSqlSessionExecutor reactiveSqlSessionExecutor) {
-        return new DefaultReactiveSqlSessionFactory(configuration, new TransactionAwareConnectionFactoryProxy(connectionFactory),reactiveSqlSessionExecutor);
-    }
-
 }

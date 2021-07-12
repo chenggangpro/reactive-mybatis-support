@@ -4,16 +4,15 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.type.TypeHandler;
-import org.springframework.beans.factory.InitializingBean;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.core.ReactiveSqlSession;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.core.type.R2DBCTypeHandler;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.core.type.R2dbcTypeHandlerRegistry;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.session.ReactiveSqlSession;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.type.R2DBCTypeHandler;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.type.R2dbcTypeHandlerRegistry;
 
 /**
  * @author: chenggang
  * @date 6/25/21.
  */
-public class R2dbcMybatisConfiguration extends Configuration implements InitializingBean {
+public class R2dbcMybatisConfiguration extends Configuration {
 
     private final R2dbcMapperRegistry r2dbcMapperRegistry = new R2dbcMapperRegistry(this);
 
@@ -51,8 +50,11 @@ public class R2dbcMybatisConfiguration extends Configuration implements Initiali
         return r2dbcTypeHandlerRegistry;
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
+    /**
+     * init R2dbcTypeHandler
+     * @throws Exception
+     */
+    public void initR2dbcTypeHandler() {
         for (TypeHandler<?> typeHandler : super.getTypeHandlerRegistry().getTypeHandlers()) {
             if (typeHandler instanceof R2DBCTypeHandler) {
                 R2DBCTypeHandler<?> r2dbcTypeHandler = (R2DBCTypeHandler<?>) typeHandler;

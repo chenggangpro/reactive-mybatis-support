@@ -3,8 +3,8 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.support;
 import org.apache.ibatis.binding.BindingException;
 import org.apache.ibatis.binding.MapperRegistry;
 import org.apache.ibatis.session.Configuration;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.core.ReactiveSqlSession;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.core.binding.MapperProxyFactory;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.session.ReactiveSqlSession;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.binding.MapperProxyFactory;
 
 import java.util.Collection;
 import java.util.Collections;
