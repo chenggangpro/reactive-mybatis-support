@@ -1,6 +1,5 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.entity.model;
 
-import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -9,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
+
+import java.time.LocalDateTime;
 
 /**
  * auto generated
