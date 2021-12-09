@@ -49,7 +49,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
 
     private static final Log log = LogFactory.getLog(DefaultReactiveSqlSession.class);
 
-    private static final List<Class<?>> NUMBER_TYPES = Arrays.asList(
+    public static final List<Class<?>> NUMBER_TYPES = Arrays.asList(
             byte.class, short.class, int.class, long.class, float.class, double.class,
             Byte.class, Short.class, Integer.class, Long.class, Float.class, Double.class);
     private final R2dbcMybatisConfiguration configuration;

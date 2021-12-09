@@ -3,13 +3,11 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.session.defaults;
 import io.r2dbc.pool.ConnectionPool;
 import io.r2dbc.spi.ConnectionFactory;
 import org.apache.ibatis.session.Configuration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveSqlSessionExecutor;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.defaults.DefaultReactiveSqlSessionExecutor;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.session.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.session.ReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.R2dbcMybatisConfiguration;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveSqlSessionExecutor;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.defaults.DefaultReactiveSqlSessionExecutor;
 
 import java.io.IOException;
 
@@ -19,8 +17,6 @@ import java.io.IOException;
  * @author linux_china
  */
 public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFactory {
-
-    private static final Logger log = LoggerFactory.getLogger(DefaultReactiveSqlSessionFactory.class);
 
     private final R2dbcMybatisConfiguration configuration;
     private final ConnectionFactory connectionFactory;

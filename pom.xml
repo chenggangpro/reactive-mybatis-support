@@ -39,19 +39,20 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
-        <reactor-bom.version>2020.0.8</reactor-bom.version>
-        <mybatis.version>3.5.6</mybatis.version>
+        <reactor-bom.version>2020.0.13</reactor-bom.version>
+        <r2dbc-bom.version>Arabba-SR11</r2dbc-bom.version>
+        <mybatis.version>3.5.7</mybatis.version>
         <mybatis-spring.version>2.0.6</mybatis-spring.version>
-        <mybatis-dynamic-sql.version>1.3.0</mybatis-dynamic-sql.version>
         <mybatis-generator-core.version>1.4.0</mybatis-generator-core.version>
-        <junit5.version>5.7.1</junit5.version>
-        <snakeyaml.version>1.29</snakeyaml.version>
-        <lombok.version>1.18.16</lombok.version>
-        <hutool-all.version>5.5.6</hutool-all.version>
-        <spring.boot.version>2.3.12.RELEASE</spring.boot.version>
-        <r2dbc-bom.version>Arabba-SR10</r2dbc-bom.version>
+        <mybatis-dynamic-sql.version>1.3.0</mybatis-dynamic-sql.version>
+        <lombok.version>1.18.22</lombok.version>
+        <hutool-all.version>5.7.16</hutool-all.version>
+        <spring.boot.version>2.5.7</spring.boot.version>
         <blockhound.version>1.0.6.RELEASE</blockhound.version>
-        <assertj-core.version>3.20.1</assertj-core.version>
+        <junit.version>4.13.2</junit.version>
+        <junit-jupiter.version>5.7.2</junit-jupiter.version>
+        <assertj.version>3.19.0</assertj.version>
+        <byte-buddy.version>1.12.3</byte-buddy.version>
     </properties>
 
     <dependencyManagement>
@@ -80,9 +81,9 @@
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>${junit5.version}</version>
-                <scope>import</scope>
+                <version>${junit-jupiter.version}</version>
                 <type>pom</type>
+                <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>org.projectlombok</groupId>
@@ -118,6 +119,21 @@
                 <groupId>org.mybatis.dynamic-sql</groupId>
                 <artifactId>mybatis-dynamic-sql</artifactId>
                 <version>${mybatis-dynamic-sql.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.bytebuddy</groupId>
+                <artifactId>byte-buddy</artifactId>
+                <version>${byte-buddy.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
