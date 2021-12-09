@@ -3,7 +3,7 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.p
 import org.apache.ibatis.io.ResolverUtil;
 import org.apache.ibatis.reflection.factory.ObjectFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.delegate.R2dbcConfiguration;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.JdbcParameterAdapter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.adapter.defaults.*;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,6 +1,7 @@
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.adapter;
 
 import io.r2dbc.spi.Statement;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.ParameterHandlerContext;
 
 /**
  * @author: chenggang
@@ -20,5 +21,5 @@ public interface JdbcParameterAdapter<T> {
      * @param parameterHandlerContext
      * @param parameter
      */
-    void adapt(Statement statement,ParameterHandlerContext parameterHandlerContext, T parameter);
+    void adapt(Statement statement, ParameterHandlerContext parameterHandlerContext, T parameter);
 }

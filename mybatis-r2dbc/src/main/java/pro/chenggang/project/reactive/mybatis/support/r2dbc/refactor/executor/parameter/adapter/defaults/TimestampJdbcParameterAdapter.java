@@ -1,10 +1,12 @@
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.adapter;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.adapter.defaults;
 
 import io.r2dbc.spi.Statement;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.JdbcParameterAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.ParameterHandlerContext;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.adapter.JdbcParameterAdapter;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 /**
  * @author: chenggang
@@ -18,6 +20,7 @@ public class TimestampJdbcParameterAdapter implements JdbcParameterAdapter<Times
 
     @Override
     public void adapt(Statement statement, ParameterHandlerContext parameterHandlerContext, Timestamp parameter) {
-
+        LocalDateTime localDateTime = parameter.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+        statement.bind(parameterHandlerContext.getIndex(),localDateTime);
     }
 }

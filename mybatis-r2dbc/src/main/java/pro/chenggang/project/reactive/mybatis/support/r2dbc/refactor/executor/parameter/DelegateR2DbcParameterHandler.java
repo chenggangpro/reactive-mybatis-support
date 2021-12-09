@@ -12,6 +12,7 @@ import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.delegate.R2dbcConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.StatementLogHelper;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.adapter.JdbcParameterAdapter;
 
 import java.io.InputStream;
 import java.io.Reader;

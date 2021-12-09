@@ -3,7 +3,7 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.delegate;
 import io.r2dbc.spi.ConnectionFactory;
 import org.apache.ibatis.session.Configuration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.ReactiveSqlSession;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.JdbcParameterAdapter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.adapter.JdbcParameterAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.adapter.JdbcParameterAdapterRegistry;
 
 /**
