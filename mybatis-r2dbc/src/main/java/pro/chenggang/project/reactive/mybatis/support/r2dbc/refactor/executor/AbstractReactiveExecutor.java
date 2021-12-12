@@ -2,17 +2,16 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor;
 
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactory;
-import io.r2dbc.spi.Result;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.RowBounds;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.connection.ConnectionCloseHolder;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.delegate.R2dbcConfiguration;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * @author: chenggang
@@ -39,9 +38,6 @@ public abstract class AbstractReactiveExecutor implements ReactiveExecutor {
                 .flatMap(statementLogHelper -> this.inConnection(
                         this.connectionFactory,
                         connection -> this.doUpdateWithConnection(connection,mappedStatement,parameter)
-                                .flatMap(Result::getRowsUpdated)
-                                .collect(Collectors.summingInt(Integer::intValue))
-                                .doOnNext(statementLogHelper::logUpdates)
                 ))
        );
     }
@@ -101,7 +97,7 @@ public abstract class AbstractReactiveExecutor implements ReactiveExecutor {
      * @param parameter
      * @return
      */
-    protected abstract Flux<? extends Result> doUpdateWithConnection(Connection connection, MappedStatement mappedStatement, Object parameter);
+    protected abstract Mono<Integer> doUpdateWithConnection(Connection connection, MappedStatement mappedStatement, Object parameter);
 
     /**
      * do query with connection

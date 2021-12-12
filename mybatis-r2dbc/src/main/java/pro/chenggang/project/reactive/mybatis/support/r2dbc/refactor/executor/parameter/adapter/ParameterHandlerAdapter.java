@@ -7,7 +7,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.pa
  * @author: chenggang
  * @date 12/9/21.
  */
-public interface JdbcParameterAdapter<T> {
+public interface ParameterHandlerAdapter<T> {
 
     /**
      * adapted class
@@ -16,10 +16,10 @@ public interface JdbcParameterAdapter<T> {
     Class<T> adaptClazz();
 
     /**
-     * adapt
+     * setParameter
      * @param statement
      * @param parameterHandlerContext
      * @param parameter
      */
-    void adapt(Statement statement, ParameterHandlerContext parameterHandlerContext, T parameter);
+    void setParameter(Statement statement, ParameterHandlerContext parameterHandlerContext, T parameter);
 }

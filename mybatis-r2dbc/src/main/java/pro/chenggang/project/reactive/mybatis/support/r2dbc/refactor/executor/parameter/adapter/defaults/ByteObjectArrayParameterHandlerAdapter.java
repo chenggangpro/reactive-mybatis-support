@@ -2,7 +2,7 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.p
 
 import io.r2dbc.spi.Statement;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.ParameterHandlerContext;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.adapter.JdbcParameterAdapter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.adapter.ParameterHandlerAdapter;
 
 import java.nio.ByteBuffer;
 
@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
  * @author: chenggang
  * @date 12/9/21.
  */
-public class ByteObjectArrayParameterAdapter implements JdbcParameterAdapter<Byte[]> {
+public class ByteObjectArrayParameterHandlerAdapter implements ParameterHandlerAdapter<Byte[]> {
 
     @Override
     public Class<Byte[]> adaptClazz() {
@@ -18,7 +18,7 @@ public class ByteObjectArrayParameterAdapter implements JdbcParameterAdapter<Byt
     }
 
     @Override
-    public void adapt(Statement statement, ParameterHandlerContext parameterHandlerContext, Byte[] parameter) {
+    public void setParameter(Statement statement, ParameterHandlerContext parameterHandlerContext, Byte[] parameter) {
         ByteBuffer byteBuffer = ByteBuffer.wrap(this.toPrimitives(parameter));
         statement.bind(parameterHandlerContext.getIndex(),byteBuffer);
     }

@@ -22,7 +22,7 @@
  *
  *
  */
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.support;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic;
 
 import reactor.core.publisher.Mono;
 

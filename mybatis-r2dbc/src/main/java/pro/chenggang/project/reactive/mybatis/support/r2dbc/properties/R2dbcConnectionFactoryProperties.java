@@ -6,6 +6,9 @@ import lombok.Setter;
 import lombok.ToString;
 import reactor.util.annotation.Nullable;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.UUID;
 
@@ -85,7 +88,21 @@ public class R2dbcConnectionFactoryProperties {
             this.r2dbcUrl = this.r2dbcUrl.replace("r2dbc:mysql:", "r2dbc:mariadb:");
             return this.r2dbcUrl;
         }
-        String credential = username + (password == null || password.isEmpty() ? "" : ":" + password);
+        String encodedUsername;
+        try {
+            encodedUsername = URLEncoder.encode(username, StandardCharsets.UTF_8.name());
+        } catch (UnsupportedEncodingException e) {
+            //fallback to original username
+            encodedUsername = username;
+        }
+        String encodedPassword;
+        try {
+            encodedPassword = URLEncoder.encode(password, StandardCharsets.UTF_8.name());
+        } catch (UnsupportedEncodingException e) {
+            //fallback to original password
+            encodedPassword = password;
+        }
+        String credential =encodedUsername + (password == null || password.isEmpty() ? "" : ":" + encodedPassword);
         this.r2dbcUrl = this.jdbcUrl.replace("r2dbc:mysql:", "r2dbc:mariadb:");
         this.r2dbcUrl = r2dbcUrl.replace("//", "//" + credential + "@");
         return this.r2dbcUrl;

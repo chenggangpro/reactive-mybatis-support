@@ -16,9 +16,9 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.binding;
 
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.ReactiveSqlSession;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.support.ProxyInstanceFactory;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -44,7 +44,10 @@ public class MapperProxyFactory<T> {
 
     @SuppressWarnings("unchecked")
     protected T newInstance(MapperProxy<T> mapperProxy) {
-        return (T) Proxy.newProxyInstance(mapperInterface.getClassLoader(), new Class[] { mapperInterface }, mapperProxy);
+        return ProxyInstanceFactory.newInstanceOfInterfaces(
+                mapperInterface,
+                () -> mapperProxy
+        );
     }
 
     public T newInstance(ReactiveSqlSession reactiveSqlSession) {

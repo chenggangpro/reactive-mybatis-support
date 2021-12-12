@@ -12,18 +12,14 @@ import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.delegate.R2dbcConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.StatementLogHelper;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.adapter.JdbcParameterAdapter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.adapter.ParameterHandlerAdapter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.support.ProxyInstanceFactory;
 
-import java.io.InputStream;
-import java.io.Reader;
-import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.SQLXML;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -33,17 +29,17 @@ import java.util.stream.Stream;
  * @author: chenggang
  * @date 12/9/21.
  */
-public class DelegateR2DbcParameterHandler implements InvocationHandler {
+public class DelegateR2dbcParameterHandler implements InvocationHandler {
 
     private final R2dbcConfiguration configuration;
     private final ParameterHandler parameterHandler;
     private final Map<Class<?>, Field> parameterHandlerFieldMap;
     private final Statement delegateStatement;
-    private final PreparedStatement delegatePreparedStatement;
+    private final PreparedStatement delegatedPreparedStatement;
     private final AtomicReference<ParameterHandlerContext> parameterHandlerContextReference = new AtomicReference<>();
     private final StatementLogHelper statementLogHelper;
 
-    public DelegateR2DbcParameterHandler(R2dbcConfiguration r2dbcConfiguration,
+    public DelegateR2dbcParameterHandler(R2dbcConfiguration r2dbcConfiguration,
                                          ParameterHandler parameterHandler,
                                          Statement statement,
                                          StatementLogHelper statementLogHelper) {
@@ -51,11 +47,7 @@ public class DelegateR2DbcParameterHandler implements InvocationHandler {
         this.parameterHandler = parameterHandler;
         this.delegateStatement = statement;
         this.statementLogHelper = statementLogHelper;
-        this.delegatePreparedStatement = (PreparedStatement) Proxy.newProxyInstance(
-                DelegateR2DbcParameterHandler.class.getClassLoader(),
-                new Class[]{PreparedStatement.class},
-                new DelegateR2dbcStatement(this.delegateStatement,this.configuration.getJdbcParameterAdapterRegistry().getAllJdbcParameterAdapters())
-        );
+        this.delegatedPreparedStatement = initDelegatedPreparedStatement();
         parameterHandlerFieldMap = Stream.of(parameterHandler.getClass().getDeclaredFields())
                 .collect(Collectors.toMap(
                         Field::getType,
@@ -66,13 +58,28 @@ public class DelegateR2DbcParameterHandler implements InvocationHandler {
                 ));
     }
 
+    /**
+     * init delegated prepared statement
+     * @return
+     */
+    private PreparedStatement initDelegatedPreparedStatement() {
+        return ProxyInstanceFactory.newInstanceOfInterfaces(
+                PreparedStatement.class,
+                () -> new DelegateR2dbcStatement(
+                        this.delegateStatement,
+                        this.configuration.getParameterHandlerAdapterRegistry().getAllParameterHandlerAdapters(),
+                        this.configuration.getNotSupportedDataTypes()
+                )
+        );
+    }
+
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         String methodName = method.getName();
         if(!Objects.equals("setParameters",methodName)){
             return method.invoke(parameterHandler,args);
         }
-        this.setParameters(this.delegatePreparedStatement);
+        this.setParameters(this.delegatedPreparedStatement);
         return null;
     }
 
@@ -103,7 +110,7 @@ public class DelegateR2DbcParameterHandler implements InvocationHandler {
         Object parameterObject = parameterHandler.getParameterObject();
         List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
         ParameterHandlerContext parameterHandlerContext = new ParameterHandlerContext();
-        DelegateR2DbcParameterHandler.this.parameterHandlerContextReference.getAndSet(parameterHandlerContext);
+        DelegateR2dbcParameterHandler.this.parameterHandlerContextReference.getAndSet(parameterHandlerContext);
         List<Object> columnValues = new ArrayList<>();
         if (parameterMappings != null) {
             for (int i = 0; i < parameterMappings.size(); i++) {
@@ -148,27 +155,19 @@ public class DelegateR2DbcParameterHandler implements InvocationHandler {
     }
 
 
-
     /**
      * delegate Prepare statement
      */
     private class DelegateR2dbcStatement implements InvocationHandler {
 
         private final Statement statement;
-        private final Map<Class, JdbcParameterAdapter> jdbcParameterAdapterContainer;
-        private final Set<Class> notSupportedJdbcParameterTypes = new HashSet<>();
+        private final Map<Class, ParameterHandlerAdapter> parameterHandlerAdapters;
+        private final Set<Class> notSupportedDataTypes;
 
-        DelegateR2dbcStatement(Statement statement, Map<Class, JdbcParameterAdapter> jdbcParameterAdapterContainer) {
+        DelegateR2dbcStatement(Statement statement, Map<Class, ParameterHandlerAdapter> parameterHandlerAdapters, Set<Class> notSupportedDataTypes) {
             this.statement = statement;
-            this.jdbcParameterAdapterContainer = jdbcParameterAdapterContainer;
-            this.loadNotSupportedJdbcParameterTypes();
-        }
-
-        private void loadNotSupportedJdbcParameterTypes(){
-            notSupportedJdbcParameterTypes.add(InputStream.class);
-            notSupportedJdbcParameterTypes.add(SQLXML.class);
-            notSupportedJdbcParameterTypes.add(Reader.class);
-            notSupportedJdbcParameterTypes.add(StringReader.class);
+            this.parameterHandlerAdapters = parameterHandlerAdapters;
+            this.notSupportedDataTypes = notSupportedDataTypes;
         }
 
         @Override
@@ -182,21 +181,20 @@ public class DelegateR2DbcParameterHandler implements InvocationHandler {
             Object parameter = args[1];
             Class<?> parameterClass = parameter.getClass();
             //not supported types
-            if(notSupportedJdbcParameterTypes.contains(parameterClass)){
+            if(notSupportedDataTypes.contains(parameterClass)){
                 throw new IllegalArgumentException("Unsupported Parameter type : " + parameterClass);
             }
             // using adapter
-            if(jdbcParameterAdapterContainer.containsKey(parameterClass)){
-                JdbcParameterAdapter jdbcParameterAdapter = jdbcParameterAdapterContainer.get(parameterClass);
-                ParameterHandlerContext parameterHandlerContext = DelegateR2DbcParameterHandler.this.parameterHandlerContextReference.get();
-                jdbcParameterAdapter.adapt(statement,parameterHandlerContext,parameter);
+            if(parameterHandlerAdapters.containsKey(parameterClass)){
+                ParameterHandlerAdapter parameterHandlerAdapter = parameterHandlerAdapters.get(parameterClass);
+                ParameterHandlerContext parameterHandlerContext = DelegateR2dbcParameterHandler.this.parameterHandlerContextReference.get();
+                parameterHandlerAdapter.setParameter(statement,parameterHandlerContext,parameter);
                 return null;
             }
             //default set
             statement.bind(index, parameter);
             return null;
         }
-
 
     }
 
