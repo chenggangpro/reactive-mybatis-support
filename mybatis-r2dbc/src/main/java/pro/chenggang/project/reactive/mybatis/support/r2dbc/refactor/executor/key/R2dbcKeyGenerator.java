@@ -10,9 +10,15 @@ import reactor.core.publisher.Mono;
 public interface R2dbcKeyGenerator {
 
     /**
+     * get result row count
+     * @return
+     */
+    Integer getResultRowCount();
+
+    /**
      * handle key result
      * @param rowResultWrapper
      * @return
      */
-    Mono<Void> handleKeyResult(RowResultWrapper rowResultWrapper);
+    Mono<Integer> handleKeyResult(RowResultWrapper rowResultWrapper, Object parameter);
 }
