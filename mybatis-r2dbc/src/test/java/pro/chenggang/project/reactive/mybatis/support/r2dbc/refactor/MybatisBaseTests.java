@@ -38,6 +38,7 @@ public class MybatisBaseTests {
     @BeforeAll
     public void setUp() throws Exception{
         Hooks.onOperatorDebug();
+        Hooks.enableContextLossTracking();
         this.r2dbcMybatisProperties = this.r2dbcMybatisProperties();
         this.r2dbcConnectionFactoryProperties = this.r2dbcConnectionFactoryProperties();
         this.r2dbcMybatisConfiguration = this.configuration(this.r2dbcMybatisProperties);
@@ -128,7 +129,6 @@ public class MybatisBaseTests {
     }
 
     public ReactiveSqlSessionFactory reactiveSqlSessionFactory(R2dbcConfiguration configuration, ConnectionFactory connectionFactory) {
-        configuration.setConnectionFactory(connectionFactory);
-        return new DefaultReactiveSqlSessionFactory(configuration);
+        return new DefaultReactiveSqlSessionFactory(configuration,connectionFactory);
     }
 }

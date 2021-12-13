@@ -20,14 +20,11 @@ import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 import org.apache.ibatis.util.MapUtil;
-import org.reactivestreams.Publisher;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.delegate.R2dbcConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.exception.R2dbcResultException;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.RowResultWrapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.TypeHandleContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.support.ProxyInstanceFactory;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Constructor;
 import java.sql.SQLException;
@@ -96,30 +93,30 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
     }
 
     @Override
-    public <T> Publisher<T> handleResult(RowResultWrapper rowResultWrapper) {
+    public <T> List<T> handleResult(RowResultWrapper rowResultWrapper) {
         List<ResultMap> resultMaps = mappedStatement.getResultMaps();
         int resultMapCount = resultMaps.size();
         if (resultMapCount < 1) {
-            return Mono.error(new ExecutorException("A query was run and no Result Maps were found for the Mapped Statement '" + mappedStatement.getId()
-                    + "'.  It's likely that neither a Result Type nor a Result Map was specified."));
+            throw new ExecutorException("A query was run and no Result Maps were found for the Mapped Statement '" + mappedStatement.getId()
+                    + "'.  It's likely that neither a Result Type nor a Result Map was specified.");
         }
         ResultMap resultMap = resultMaps.get(0);
         if(!resultMap.hasNestedResultMaps()){
             try{
                 ResultMap discriminatedResultMap = resolveDiscriminatedResultMap(rowResultWrapper, resultMap, null);
                 Object rowValue = getRowValueForSimpleResultMap(rowResultWrapper, discriminatedResultMap, null);
-                return Mono.justOrEmpty((T) rowValue)
-                        .doOnNext(value -> totalCount.increment());
+                totalCount.increment();
+                return Collections.singletonList((T) rowValue);
             }catch (SQLException e) {
-                return Mono.error(new R2dbcResultException(e));
+                throw new R2dbcResultException(e);
             }
         }
         try {
             List<Object> objects = handleRowValuesForNestedResultMap(rowResultWrapper, resultMap);
-            return Flux.fromIterable((List<T>) objects)
-                    .doOnNext(value -> totalCount.increment());
+            totalCount.increment();
+            return (List<T>) objects;
         } catch (SQLException e) {
-            return Mono.error(new R2dbcResultException(e));
+            throw new R2dbcResultException(e);
         }
     }
 

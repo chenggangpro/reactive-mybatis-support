@@ -2,6 +2,7 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.reactivestreams.Publisher;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.application.mapper.PeopleMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.application.model.People;
 import reactor.core.publisher.Flux;
@@ -19,11 +20,12 @@ import java.util.stream.Stream;
 public class PeopleMapperTests extends MybatisBaseTests {
 
     private PeopleMapper peopleMapper;
+    private ReactiveSqlSession reactiveSqlSession;
 
     @BeforeAll
     public void setUp() throws Exception{
         super.setUp();
-        this.peopleMapper = super.reactiveSqlSessionFactory.openSession().getMapper(PeopleMapper.class);
+        reactiveSqlSession = super.reactiveSqlSessionFactory.openSession();
     }
 
     @Test
@@ -43,7 +45,7 @@ public class PeopleMapperTests extends MybatisBaseTests {
 
     @Test
     public void testPeopleMapperDynamicFindExample() throws Exception {
-        People example = new People(1, "mybatis", LocalDateTime.now());
+        People example = new People(1, "zhangwfuei", LocalDateTime.now());
         Mono<People> peopleMono = peopleMapper.dynamicFindExample(example);
         StepVerifier.create(peopleMono)
                 .expectNextMatches(people -> people.getId() == 1)
@@ -68,7 +70,7 @@ public class PeopleMapperTests extends MybatisBaseTests {
 
     @Test
     public void testPeopleMapperFindByNick() throws Exception {
-        peopleMapper.findByNick("linux_china").subscribe(people -> {
+        peopleMapper.findByNick("zhangwfuei").subscribe(people -> {
             System.out.println(people.getId());
         });
         Thread.sleep(2000);
@@ -89,15 +91,31 @@ public class PeopleMapperTests extends MybatisBaseTests {
     public void testPeopleMapperInsertBatch() throws Exception {
         People people = new People();
         people.setNick("nick007");
-        peopleMapper.getAllCount()
-                .doOnNext((count)-> System.out.println("Total Count Before Insert : " + count))
-                .thenMany(Flux.fromStream(Stream.of(people)))
-                .collectList()
-                .flatMap(peopleList -> peopleMapper.batchInsert(peopleList))
-                .doOnNext(rowCount -> System.out.println("Insert Row Count : " + rowCount))
-                .then(peopleMapper.getAllCount())
-                .doOnNext((count)-> System.out.println("Total Count After Insert : " + count))
-                .subscribe();
+        ReactiveSqlSession reactiveSqlSession = this.reactiveSqlSessionFactory.openSession(false);
+        Publisher<Void> execute = reactiveSqlSession.execute(
+                PeopleMapper.class,
+                (session, mapper) -> {
+                    return session.withTransaction()
+                            .then(Mono.defer(() -> {
+                                return mapper.getAllCount()
+                                        .doOnNext((count) -> System.out.println("Total Count Before Insert : " + count));
+                            }))
+                            .thenMany(Flux.fromStream(Stream.of(people)))
+                            .collectList()
+                            .flatMap(peopleList -> mapper.batchInsert(peopleList))
+                            .doOnNext(rowCount -> System.out.println("Insert Row Count : " + rowCount))
+                            .then(mapper.getAllCount())
+                            .doOnNext((count) -> System.out.println("Total Count After Insert : " + count))
+                            .flatMap(rowCount -> {
+                                return Mono.deferContextual(contextView -> {
+                                    return session.rollback();
+                                });
+                            });
+
+                }
+        );
+        Mono.from(execute)
+                .subscribe(result -> System.out.println(result));
         Thread.sleep(5000);
     }
 }

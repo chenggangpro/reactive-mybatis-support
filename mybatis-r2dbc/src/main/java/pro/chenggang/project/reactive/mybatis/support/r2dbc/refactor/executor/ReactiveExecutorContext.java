@@ -22,7 +22,9 @@ public class ReactiveExecutorContext {
     private final AtomicBoolean requireClosed = new AtomicBoolean(false);
     private final StatementLogHelper statementLogHelper;
 
-    public ReactiveExecutorContext(boolean autoCommit, IsolationLevel isolationLevel, StatementLogHelper statementLogHelper) {
+    public ReactiveExecutorContext(boolean autoCommit,
+                                   IsolationLevel isolationLevel,
+                                   StatementLogHelper statementLogHelper) {
         this.autoCommit = autoCommit;
         this.isolationLevel = isolationLevel;
         this.statementLogHelper = statementLogHelper;
@@ -64,14 +66,6 @@ public class ReactiveExecutorContext {
         this.requireClosed.getAndSet(requireClosed);
     }
 
-    public void setConnection(Connection connection){
-        this.connectionReference.compareAndSet(null,connection);
-    }
-
-    public Optional<Connection> getConnection() {
-        return Optional.ofNullable(this.connectionReference.get());
-    }
-
     public IsolationLevel getIsolationLevel() {
         return isolationLevel;
     }
@@ -79,4 +73,17 @@ public class ReactiveExecutorContext {
     public StatementLogHelper getStatementLogHelper() {
         return statementLogHelper;
     }
+
+    public boolean registerConnection(Connection connection){
+        return this.connectionReference.compareAndSet(null,connection);
+    }
+
+    public Optional<Connection> clearConnection(){
+        return Optional.ofNullable(this.connectionReference.getAndSet(null));
+    }
+
+    public Optional<Connection> getConnection() {
+        return Optional.ofNullable(this.connectionReference.get());
+    }
+
 }

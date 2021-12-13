@@ -1,9 +1,11 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.defaults;
 
 import io.r2dbc.pool.ConnectionPool;
+import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.IsolationLevel;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.ReactiveSqlSessionFactory;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.connection.DefaultTransactionSupportConnectionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.delegate.R2dbcConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.DefaultReactiveExecutor;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.ReactiveExecutor;
@@ -16,8 +18,12 @@ public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFacto
 
     private final R2dbcConfiguration configuration;
 
-    public DefaultReactiveSqlSessionFactory(R2dbcConfiguration configuration) {
+    public DefaultReactiveSqlSessionFactory(R2dbcConfiguration configuration, ConnectionFactory connectionFactory) {
         this.configuration = configuration;
+        if(connectionFactory instanceof ConnectionPool){
+            ConnectionFactory transactionSupportConnectionFactory = new DefaultTransactionSupportConnectionFactory(connectionFactory);
+            this.configuration.setConnectionFactory(transactionSupportConnectionFactory);
+        }
     }
 
     @Override
@@ -39,11 +45,9 @@ public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFacto
 
     @Override
     public void close() throws Exception {
-        if(this.configuration.getConnectionFactory() instanceof ConnectionPool){
-            ConnectionPool connectionPool = ((ConnectionPool) this.configuration.getConnectionFactory());
-            if (!connectionPool.isDisposed()) {
-                connectionPool.dispose();
-            }
+        if(this.configuration.getConnectionFactory() instanceof DefaultTransactionSupportConnectionFactory){
+            DefaultTransactionSupportConnectionFactory defaultTransactionSupportConnectionFactory = ((DefaultTransactionSupportConnectionFactory) this.configuration.getConnectionFactory());
+            defaultTransactionSupportConnectionFactory.close();
         }
     }
 }

@@ -56,7 +56,7 @@ public abstract class AbstractReactiveExecutor implements ReactiveExecutor {
                 .justOrEmpty(contextView.getOrEmpty(ReactiveExecutorContext.class))
                 .cast(ReactiveExecutorContext.class)
                 .flatMap(reactiveExecutorContext -> {
-                    reactiveExecutorContext.setForceCommit(required);
+                    reactiveExecutorContext.setForceCommit(required || reactiveExecutorContext.isUsingTransaction());
                     return Mono.justOrEmpty(reactiveExecutorContext.getConnection())
                             .flatMap(connection -> Mono.from(connection.close()));
                 })
@@ -69,7 +69,7 @@ public abstract class AbstractReactiveExecutor implements ReactiveExecutor {
                 .justOrEmpty(contextView.getOrEmpty(ReactiveExecutorContext.class))
                 .cast(ReactiveExecutorContext.class)
                 .flatMap(reactiveExecutorContext -> {
-                    reactiveExecutorContext.setForceRollback(required);
+                    reactiveExecutorContext.setForceRollback(required || reactiveExecutorContext.isUsingTransaction());
                     return Mono.justOrEmpty(reactiveExecutorContext.getConnection())
                             .flatMap(connection -> Mono.from(connection.close()));
                 })
@@ -82,7 +82,7 @@ public abstract class AbstractReactiveExecutor implements ReactiveExecutor {
                 .justOrEmpty(contextView.getOrEmpty(ReactiveExecutorContext.class))
                 .cast(ReactiveExecutorContext.class)
                 .flatMap(reactiveExecutorContext -> {
-                    reactiveExecutorContext.setForceRollback(forceRollback);
+                    reactiveExecutorContext.setForceRollback(forceRollback || reactiveExecutorContext.isUsingTransaction());
                     reactiveExecutorContext.setRequireClosed(true);
                     return Mono.justOrEmpty(reactiveExecutorContext.getConnection())
                             .flatMap(connection -> Mono.from(connection.close()));
@@ -117,7 +117,7 @@ public abstract class AbstractReactiveExecutor implements ReactiveExecutor {
      * @return
      */
     protected <T> Mono<T> inConnection(ConnectionFactory connectionFactory, Function<Connection, Mono<T>> action) {
-        Mono<ConnectionCloseHolder> connectionMono =  Mono.deferContextual(contextView -> Mono
+        Mono<ConnectionCloseHolder> connectionMono = Mono.deferContextual(contextView -> Mono
                 .justOrEmpty(contextView.getOrEmpty(ReactiveExecutorContext.class))
                 .switchIfEmpty(Mono.error(new IllegalStateException("Do in connection ,ReactiveExecutorContext is empty")))
                 .cast(ReactiveExecutorContext.class)
@@ -125,14 +125,14 @@ public abstract class AbstractReactiveExecutor implements ReactiveExecutor {
                         .from(connectionFactory.create())
                         .doOnNext(connection -> {
                             log.debug("Execute Statement With Mono,Get Connection [" + connection + "] From Connection Factory ");
-                            reactiveExecutorContext.setConnection(connection);
                         })
-                        .flatMap(connection -> Mono.justOrEmpty(reactiveExecutorContext.getIsolationLevel())
-                                .flatMap(isolationLevel -> Mono
-                                        .from(connection.setTransactionIsolationLevel(isolationLevel))
-                                        .then(Mono.just(new ConnectionCloseHolder(connection,this::closeConnection))))
-                                .defaultIfEmpty(new ConnectionCloseHolder(connection,this::closeConnection)))
-                ));
+//                        .flatMap(connection -> Mono.justOrEmpty(reactiveExecutorContext.getIsolationLevel())
+//                                .flatMap(isolationLevel -> Mono
+//                                        .from(connection.setTransactionIsolationLevel(isolationLevel))
+//                                        .then(Mono.just(new ConnectionCloseHolder(connection,this::closeConnection))))
+//                                .defaultIfEmpty(new ConnectionCloseHolder(connection,this::closeConnection)))
+                ))
+                .map(connection -> new ConnectionCloseHolder(connection,this::closeConnection));
         // ensure close method only execute once with Mono.usingWhen() operator
         return Mono.usingWhen(connectionMono,
                 connection -> action.apply(connection.getTarget()),
@@ -149,7 +149,7 @@ public abstract class AbstractReactiveExecutor implements ReactiveExecutor {
      * @return
      */
     protected <T> Flux<T> inConnectionMany(ConnectionFactory connectionFactory, Function<Connection, Flux<T>> action) {
-        Mono<ConnectionCloseHolder> connectionMono =  Mono.deferContextual(contextView -> Mono
+        Mono<ConnectionCloseHolder> connectionMono = Mono.deferContextual(contextView -> Mono
                 .justOrEmpty(contextView.getOrEmpty(ReactiveExecutorContext.class))
                 .switchIfEmpty(Mono.error(new IllegalStateException("Do in connection many ,ReactiveExecutorContext is empty")))
                 .cast(ReactiveExecutorContext.class)
@@ -157,14 +157,14 @@ public abstract class AbstractReactiveExecutor implements ReactiveExecutor {
                         .from(connectionFactory.create())
                         .doOnNext(connection -> {
                             log.debug("Execute Statement With Flux,Get Connection [" + connection + "] From Connection Factory ");
-                            reactiveExecutorContext.setConnection(connection);
                         })
-                        .flatMap(connection -> Mono.justOrEmpty(reactiveExecutorContext.getIsolationLevel())
-                                .flatMap(isolationLevel -> Mono
-                                        .from(connection.setTransactionIsolationLevel(isolationLevel))
-                                        .then(Mono.just(new ConnectionCloseHolder(connection,this::closeConnection))))
-                                .defaultIfEmpty(new ConnectionCloseHolder(connection,this::closeConnection)))
-                ));
+//                        .flatMap(connection -> Mono.justOrEmpty(reactiveExecutorContext.getIsolationLevel())
+//                                .flatMap(isolationLevel -> Mono
+//                                        .from(connection.setTransactionIsolationLevel(isolationLevel))
+//                                        .then(Mono.just(new ConnectionCloseHolder(connection,this::closeConnection))))
+//                                .defaultIfEmpty(new ConnectionCloseHolder(connection,this::closeConnection)))
+                ))
+                .map(connection -> new ConnectionCloseHolder(connection,this::closeConnection));
         // ensure close method only execute once with Mono.usingWhen() operator
         return Flux.usingWhen(connectionMono,
                 connection -> action.apply(connection.getTarget()),

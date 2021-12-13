@@ -1,7 +1,6 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.key;
 
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.RowResultWrapper;
-import reactor.core.publisher.Mono;
 
 /**
  * @author: chenggang
@@ -18,7 +17,8 @@ public interface R2dbcKeyGenerator {
     /**
      * handle key result
      * @param rowResultWrapper
+     * @param parameter
      * @return
      */
-    Mono<Integer> handleKeyResult(RowResultWrapper rowResultWrapper, Object parameter);
+    Integer handleKeyResult(RowResultWrapper rowResultWrapper, Object parameter);
 }

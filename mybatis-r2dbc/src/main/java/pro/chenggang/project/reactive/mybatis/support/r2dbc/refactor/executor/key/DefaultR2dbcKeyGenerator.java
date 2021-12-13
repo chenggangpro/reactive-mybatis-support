@@ -14,7 +14,6 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.re
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.TypeHandleContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.handler.DelegateR2DbcResultRowDataHandler;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.support.ProxyInstanceFactory;
-import reactor.core.publisher.Mono;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -47,10 +46,10 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
     }
 
     @Override
-    public Mono<Integer> handleKeyResult(RowResultWrapper rowResultWrapper, Object parameter) {
-        return Mono.fromRunnable(() -> this.assignKeys(r2dbcConfiguration,rowResultWrapper,mappedStatement.getKeyProperties(),parameter))
-                .then(Mono.just(1))
-                .doOnNext(v -> this.resultRowCounter.increment());
+    public Integer handleKeyResult(RowResultWrapper rowResultWrapper, Object parameter) {
+        this.assignKeys(r2dbcConfiguration,rowResultWrapper,mappedStatement.getKeyProperties(),parameter);
+        this.resultRowCounter.increment();
+        return 1;
     }
 
     @SuppressWarnings("unchecked")

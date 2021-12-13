@@ -1,7 +1,8 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.handler;
 
-import org.reactivestreams.Publisher;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.RowResultWrapper;
+
+import java.util.List;
 
 /**
  * @author: chenggang
@@ -26,5 +27,5 @@ public interface ReactiveResultHandler {
      * @param <T>
      * @return
      */
-    <T> Publisher<T> handleResult(RowResultWrapper rowResultWrapper);
+    <T> List<T> handleResult(RowResultWrapper rowResultWrapper);
 }

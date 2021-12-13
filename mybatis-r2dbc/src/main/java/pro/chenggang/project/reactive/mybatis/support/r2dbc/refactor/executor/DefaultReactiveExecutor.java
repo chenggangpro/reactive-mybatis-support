@@ -9,7 +9,6 @@ import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.RowBounds;
-import org.reactivestreams.Publisher;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.delegate.R2dbcConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.exception.R2dbcParameterException;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.key.DefaultR2dbcKeyGenerator;
@@ -23,6 +22,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -60,10 +60,10 @@ public class DefaultReactiveExecutor extends AbstractReactiveExecutor{
                                     int keyPropertiesLength = mappedStatement.getKeyProperties().length;
                                     return Flux.just(result)
                                             .takeWhile(targetResult -> r2dbcKeyGenerator.getResultRowCount() < keyPropertiesLength)
-                                            .flatMap(targetResult -> targetResult.map((row,rowMetadata) -> new RowResultWrapper(row,rowMetadata,configuration)))
-                                            .flatMap(rowResultWrapper -> r2dbcKeyGenerator.handleKeyResult(rowResultWrapper,parameter))
-                                            .collect(Collectors.summingInt(Integer::intValue))
-                                            .doOnNext(statementLogHelper::logUpdates);
+                                            .flatMap(targetResult -> targetResult.map((row, rowMetadata) -> {
+                                                RowResultWrapper rowResultWrapper = new RowResultWrapper(row, rowMetadata, configuration);
+                                                return r2dbcKeyGenerator.handleKeyResult(rowResultWrapper, parameter);
+                                            }));
                                 }
                             })
                             .collect(Collectors.summingInt(Integer::intValue))
@@ -86,8 +86,11 @@ public class DefaultReactiveExecutor extends AbstractReactiveExecutor{
                             .checkpoint("SQL: \"" + boundSql + "\" [DefaultReactiveExecutor]")
                             .skip(rowBounds.getOffset())
                             .takeWhile(result -> reactiveResultHandler.getResultRowTotalCount() < rowBounds.getLimit())
-                            .flatMap(result -> result.map((row,rowMetadata) -> new RowResultWrapper(row,rowMetadata,configuration)))
-                            .flatMap(rowResultWrapper -> (Publisher<E>) reactiveResultHandler.handleResult(rowResultWrapper))
+                            .flatMap(result -> result.map((row,rowMetadata) -> {
+                                RowResultWrapper rowResultWrapper = new RowResultWrapper(row, rowMetadata, configuration);
+                                return (List<E>) reactiveResultHandler.handleResult(rowResultWrapper);
+                            }))
+                            .flatMap(Flux::fromIterable)
                             .filter(data -> !Objects.equals(data,DEFERRED))
                             .doOnComplete(() -> statementLogHelper.logTotal(reactiveResultHandler.getResultRowTotalCount()));
                 })

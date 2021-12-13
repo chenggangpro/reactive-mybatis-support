@@ -7,6 +7,7 @@ import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.reflection.ParamNameResolver;
 import org.apache.ibatis.session.RowBounds;
+import org.reactivestreams.Publisher;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.delegate.R2dbcConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.ReactiveExecutor;
@@ -18,6 +19,7 @@ import reactor.util.context.Context;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiFunction;
 
 /**
  * @author: chenggang
@@ -27,9 +29,9 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
 
     private static final Log log = LogFactory.getLog(DefaultReactiveSqlSession.class);
 
+    private final boolean autoCommit;
     private final R2dbcConfiguration configuration;
     private final ReactiveExecutor reactiveExecutor;
-    private final boolean autoCommit;
     private final IsolationLevel isolationLevel;
     private final AtomicBoolean dirty = new AtomicBoolean(false);
     private final AtomicBoolean withinTransaction = new AtomicBoolean(false);
@@ -50,11 +52,11 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
     }
 
     @Override
-    public ReactiveSqlSession beginTransaction() {
+    public Mono<Void> withTransaction() {
         if(this.withinTransaction.compareAndSet(false,true)){
             log.debug("ReactiveSqlSession operation start with transaction");
         }
-        return this;
+        return Mono.empty();
     }
 
     @Override
@@ -92,19 +94,13 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
     @Override
     public Mono<Void> commit(boolean force) {
         return reactiveExecutor.commit(isCommitOrRollbackRequired(force))
-                .then(Mono.defer(() -> {
-                    dirty.compareAndSet(true,false);
-                    return Mono.empty();
-                }));
+                .doOnSubscribe(s -> dirty.compareAndSet(true,false));
     }
 
     @Override
     public Mono<Void> rollback(boolean force) {
         return reactiveExecutor.rollback(isCommitOrRollbackRequired(force))
-                .then(Mono.defer(() -> {
-                    dirty.compareAndSet(true,false);
-                    return Mono.empty();
-                }));
+                .doOnSubscribe(s -> dirty.compareAndSet(true,false));
     }
 
     @Override
@@ -118,12 +114,14 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
     }
 
     @Override
+    public <T, V> Publisher<T> execute(Class<V> interfaceClass, BiFunction<ReactiveSqlSession, V, Publisher<T>> execution) {
+        return execution.apply(this,this.getMapper(interfaceClass));
+    }
+
+    @Override
     public Mono<Void> close() {
         return reactiveExecutor.close(isCommitOrRollbackRequired(false))
-                .then(Mono.defer(() -> {
-                    dirty.compareAndSet(true,false);
-                    return Mono.empty();
-                }));
+                .doOnSubscribe(s -> dirty.compareAndSet(true,false));
     }
 
     private boolean isCommitOrRollbackRequired(boolean force) {

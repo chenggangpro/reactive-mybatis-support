@@ -1,9 +1,12 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor;
 
 import org.apache.ibatis.session.RowBounds;
+import org.reactivestreams.Publisher;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.delegate.R2dbcConfiguration;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.function.BiFunction;
 
 /**
  * @author: chenggang
@@ -15,7 +18,7 @@ public interface ReactiveSqlSession {
      * enable transaction
      * @return
      */
-    ReactiveSqlSession beginTransaction();
+    Mono<Void> withTransaction();
 
     /**
      * Retrieve a single row mapped from the statement key.
@@ -176,5 +179,7 @@ public interface ReactiveSqlSession {
      * @return a mapper bound to this SqlSession
      */
     <T> T getMapper(Class<T> type);
+
+    <T,V> Publisher<T> execute(Class<V> interfaceClass, BiFunction<ReactiveSqlSession,V,Publisher<T>> execution);
 
 }
