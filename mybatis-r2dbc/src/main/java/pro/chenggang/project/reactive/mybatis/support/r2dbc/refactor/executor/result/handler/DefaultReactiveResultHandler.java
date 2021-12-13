@@ -1,4 +1,4 @@
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.handler;
 
 import io.r2dbc.spi.Row;
 import org.apache.ibatis.annotations.AutomapConstructor;
@@ -23,6 +23,8 @@ import org.apache.ibatis.util.MapUtil;
 import org.reactivestreams.Publisher;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.delegate.R2dbcConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.exception.R2dbcResultException;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.RowResultWrapper;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.TypeHandleContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.support.ProxyInstanceFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -798,7 +800,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
                 TypeHandler.class,
                 () -> new DelegateR2DbcResultRowDataHandler(
                         this.r2dbcConfiguration.getNotSupportedDataTypes(),
-                        this.r2dbcConfiguration.getResultHandlerAdapterrRegistry().getAllResultHandlerAdapters()
+                        this.r2dbcConfiguration.getR2dbcTypeHandlerAdapterRegistry().getR2dbcTypeHandlerAdapters()
                 ),
                 TypeHandleContext.class
         );

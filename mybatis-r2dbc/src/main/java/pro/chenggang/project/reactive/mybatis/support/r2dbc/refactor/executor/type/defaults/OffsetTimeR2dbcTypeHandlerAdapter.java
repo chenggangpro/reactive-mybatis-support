@@ -1,8 +1,10 @@
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.adapter.defaults;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.type.defaults;
 
 import io.r2dbc.spi.Row;
 import io.r2dbc.spi.RowMetadata;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.adapter.ResultHandlerAdapter;
+import io.r2dbc.spi.Statement;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.ParameterHandlerContext;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.type.R2dbcTypeHandlerAdapter;
 
 import java.time.LocalTime;
 import java.time.OffsetTime;
@@ -11,11 +13,16 @@ import java.time.OffsetTime;
  * @author: chenggang
  * @date 12/9/21.
  */
-public class OffsetTimeResultHandlerAdapter implements ResultHandlerAdapter<OffsetTime> {
+public class OffsetTimeR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerAdapter<OffsetTime> {
 
     @Override
     public Class<OffsetTime> adaptClazz() {
         return OffsetTime.class;
+    }
+
+    @Override
+    public void setParameter(Statement statement, ParameterHandlerContext parameterHandlerContext, OffsetTime parameter) {
+        statement.bind(parameterHandlerContext.getIndex(),parameter.toLocalTime());
     }
 
     @Override

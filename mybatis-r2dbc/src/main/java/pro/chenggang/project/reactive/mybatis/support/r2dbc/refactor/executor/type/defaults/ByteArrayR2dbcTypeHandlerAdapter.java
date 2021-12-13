@@ -1,8 +1,10 @@
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.adapter.defaults;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.type.defaults;
 
 import io.r2dbc.spi.Row;
 import io.r2dbc.spi.RowMetadata;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.adapter.ResultHandlerAdapter;
+import io.r2dbc.spi.Statement;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.ParameterHandlerContext;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.type.R2dbcTypeHandlerAdapter;
 
 import java.nio.ByteBuffer;
 
@@ -10,11 +12,17 @@ import java.nio.ByteBuffer;
  * @author: chenggang
  * @date 12/9/21.
  */
-public class ByteArrayResultHandlerAdapter implements ResultHandlerAdapter<byte[]> {
+public class ByteArrayR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerAdapter<byte[]> {
 
     @Override
     public Class<byte[]> adaptClazz() {
         return byte[].class;
+    }
+
+    @Override
+    public void setParameter(Statement statement, ParameterHandlerContext parameterHandlerContext, byte[] parameter) {
+        ByteBuffer byteBuffer = ByteBuffer.wrap(parameter);
+        statement.bind(parameterHandlerContext.getIndex(),byteBuffer);
     }
 
     @Override

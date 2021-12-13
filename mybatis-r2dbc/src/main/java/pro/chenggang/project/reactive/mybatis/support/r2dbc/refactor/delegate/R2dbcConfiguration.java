@@ -4,10 +4,8 @@ import io.r2dbc.spi.ConnectionFactory;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.Configuration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.ReactiveSqlSession;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.adapter.ParameterHandlerAdapter;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.adapter.ParameterHandlerAdapterRegistry;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.adapter.ResultHandlerAdapter;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.adapter.ResultHandlerAdapterRegistry;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.type.R2dbcTypeHandlerAdapter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.type.R2dbcTypeHandlerAdapterRegistry;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -23,8 +21,7 @@ import java.util.Set;
 public class R2dbcConfiguration extends Configuration {
 
     private final R2dbcMapperRegistry r2dbcMapperRegistry = new R2dbcMapperRegistry(this);
-    private final ParameterHandlerAdapterRegistry parameterHandlerAdapterRegistry = new ParameterHandlerAdapterRegistry(this);
-    private final ResultHandlerAdapterRegistry resultHandlerAdapterRegistry = new ResultHandlerAdapterRegistry(this);
+    private final R2dbcTypeHandlerAdapterRegistry r2dbcTypeHandlerAdapterRegistry = new R2dbcTypeHandlerAdapterRegistry(this);
     private final Set<Class> notSupportedDataTypes = new HashSet<>();
     private ConnectionFactory connectionFactory;
 
@@ -79,28 +76,16 @@ public class R2dbcConfiguration extends Configuration {
         return this.r2dbcMapperRegistry.hasMapper(type);
     }
 
-    public void addParameterHandlerAdapter(ParameterHandlerAdapter parameterHandlerAdapter){
-        this.parameterHandlerAdapterRegistry.register(parameterHandlerAdapter);
+    public void addR2dbcTypeHandlerAdapter(R2dbcTypeHandlerAdapter r2dbcTypeHandlerAdapter){
+        this.r2dbcTypeHandlerAdapterRegistry.register(r2dbcTypeHandlerAdapter);
     }
 
-    public void addParameterHandlerAdapter(String packageName){
-        this.parameterHandlerAdapterRegistry.register(packageName);
+    public void addR2dbcTypeHandlerAdapter(String packageName){
+        this.r2dbcTypeHandlerAdapterRegistry.register(packageName);
     }
 
-    public ParameterHandlerAdapterRegistry getParameterHandlerAdapterRegistry() {
-        return parameterHandlerAdapterRegistry;
-    }
-
-    public void addResultHandlerAdapter(ResultHandlerAdapter resultHandlerAdapter){
-        this.resultHandlerAdapterRegistry.register(resultHandlerAdapter);
-    }
-
-    public void addResultHandlerAdapter(String packageName){
-        this.resultHandlerAdapterRegistry.register(packageName);
-    }
-
-    public ResultHandlerAdapterRegistry getResultHandlerAdapterrRegistry() {
-        return resultHandlerAdapterRegistry;
+    public R2dbcTypeHandlerAdapterRegistry getR2dbcTypeHandlerAdapterRegistry() {
+        return r2dbcTypeHandlerAdapterRegistry;
     }
 
     public void setNotSupportedJdbcType(Class clazz){

@@ -1,8 +1,10 @@
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.adapter.defaults;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.type.defaults;
 
 import io.r2dbc.spi.Row;
 import io.r2dbc.spi.RowMetadata;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.adapter.ResultHandlerAdapter;
+import io.r2dbc.spi.Statement;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.ParameterHandlerContext;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.type.R2dbcTypeHandlerAdapter;
 
 import java.nio.ByteBuffer;
 
@@ -10,11 +12,17 @@ import java.nio.ByteBuffer;
  * @author: chenggang
  * @date 12/9/21.
  */
-public class ByteObjectArrayResultHandlerAdapter implements ResultHandlerAdapter<Byte[]> {
+public class ByteObjectArrayR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerAdapter<Byte[]> {
 
     @Override
     public Class<Byte[]> adaptClazz() {
         return Byte[].class;
+    }
+
+    @Override
+    public void setParameter(Statement statement, ParameterHandlerContext parameterHandlerContext, Byte[] parameter) {
+        ByteBuffer byteBuffer = ByteBuffer.wrap(this.toPrimitives(parameter));
+        statement.bind(parameterHandlerContext.getIndex(),byteBuffer);
     }
 
     @Override
@@ -35,6 +43,18 @@ public class ByteObjectArrayResultHandlerAdapter implements ResultHandlerAdapter
         return this.toByteObjects(byteBuffer.array());
     }
 
+    /**
+     * Byte[] -> byte[]
+     * @param oBytes
+     * @return
+     */
+    private byte[] toPrimitives(Byte[] oBytes) {
+        byte[] bytes = new byte[oBytes.length];
+        for(int i = 0; i < oBytes.length; i++) {
+            bytes[i] = oBytes[i];
+        }
+        return bytes;
+    }
 
     /**
      * byte[] -> Byte[]

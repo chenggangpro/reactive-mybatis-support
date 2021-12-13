@@ -12,7 +12,7 @@ import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.delegate.R2dbcConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.StatementLogHelper;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.adapter.ParameterHandlerAdapter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.type.R2dbcTypeHandlerAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.support.ProxyInstanceFactory;
 
 import java.lang.reflect.Field;
@@ -67,7 +67,7 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
                 PreparedStatement.class,
                 () -> new DelegateR2dbcStatement(
                         this.delegateStatement,
-                        this.configuration.getParameterHandlerAdapterRegistry().getAllParameterHandlerAdapters(),
+                        this.configuration.getR2dbcTypeHandlerAdapterRegistry().getR2dbcTypeHandlerAdapters(),
                         this.configuration.getNotSupportedDataTypes()
                 )
         );
@@ -161,12 +161,12 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
     private class DelegateR2dbcStatement implements InvocationHandler {
 
         private final Statement statement;
-        private final Map<Class, ParameterHandlerAdapter> parameterHandlerAdapters;
+        private final Map<Class, R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapters;
         private final Set<Class> notSupportedDataTypes;
 
-        DelegateR2dbcStatement(Statement statement, Map<Class, ParameterHandlerAdapter> parameterHandlerAdapters, Set<Class> notSupportedDataTypes) {
+        DelegateR2dbcStatement(Statement statement, Map<Class, R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapters, Set<Class> notSupportedDataTypes) {
             this.statement = statement;
-            this.parameterHandlerAdapters = parameterHandlerAdapters;
+            this.r2dbcTypeHandlerAdapters = r2dbcTypeHandlerAdapters;
             this.notSupportedDataTypes = notSupportedDataTypes;
         }
 
@@ -185,10 +185,10 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
                 throw new IllegalArgumentException("Unsupported Parameter type : " + parameterClass);
             }
             // using adapter
-            if(parameterHandlerAdapters.containsKey(parameterClass)){
-                ParameterHandlerAdapter parameterHandlerAdapter = parameterHandlerAdapters.get(parameterClass);
+            if(r2dbcTypeHandlerAdapters.containsKey(parameterClass)){
+                R2dbcTypeHandlerAdapter r2dbcTypeHandlerAdapter = r2dbcTypeHandlerAdapters.get(parameterClass);
                 ParameterHandlerContext parameterHandlerContext = DelegateR2dbcParameterHandler.this.parameterHandlerContextReference.get();
-                parameterHandlerAdapter.setParameter(statement,parameterHandlerContext,parameter);
+                r2dbcTypeHandlerAdapter.setParameter(statement,parameterHandlerContext,parameter);
                 return null;
             }
             //default set

@@ -1,8 +1,10 @@
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.adapter.defaults;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.type.defaults;
 
 import io.r2dbc.spi.Row;
 import io.r2dbc.spi.RowMetadata;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.adapter.ResultHandlerAdapter;
+import io.r2dbc.spi.Statement;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.ParameterHandlerContext;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.type.R2dbcTypeHandlerAdapter;
 
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
@@ -11,11 +13,16 @@ import java.time.ZonedDateTime;
  * @author: chenggang
  * @date 12/9/21.
  */
-public class ZonedDateTimeResultHandlerAdapter implements ResultHandlerAdapter<ZonedDateTime> {
+public class ZonedDateTimeR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerAdapter<ZonedDateTime> {
 
     @Override
     public Class<ZonedDateTime> adaptClazz() {
         return ZonedDateTime.class;
+    }
+
+    @Override
+    public void setParameter(Statement statement, ParameterHandlerContext parameterHandlerContext, ZonedDateTime parameter) {
+        statement.bind(parameterHandlerContext.getIndex(),parameter.toOffsetDateTime());
     }
 
     @Override

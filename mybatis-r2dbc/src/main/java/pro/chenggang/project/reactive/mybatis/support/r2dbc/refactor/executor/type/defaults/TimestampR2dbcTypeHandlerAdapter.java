@@ -1,8 +1,10 @@
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.adapter.defaults;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.type.defaults;
 
 import io.r2dbc.spi.Row;
 import io.r2dbc.spi.RowMetadata;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.adapter.ResultHandlerAdapter;
+import io.r2dbc.spi.Statement;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.parameter.ParameterHandlerContext;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.type.R2dbcTypeHandlerAdapter;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -11,11 +13,16 @@ import java.time.LocalDateTime;
  * @author: chenggang
  * @date 12/9/21.
  */
-public class TimestampResultHandlerAdapter implements ResultHandlerAdapter<Timestamp> {
+public class TimestampR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerAdapter<Timestamp> {
 
     @Override
     public Class<Timestamp> adaptClazz() {
         return Timestamp.class;
+    }
+
+    @Override
+    public void setParameter(Statement statement, ParameterHandlerContext parameterHandlerContext, Timestamp parameter) {
+        statement.bind(parameterHandlerContext.getIndex(),parameter.toLocalDateTime());
     }
 
     @Override

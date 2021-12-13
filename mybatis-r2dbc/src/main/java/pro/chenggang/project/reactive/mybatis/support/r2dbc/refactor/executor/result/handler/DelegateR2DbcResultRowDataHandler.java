@@ -1,7 +1,8 @@
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.handler;
 
 import org.apache.ibatis.type.TypeHandler;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.adapter.ResultHandlerAdapter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.RowResultWrapper;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.type.R2dbcTypeHandlerAdapter;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -22,12 +23,12 @@ public class DelegateR2DbcResultRowDataHandler implements InvocationHandler {
     private RowResultWrapper rowResultWrapper;
     private Class typeHandlerArgumentType;
     private final Set<Class> notSupportedDataTypes;
-    private final Map<Class, ResultHandlerAdapter> resultHandlerAdapters;
+    private final Map<Class, R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapters;
 
     public DelegateR2DbcResultRowDataHandler(Set<Class> notSupportedDataTypes,
-                                             Map<Class, ResultHandlerAdapter> resultHandlerAdapters) {
+                                             Map<Class, R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapters) {
         this.notSupportedDataTypes = notSupportedDataTypes;
-        this.resultHandlerAdapters = resultHandlerAdapters;
+        this.r2dbcTypeHandlerAdapters = r2dbcTypeHandlerAdapters;
     }
 
     @Override
@@ -55,15 +56,15 @@ public class DelegateR2DbcResultRowDataHandler implements InvocationHandler {
             throw new IllegalArgumentException("Unsupported Result Data type : " + typeHandlerArgumentType);
         }
         //using adapter
-        if(resultHandlerAdapters.containsKey(this.typeHandlerArgumentType)){
-            ResultHandlerAdapter resultHandlerAdapter = resultHandlerAdapters.get(this.typeHandlerArgumentType);
+        if(r2dbcTypeHandlerAdapters.containsKey(this.typeHandlerArgumentType)){
+            R2dbcTypeHandlerAdapter r2dbcTypeHandlerAdapter = r2dbcTypeHandlerAdapters.get(this.typeHandlerArgumentType);
             // T getResult(ResultSet rs, String columnName)
             if(secondArg instanceof String){
-                return resultHandlerAdapter.getResult(rowResultWrapper.getRow(),rowResultWrapper.getRowMetadata(),(String) secondArg);
+                return r2dbcTypeHandlerAdapter.getResult(rowResultWrapper.getRow(),rowResultWrapper.getRowMetadata(),(String) secondArg);
             }
             // T getResult(ResultSet rs, int columnIndex)
             if(secondArg instanceof Integer){
-                return resultHandlerAdapter.getResult(rowResultWrapper.getRow(),rowResultWrapper.getRowMetadata(),(Integer) secondArg - 1);
+                return r2dbcTypeHandlerAdapter.getResult(rowResultWrapper.getRow(),rowResultWrapper.getRowMetadata(),(Integer) secondArg - 1);
             }
         }
         // T getResult(ResultSet rs, String columnName)
