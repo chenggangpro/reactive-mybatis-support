@@ -70,25 +70,25 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
 				.flatMap(reactiveExecutorContext -> Mono.just(reactiveExecutorContext.isUsingTransaction())
 						.filter(usingTransaction -> usingTransaction)
 						.flatMap(usingTransaction -> {
-							log.debug("[Get connection](Using transaction)");
+							log.debug("[Get connection](With transaction)");
 							return Mono.justOrEmpty(reactiveExecutorContext.getConnection())
 										.switchIfEmpty(Mono.from(targetConnectionFactory.create())
 												.map(newConnection -> {
-													log.debug("[Get connection](Using transaction)Old connection not exist ,Create connection : " + newConnection);
+													log.debug("[Get connection](With transaction)Old connection not exist ,Create connection : " + newConnection);
 													return this.getConnectionProxy(newConnection, true);
 												})
 										)
 										.doOnNext(transactionConnection -> {
-											log.debug("[Get connection](Using transaction)Register to context : " + transactionConnection);
+											log.debug("[Get connection](With transaction)Register to context : " + transactionConnection);
 											reactiveExecutorContext.registerConnection(transactionConnection);
 										})
 										//if using transaction then force set auto commit to false
 										.flatMap(newConnection -> Mono.justOrEmpty(reactiveExecutorContext.getIsolationLevel())
 												.flatMap(isolationLevel -> {
-													log.debug("[Get connection](Using transaction)Transaction isolation level exist : " + isolationLevel);
+													log.debug("[Get connection](With transaction)Transaction isolation level exist : " + isolationLevel);
 													return Mono.from(newConnection.setTransactionIsolationLevel(isolationLevel))
 															.then(Mono.defer(() -> {
-																log.debug("[Get connection](Using transaction)Force set autocommit to false");
+																log.debug("[Get connection](With transaction)Force set autocommit to false");
 																return Mono.from(newConnection.setAutoCommit(false));
 															}));
 												})
@@ -177,15 +177,19 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
 									return Mono.just(reactiveExecutorContext.isRequireClosed())
 											.filter(requireClose -> requireClose)
 											.flatMap(requireClose -> {
-												log.debug("[Close connection](Using Transaction)rollback and close connection");
+												log.debug("[Close connection](With Transaction)rollback and close connection");
 												return Mono.from(this.connection.rollbackTransaction())
 														.then(Mono.defer(
-																() -> this.executeCloseConnection(reactiveExecutorContext)
+																() -> {
+																    reactiveExecutorContext.setForceRollback(false);
+                                                                    return this.executeCloseConnection(reactiveExecutorContext);
+                                                                }
 														));
 											})
 											.switchIfEmpty(Mono.defer(
 													() -> {
-														log.debug("[Close connection](Using Transaction)just rollback,not close connection");
+														log.debug("[Close connection](With Transaction)just rollback,not close connection");
+														reactiveExecutorContext.setForceRollback(false);
 														return Mono.from(this.connection.rollbackTransaction())
 																.onErrorResume(Exception.class, this::onErrorOperation);
 													}
@@ -195,22 +199,26 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
 									return Mono.just(reactiveExecutorContext.isRequireClosed())
 											.filter(requireClose -> requireClose)
 											.flatMap(requireClose -> {
-												log.debug("[Close connection](Using Transaction)commit and close connection");
+												log.debug("[Close connection](With Transaction)commit and close connection");
 												return Mono.from(this.connection.commitTransaction())
 														.then(Mono.defer(
-																() -> this.executeCloseConnection(reactiveExecutorContext)
+																() -> {
+																    reactiveExecutorContext.setForceCommit(false);
+                                                                    return this.executeCloseConnection(reactiveExecutorContext);
+                                                                }
 														));
 											})
 											.switchIfEmpty(Mono.defer(
 													() -> {
-														log.debug("[Close connection](Using Transaction)just commit,not close connection");
+														log.debug("[Close connection](With Transaction)just commit,not close connection");
+														reactiveExecutorContext.setForceRollback(false);
 														return Mono.from(this.connection.commitTransaction())
 																.onErrorResume(Exception.class, this::onErrorOperation);
 													}
 											));
 								}
 								if(reactiveExecutorContext.isRequireClosed()){
-									log.debug("[Close connection](Using Transaction)close connection");
+									log.debug("[Close connection](With Transaction)close connection");
 									return this.executeCloseConnection(reactiveExecutorContext);
 								}
 								return Mono.empty();
@@ -265,17 +273,18 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
 					.flatMap(reactiveExecutorContext -> {
 						if(reactiveExecutorContext.isUsingTransaction()){
 							return Mono.from(this.connection.rollbackTransaction())
-									.then(Mono.from(this.connection.close()))
+									.then(Mono.defer(() -> Mono.from(this.connection.close())))
 									.doOnSubscribe(v -> this.closed = true);
 						}
 						return Mono.from(this.connection.close())
 								.doOnSubscribe(v -> this.closed = true);
-					}));
+					}))
+                    .then(Mono.error(e));
 		}
 
 		private String proxyToString(@Nullable Object proxy) {
 			// Allow for differentiating between the proxy and the raw Connection.
-			return "Transaction-aware proxy for target Connection [" + this.connection.toString() + "],Original Proxy ["+proxy+"]";
+			return "Transaction-support proxy for target Connection [" + this.connection.toString() + "],Original Proxy ["+proxy+"]";
 		}
 
 	}

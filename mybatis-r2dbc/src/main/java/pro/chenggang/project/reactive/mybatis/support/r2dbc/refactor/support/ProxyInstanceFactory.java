@@ -36,7 +36,8 @@ public class ProxyInstanceFactory {
             targetInterfaces.addAll(Arrays.asList(otherInterfaces));
         }
         try{
-            return (T) new ByteBuddy().subclass(Object.class)
+            return (T) new ByteBuddy()
+                    .subclass(Object.class)
                     .implement(targetInterfaces)
                     .intercept(InvocationHandlerAdapter.of(invocationHandlerSupplier.get()))
                     .make()

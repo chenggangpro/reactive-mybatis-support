@@ -92,7 +92,7 @@ public class PeopleMapperTests extends MybatisBaseTests {
         people.setNick("nick007");
         ReactiveSqlSession reactiveSqlSession = this.reactiveSqlSessionFactory.openSession(false);
         PeopleMapper mapper = reactiveSqlSession.withTransaction().getMapper(PeopleMapper.class);
-        Mono<Long> longMono = mapper.getAllCount()
+        mapper.getAllCount()
                 .doOnNext((count) -> System.out.println("Total Count Before Insert : " + count))
                 .thenMany(Flux.fromStream(Stream.of(people)))
                 .collectList()
@@ -106,9 +106,10 @@ public class PeopleMapperTests extends MybatisBaseTests {
                 .doOnNext((count) -> System.out.println("Total Count After Insert : " + count))
                 .flatMap(rowCount -> reactiveSqlSession.rollback())
                 .then(mapper.getAllCount())
-                .doOnNext((count) -> System.out.println("Total Count After Rollback : " + count));
-        longMono
-                .flatMap(executeResult -> reactiveSqlSession.close())
+                .doOnNext((count) -> System.out.println("Total Count After Rollback : " + count))
+                .then(Mono.defer(() -> {
+                    return reactiveSqlSession.close();
+                }))
                 .subscribe(result -> System.out.println(result));
         Thread.sleep(5000);
     }
