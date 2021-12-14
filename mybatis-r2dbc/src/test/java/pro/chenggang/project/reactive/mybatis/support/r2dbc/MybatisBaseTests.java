@@ -11,11 +11,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.io.Resource;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.properties.R2dbcConnectionFactoryProperties;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.properties.R2dbcMybatisProperties;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.session.ReactiveSqlSessionFactory;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.session.defaults.DefaultReactiveSqlSessionFactory;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.R2dbcMybatisConfiguration;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReactiveSqlSessionFactory;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.R2dbcConnectionFactoryProperties;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.R2dbcMybatisProperties;
 import reactor.core.publisher.Hooks;
 
 import java.time.Duration;
@@ -42,7 +41,7 @@ public class MybatisBaseTests {
         this.r2dbcMybatisProperties = this.r2dbcMybatisProperties();
         this.r2dbcConnectionFactoryProperties = this.r2dbcConnectionFactoryProperties();
         this.r2dbcMybatisConfiguration = this.configuration(this.r2dbcMybatisProperties);
-        this.r2dbcMybatisConfiguration.initR2dbcTypeHandler();
+//        this.r2dbcMybatisConfiguration.initR2dbcTypeHandler();
         this.connectionFactory = this.connectionFactory(this.r2dbcConnectionFactoryProperties);
         this.reactiveSqlSessionFactory = this.reactiveSqlSessionFactory(this.r2dbcMybatisConfiguration,this.connectionFactory);
     }

@@ -12,7 +12,7 @@ import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.StringUtils;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.session.ReactiveSqlSessionFactory;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFactory;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;

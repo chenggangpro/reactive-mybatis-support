@@ -21,16 +21,14 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.r2dbc.connectionfactory.R2dbcTransactionManager;
 import org.springframework.data.r2dbc.connectionfactory.TransactionAwareConnectionFactoryProxy;
 import org.springframework.transaction.ReactiveTransactionManager;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveSqlSessionExecutor;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.properties.R2dbcConnectionFactoryProperties;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.properties.R2dbcConnectionFactoryProperties.Pool;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.properties.R2dbcMybatisProperties;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.session.ReactiveSqlSessionFactory;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.session.defaults.DefaultReactiveSqlSessionFactory;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.executor.SpringR2dbcReactiveSqlSessionExecutor;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFactory;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReactiveSqlSessionFactory;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcConnectionFactoryProperties;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcConnectionFactoryProperties.Pool;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcMybatisProperties;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.R2dbcAutoConfiguredMapperScannerRegistrar;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.R2dbcMapperScannerRegistrar;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.R2dbcMybatisConfiguration;
 
 import static org.springframework.util.StringUtils.hasText;
 import static org.springframework.util.StringUtils.tokenizeToStringArray;
@@ -89,7 +87,6 @@ public class R2dbcMybatisAutoConfiguration {
         } else {
             throw new IllegalArgumentException("mapperLocations cannot be empty...");
         }
-        configuration.initR2dbcTypeHandler();
         return configuration;
     }
 
@@ -128,17 +125,11 @@ public class R2dbcMybatisAutoConfiguration {
         return new R2dbcTransactionManager(connectionFactory);
     }
 
-    @Bean
-    @ConditionalOnMissingBean(ReactiveSqlSessionExecutor.class)
-    public ReactiveSqlSessionExecutor reactiveSqlSessionExecutor(){
-        return new SpringR2dbcReactiveSqlSessionExecutor();
-    }
-
 
     @Bean
     @ConditionalOnMissingBean(ReactiveSqlSessionFactory.class)
-    public ReactiveSqlSessionFactory reactiveSqlSessionFactoryWithTransaction(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory,ReactiveSqlSessionExecutor reactiveSqlSessionExecutor) {
-        return new DefaultReactiveSqlSessionFactory(configuration, new TransactionAwareConnectionFactoryProxy(connectionFactory),reactiveSqlSessionExecutor);
+    public ReactiveSqlSessionFactory reactiveSqlSessionFactoryWithTransaction(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory) {
+        return new DefaultReactiveSqlSessionFactory(configuration, new TransactionAwareConnectionFactoryProxy(connectionFactory));
     }
 
 }

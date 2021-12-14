@@ -5,8 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.session.ReactiveSqlSession;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.session.ReactiveSqlSessionFactory;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFactory;
 
 import static org.springframework.util.Assert.notNull;
 

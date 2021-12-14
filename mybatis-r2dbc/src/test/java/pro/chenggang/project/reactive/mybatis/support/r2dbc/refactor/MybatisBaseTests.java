@@ -11,10 +11,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.io.Resource;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.properties.R2dbcConnectionFactoryProperties;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.properties.R2dbcMybatisProperties;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.defaults.DefaultReactiveSqlSessionFactory;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.delegate.R2dbcConfiguration;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFactory;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReactiveSqlSessionFactory;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import reactor.core.publisher.Hooks;
 
 import java.time.Duration;
@@ -31,7 +30,7 @@ public class MybatisBaseTests {
 
     protected R2dbcMybatisProperties r2dbcMybatisProperties;
     protected R2dbcConnectionFactoryProperties r2dbcConnectionFactoryProperties;
-    protected R2dbcConfiguration r2dbcMybatisConfiguration;
+    protected R2dbcMybatisConfiguration r2dbcMybatisConfiguration;
     protected ConnectionFactory connectionFactory;
     protected ReactiveSqlSessionFactory reactiveSqlSessionFactory;
 
@@ -71,8 +70,8 @@ public class MybatisBaseTests {
     }
 
 
-    public R2dbcConfiguration configuration(R2dbcMybatisProperties properties) {
-        R2dbcConfiguration configuration = new R2dbcConfiguration();
+    public R2dbcMybatisConfiguration configuration(R2dbcMybatisProperties properties) {
+        R2dbcMybatisConfiguration configuration = new R2dbcMybatisConfiguration();
         if (properties.getTypeAliasesPackage() != null) {
             String[] typeAliasPackageArray = tokenizeToStringArray(properties.getTypeAliasesPackage(),
                     ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
@@ -128,7 +127,7 @@ public class MybatisBaseTests {
         return connectionPool;
     }
 
-    public ReactiveSqlSessionFactory reactiveSqlSessionFactory(R2dbcConfiguration configuration, ConnectionFactory connectionFactory) {
+    public ReactiveSqlSessionFactory reactiveSqlSessionFactory(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory) {
         return new DefaultReactiveSqlSessionFactory(configuration,connectionFactory);
     }
 }

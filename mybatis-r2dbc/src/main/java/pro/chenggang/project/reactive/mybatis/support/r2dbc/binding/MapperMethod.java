@@ -1,35 +1,30 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.binding;
 
 import org.apache.ibatis.annotations.Flush;
-import org.apache.ibatis.annotations.MapKey;
 import org.apache.ibatis.binding.BindingException;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
-import org.apache.ibatis.mapping.StatementType;
 import org.apache.ibatis.reflection.ParamNameResolver;
 import org.apache.ibatis.reflection.TypeParameterResolver;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.session.ReactiveSqlSession;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Collection;
+
+import static org.apache.ibatis.mapping.SqlCommandType.FLUSH;
 
 /**
- *
- * copy from https://github.com/linux-china/mybatis-r2dbc
  * @author Clinton Begin
  * @author Eduardo Macarron
  * @author Lasse Voss
  * @author Kazuki Shimizu
- * @author linux_china
  */
 public class MapperMethod {
 
@@ -46,30 +41,32 @@ public class MapperMethod {
         switch (command.getType()) {
             case INSERT: {
                 Object param = method.convertArgsToSqlCommandParam(args);
-                result = sqlSession.insert(command.getName(), param);
+                result = rowCountResult(sqlSession.insert(command.getName(), param));
                 break;
             }
             case UPDATE: {
                 Object param = method.convertArgsToSqlCommandParam(args);
-                result = sqlSession.update(command.getName(), param);
+                result = rowCountResult(sqlSession.update(command.getName(), param));
                 break;
             }
             case DELETE: {
                 Object param = method.convertArgsToSqlCommandParam(args);
-                result = sqlSession.delete(command.getName(), param);
+                result = rowCountResult(sqlSession.delete(command.getName(), param));
                 break;
             }
             case SELECT:
                 if (method.returnsVoid()) {
-                    executeWithVoidHandler(sqlSession, args);
-                    result = null;
+                    result = executeWithVoid(sqlSession, args)
+                            .then();
                 } else if (method.returnsMany()) {
                     result = executeForMany(sqlSession, args);
-                } else {
+                }  else {
                     Object param = method.convertArgsToSqlCommandParam(args);
-                    return sqlSession.selectOne(command.getName(), param);
+                    result = sqlSession.selectOne(command.getName(), param);
                 }
                 break;
+            case FLUSH:
+                throw new UnsupportedOperationException("Unsupported execution command : " + FLUSH);
             default:
                 throw new BindingException("Unknown execution method for: " + command.getName());
         }
@@ -80,10 +77,29 @@ public class MapperMethod {
         return result;
     }
 
-    private void executeWithVoidHandler(ReactiveSqlSession sqlSession, Object[] args) {
+    private Object rowCountResult(Mono<Integer> rowCount) {
+        final Object result;
+        if (method.returnsVoid()) {
+            result = rowCount.then();
+        } else if (Integer.class.equals(method.getReturnInferredType()) || Integer.TYPE.equals(method.getReturnInferredType())) {
+            result = rowCount.defaultIfEmpty(0);
+        } else if (Long.class.equals(method.getReturnInferredType()) || Long.TYPE.equals(method.getReturnInferredType())) {
+            result = rowCount
+                    .map(Long::valueOf)
+                    .defaultIfEmpty(0L);
+        } else if (Boolean.class.equals(method.getReturnInferredType()) || Boolean.TYPE.equals(method.getReturnInferredType())) {
+            result = rowCount
+                    .map(value -> value > 0)
+                    .defaultIfEmpty(false);
+        } else {
+            throw new BindingException("Mapper method '" + command.getName() + "' has an unsupported return type: " + method.getReturnType());
+        }
+        return result;
+    }
+
+    private Flux<Object> executeWithVoid(ReactiveSqlSession sqlSession, Object[] args) {
         MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(command.getName());
-        if (!StatementType.CALLABLE.equals(ms.getStatementType())
-                && void.class.equals(ms.getResultMaps().get(0).getType())) {
+        if (void.class.equals(ms.getResultMaps().get(0).getType())) {
             throw new BindingException("method " + command.getName()
                     + " needs either a @ResultMap annotation, a @ResultType annotation,"
                     + " or a resultType attribute in XML so a ResultHandler can be used as a parameter.");
@@ -91,50 +107,18 @@ public class MapperMethod {
         Object param = method.convertArgsToSqlCommandParam(args);
         if (method.hasRowBounds()) {
             RowBounds rowBounds = method.extractRowBounds(args);
-            sqlSession.select(command.getName(), param, rowBounds);
-        } else {
-            sqlSession.select(command.getName(), param);
+            return sqlSession.selectList(command.getName(), param, rowBounds);
         }
+        return sqlSession.selectList(command.getName(), param);
     }
 
-    private <E> Object executeForMany(ReactiveSqlSession sqlSession, Object[] args) {
-        Flux<E> result;
+    private <E> Flux<E> executeForMany(ReactiveSqlSession sqlSession, Object[] args) {
         Object param = method.convertArgsToSqlCommandParam(args);
         if (method.hasRowBounds()) {
             RowBounds rowBounds = method.extractRowBounds(args);
-            result = sqlSession.select(command.getName(), param, rowBounds);
-        } else {
-            result = sqlSession.select(command.getName(), param);
+            return sqlSession.selectList(command.getName(), param, rowBounds);
         }
-        return result;
-    }
-
-    @SuppressWarnings("unchecked")
-    private <E> Object convertToArray(List<E> list) {
-        Class<?> arrayComponentType = method.getReturnType().getComponentType();
-        Object array = Array.newInstance(arrayComponentType, list.size());
-        if (arrayComponentType.isPrimitive()) {
-            for (int i = 0; i < list.size(); i++) {
-                Array.set(array, i, list.get(i));
-            }
-            return array;
-        } else {
-            return list.toArray((E[]) array);
-        }
-    }
-
-    public static class ParamMap<V> extends HashMap<String, V> {
-
-        private static final long serialVersionUID = -2212268410512043556L;
-
-        @Override
-        public V get(Object key) {
-            if (!super.containsKey(key)) {
-                throw new BindingException("Parameter '" + key + "' not found. Available parameters are " + keySet());
-            }
-            return super.get(key);
-        }
-
+        return sqlSession.selectList(command.getName(), param);
     }
 
     public static class SqlCommand {
@@ -145,11 +129,11 @@ public class MapperMethod {
         public SqlCommand(Configuration configuration, Class<?> mapperInterface, Method method) {
             final String methodName = method.getName();
             final Class<?> declaringClass = method.getDeclaringClass();
-            MappedStatement ms = resolveMappedStatement(mapperInterface, methodName, declaringClass, configuration);
+            MappedStatement ms = resolveMappedStatement(mapperInterface, methodName, declaringClass,
+                    configuration);
             if (ms == null) {
                 if (method.getAnnotation(Flush.class) != null) {
-                    name = null;
-                    type = SqlCommandType.FLUSH;
+                    throw new UnsupportedOperationException("Unsupported execution command : " + FLUSH);
                 } else {
                     throw new BindingException("Invalid bound statement (not found): "
                             + mapperInterface.getName() + "." + methodName);
@@ -198,7 +182,6 @@ public class MapperMethod {
         private final boolean returnsVoid;
         private final Class<?> returnType;
         private final Class<?> returnInferredType;
-        private final String mapKey;
         private final Integer resultHandlerIndex;
         private final Integer rowBoundsIndex;
         private final ParamNameResolver paramNameResolver;
@@ -215,10 +198,26 @@ public class MapperMethod {
             this.returnInferredType = parseInferredClass(method.getGenericReturnType());
             this.returnsVoid = Void.TYPE.equals(this.returnInferredType);
             this.returnsMany = Flux.class.equals(this.returnType);
-            this.mapKey = getMapKey(method);
             this.rowBoundsIndex = getUniqueParamIndex(method, RowBounds.class);
             this.resultHandlerIndex = getUniqueParamIndex(method, ResultHandler.class);
             this.paramNameResolver = new ParamNameResolver(configuration, method);
+            checkReactorType();
+        }
+
+        /**
+         * check reactor type
+         */
+        private void checkReactorType(){
+            if(Mono.class.equals(this.returnType)
+                    && Collection.class.isAssignableFrom(this.returnInferredType)){
+                throw new UnsupportedOperationException("Return type assignable from Mono<Collection> should be changed to Flux<Object>");
+            }
+            if(void.class.equals(this.returnType)){
+                throw new UnsupportedOperationException("Return type is void should be changed to Mono<Void>");
+            }
+            if(!Mono.class.equals(this.returnType) && !Flux.class.equals(this.returnType)){
+                throw new UnsupportedOperationException("Return type should by either Mono or Flux");
+            }
         }
 
         public Object convertArgsToSqlCommandParam(Object[] args) {
@@ -237,12 +236,8 @@ public class MapperMethod {
             return resultHandlerIndex != null;
         }
 
-        public ResultHandler<?> extractResultHandler(Object[] args) {
-            return hasResultHandler() ? (ResultHandler<?>) args[resultHandlerIndex] : null;
-        }
-
-        public String getMapKey() {
-            return mapKey;
+        public ResultHandler extractResultHandler(Object[] args) {
+            return hasResultHandler() ? (ResultHandler) args[resultHandlerIndex] : null;
         }
 
         public Class<?> getReturnType() {
@@ -275,50 +270,39 @@ public class MapperMethod {
             }
             return index;
         }
+    }
 
-        private String getMapKey(Method method) {
-            String mapKey = null;
-            if (Map.class.isAssignableFrom(method.getReturnType())) {
-                final MapKey mapKeyAnnotation = method.getAnnotation(MapKey.class);
-                if (mapKeyAnnotation != null) {
-                    mapKey = mapKeyAnnotation.value();
-                }
-            }
-            return mapKey;
-        }
-
-        public static Class<?> parseInferredClass(Type genericType) {
-            Class<?> inferredClass = null;
-            if (genericType instanceof ParameterizedType) {
-                ParameterizedType type = (ParameterizedType) genericType;
-                Type[] typeArguments = type.getActualTypeArguments();
-                if (typeArguments.length > 0) {
-                    final Type typeArgument = typeArguments[0];
-                    if (typeArgument instanceof ParameterizedType) {
-                        inferredClass = (Class<?>) ((ParameterizedType) typeArgument).getActualTypeArguments()[0];
-                    } else if (typeArgument instanceof Class) {
-                        inferredClass = (Class<?>) typeArgument;
-                    } else {
-                        String typeName = typeArgument.getTypeName();
-                        if (typeName.contains(" ")) {
-                            typeName = typeName.substring(typeName.lastIndexOf(" ") + 1);
-                        }
-                        if (typeName.contains("<")) {
-                            typeName = typeName.substring(0, typeName.indexOf("<"));
-                        }
-                        try {
-                            inferredClass = Class.forName(typeName);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+    public static Class<?> parseInferredClass(Type genericType) {
+        Class<?> inferredClass = null;
+        if (genericType instanceof ParameterizedType) {
+            ParameterizedType type = (ParameterizedType) genericType;
+            Type[] typeArguments = type.getActualTypeArguments();
+            if (typeArguments.length > 0) {
+                final Type typeArgument = typeArguments[0];
+                if (typeArgument instanceof ParameterizedType) {
+                    inferredClass = (Class<?>) ((ParameterizedType) typeArgument).getActualTypeArguments()[0];
+                } else if (typeArgument instanceof Class) {
+                    inferredClass = (Class<?>) typeArgument;
+                } else {
+                    String typeName = typeArgument.getTypeName();
+                    if (typeName.contains(" ")) {
+                        typeName = typeName.substring(typeName.lastIndexOf(" ") + 1);
+                    }
+                    if (typeName.contains("<")) {
+                        typeName = typeName.substring(0, typeName.indexOf("<"));
+                    }
+                    try {
+                        inferredClass = Class.forName(typeName);
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             }
-            if (inferredClass == null && genericType instanceof Class) {
-                inferredClass = (Class<?>) genericType;
-            }
-            return inferredClass;
         }
+        if (inferredClass == null && genericType instanceof Class) {
+            inferredClass = (Class<?>) genericType;
+        }
+        return inferredClass;
     }
 
 }

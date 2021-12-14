@@ -1,16 +1,14 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.binding;
 
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.session.ReactiveSqlSession;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * copy from https://github.com/linux-china/mybatis-r2dbc
  * @author Lasse Voss
- * @author linux_china
  */
 public class MapperProxyFactory<T> {
 
@@ -31,11 +29,15 @@ public class MapperProxyFactory<T> {
 
     @SuppressWarnings("unchecked")
     protected T newInstance(MapperProxy<T> mapperProxy) {
-        return (T) Proxy.newProxyInstance(mapperInterface.getClassLoader(), new Class[]{mapperInterface}, mapperProxy);
+        return ProxyInstanceFactory.newInstanceOfInterfaces(
+                mapperInterface,
+                () -> mapperProxy
+        );
     }
 
-    public T newInstance(ReactiveSqlSession sqlSession) {
-        final MapperProxy<T> mapperProxy = new MapperProxy<T>(sqlSession, mapperInterface, methodCache);
+    public T newInstance(ReactiveSqlSession reactiveSqlSession) {
+        final MapperProxy<T> mapperProxy = new MapperProxy<>(reactiveSqlSession, mapperInterface, methodCache);
         return newInstance(mapperProxy);
     }
+
 }
