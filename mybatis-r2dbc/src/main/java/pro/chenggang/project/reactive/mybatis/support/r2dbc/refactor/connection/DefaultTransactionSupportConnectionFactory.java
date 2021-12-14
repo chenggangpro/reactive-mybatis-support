@@ -1,10 +1,7 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.connection;
 
 import io.r2dbc.pool.ConnectionPool;
-import io.r2dbc.spi.Connection;
-import io.r2dbc.spi.ConnectionFactory;
-import io.r2dbc.spi.ConnectionFactoryMetadata;
-import io.r2dbc.spi.Wrapped;
+import io.r2dbc.spi.*;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 import org.springframework.lang.Nullable;
@@ -14,6 +11,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.Re
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.support.ProxyInstanceFactory;
 import reactor.core.publisher.Mono;
 
+import java.io.Closeable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -21,7 +19,7 @@ import java.lang.reflect.Method;
 /**
  * @author evans
  */
-public class DefaultTransactionSupportConnectionFactory implements ConnectionFactory, Wrapped<ConnectionFactory> {
+public class DefaultTransactionSupportConnectionFactory implements ConnectionFactory, Wrapped<ConnectionFactory>, Closeable {
 
 	private static final Log log = LogFactory.getLog(DefaultTransactionSupportConnectionFactory.class);
 
@@ -49,6 +47,7 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
 	/**
 	 * close connection factory
 	 */
+	@Override
 	public void close(){
 		if(this.targetConnectionFactory instanceof ConnectionPool){
 			ConnectionPool connectionPool = ((ConnectionPool) this.targetConnectionFactory);

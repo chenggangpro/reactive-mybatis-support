@@ -10,6 +10,8 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.delegate.R2
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.DefaultReactiveExecutor;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.ReactiveExecutor;
 
+import java.io.Closeable;
+
 /**
  * @author: chenggang
  * @date 12/8/21.
@@ -45,9 +47,9 @@ public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFacto
 
     @Override
     public void close() throws Exception {
-        if(this.configuration.getConnectionFactory() instanceof DefaultTransactionSupportConnectionFactory){
-            DefaultTransactionSupportConnectionFactory defaultTransactionSupportConnectionFactory = ((DefaultTransactionSupportConnectionFactory) this.configuration.getConnectionFactory());
-            defaultTransactionSupportConnectionFactory.close();
+        if(this.configuration.getConnectionFactory() instanceof Closeable){
+            Closeable closeableConnectionFactory = ((Closeable) this.configuration.getConnectionFactory());
+            closeableConnectionFactory.close();
         }
     }
 }
