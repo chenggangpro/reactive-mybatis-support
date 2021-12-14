@@ -2,6 +2,8 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.p
 
 import io.r2dbc.spi.Statement;
 import org.apache.ibatis.executor.parameter.ParameterHandler;
+import org.apache.ibatis.logging.Log;
+import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.ParameterMapping;
 import org.apache.ibatis.mapping.ParameterMode;
@@ -31,6 +33,7 @@ import java.util.stream.Stream;
  */
 public class DelegateR2dbcParameterHandler implements InvocationHandler {
 
+    private static final Log log = LogFactory.getLog(DelegateR2dbcParameterHandler.class);
     private final R2dbcConfiguration configuration;
     private final ParameterHandler parameterHandler;
     private final Map<Class<?>, Field> parameterHandlerFieldMap;
@@ -186,6 +189,7 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
             }
             // using adapter
             if(r2dbcTypeHandlerAdapters.containsKey(parameterClass)){
+                log.debug("Found r2dbc type handler adapter for type : " + parameterClass);
                 R2dbcTypeHandlerAdapter r2dbcTypeHandlerAdapter = r2dbcTypeHandlerAdapters.get(parameterClass);
                 ParameterHandlerContext parameterHandlerContext = DelegateR2dbcParameterHandler.this.parameterHandlerContextReference.get();
                 r2dbcTypeHandlerAdapter.setParameter(statement,parameterHandlerContext,parameter);

@@ -2,7 +2,6 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.reactivestreams.Publisher;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.application.mapper.PeopleMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.application.model.People;
 import reactor.core.publisher.Flux;
@@ -92,29 +91,24 @@ public class PeopleMapperTests extends MybatisBaseTests {
         People people = new People();
         people.setNick("nick007");
         ReactiveSqlSession reactiveSqlSession = this.reactiveSqlSessionFactory.openSession(false);
-        Publisher<Void> execute = reactiveSqlSession.execute(
-                PeopleMapper.class,
-                (session, mapper) -> {
-                    return session.withTransaction()
-                            .then(Mono.defer(() -> {
-                                return mapper.getAllCount()
-                                        .doOnNext((count) -> System.out.println("Total Count Before Insert : " + count));
-                            }))
-                            .thenMany(Flux.fromStream(Stream.of(people)))
-                            .collectList()
-                            .flatMap(peopleList -> mapper.batchInsert(peopleList))
-                            .doOnNext(rowCount -> System.out.println("Insert Row Count : " + rowCount))
-                            .then(mapper.getAllCount())
-                            .doOnNext((count) -> System.out.println("Total Count After Insert : " + count))
-                            .flatMap(rowCount -> {
-                                return Mono.deferContextual(contextView -> {
-                                    return session.rollback();
-                                });
-                            });
-
-                }
-        );
-        Mono.from(execute)
+        PeopleMapper mapper = reactiveSqlSession.withTransaction().getMapper(PeopleMapper.class);
+        Mono<Long> longMono = mapper.getAllCount()
+                .doOnNext((count) -> System.out.println("Total Count Before Insert : " + count))
+                .thenMany(Flux.fromStream(Stream.of(people)))
+                .collectList()
+                .flatMap(peopleList -> mapper.batchInsert(peopleList))
+                .doOnNext(rowCount -> System.out.println("Insert Row Count : " + rowCount))
+                .thenMany(Flux.fromStream(Stream.of(people)))
+                .collectList()
+                .flatMap(peopleList -> mapper.batchInsert(peopleList))
+                .doOnNext(rowCount -> System.out.println("Insert Row Count : " + rowCount))
+                .then(mapper.getAllCount())
+                .doOnNext((count) -> System.out.println("Total Count After Insert : " + count))
+                .flatMap(rowCount -> reactiveSqlSession.rollback())
+                .then(mapper.getAllCount())
+                .doOnNext((count) -> System.out.println("Total Count After Rollback : " + count));
+        longMono
+                .flatMap(executeResult -> reactiveSqlSession.close())
                 .subscribe(result -> System.out.println(result));
         Thread.sleep(5000);
     }

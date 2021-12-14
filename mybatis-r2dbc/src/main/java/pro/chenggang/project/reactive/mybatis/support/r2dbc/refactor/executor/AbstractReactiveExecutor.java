@@ -78,15 +78,17 @@ public abstract class AbstractReactiveExecutor implements ReactiveExecutor {
 
     @Override
     public Mono<Void> close(boolean forceRollback) {
-        return Mono.deferContextual(contextView -> Mono
-                .justOrEmpty(contextView.getOrEmpty(ReactiveExecutorContext.class))
-                .cast(ReactiveExecutorContext.class)
-                .flatMap(reactiveExecutorContext -> {
-                    reactiveExecutorContext.setForceRollback(forceRollback || reactiveExecutorContext.isUsingTransaction());
-                    reactiveExecutorContext.setRequireClosed(true);
-                    return Mono.justOrEmpty(reactiveExecutorContext.getConnection())
-                            .flatMap(connection -> Mono.from(connection.close()));
-                })
+        return Mono.deferContextual(contextView -> {
+                    return Mono
+                            .justOrEmpty(contextView.getOrEmpty(ReactiveExecutorContext.class))
+                            .cast(ReactiveExecutorContext.class)
+                            .flatMap(reactiveExecutorContext -> {
+                                reactiveExecutorContext.setForceRollback(forceRollback || reactiveExecutorContext.isUsingTransaction());
+                                reactiveExecutorContext.setRequireClosed(true);
+                                return Mono.justOrEmpty(reactiveExecutorContext.getConnection())
+                                        .flatMap(connection -> Mono.from(connection.close()));
+                            });
+                }
         );
     }
 
@@ -126,11 +128,6 @@ public abstract class AbstractReactiveExecutor implements ReactiveExecutor {
                         .doOnNext(connection -> {
                             log.debug("Execute Statement With Mono,Get Connection [" + connection + "] From Connection Factory ");
                         })
-//                        .flatMap(connection -> Mono.justOrEmpty(reactiveExecutorContext.getIsolationLevel())
-//                                .flatMap(isolationLevel -> Mono
-//                                        .from(connection.setTransactionIsolationLevel(isolationLevel))
-//                                        .then(Mono.just(new ConnectionCloseHolder(connection,this::closeConnection))))
-//                                .defaultIfEmpty(new ConnectionCloseHolder(connection,this::closeConnection)))
                 ))
                 .map(connection -> new ConnectionCloseHolder(connection,this::closeConnection));
         // ensure close method only execute once with Mono.usingWhen() operator
@@ -158,11 +155,6 @@ public abstract class AbstractReactiveExecutor implements ReactiveExecutor {
                         .doOnNext(connection -> {
                             log.debug("Execute Statement With Flux,Get Connection [" + connection + "] From Connection Factory ");
                         })
-//                        .flatMap(connection -> Mono.justOrEmpty(reactiveExecutorContext.getIsolationLevel())
-//                                .flatMap(isolationLevel -> Mono
-//                                        .from(connection.setTransactionIsolationLevel(isolationLevel))
-//                                        .then(Mono.just(new ConnectionCloseHolder(connection,this::closeConnection))))
-//                                .defaultIfEmpty(new ConnectionCloseHolder(connection,this::closeConnection)))
                 ))
                 .map(connection -> new ConnectionCloseHolder(connection,this::closeConnection));
         // ensure close method only execute once with Mono.usingWhen() operator

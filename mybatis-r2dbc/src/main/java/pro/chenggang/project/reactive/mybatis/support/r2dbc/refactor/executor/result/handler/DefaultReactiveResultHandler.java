@@ -19,7 +19,6 @@ import org.apache.ibatis.session.AutoMappingBehavior;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
-import org.apache.ibatis.util.MapUtil;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.delegate.R2dbcConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.exception.R2dbcResultException;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.RowResultWrapper;
@@ -561,24 +560,6 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
                 if (parent != null && rowValue != null) {
                     linkObjects(parent.metaObject, parent.propertyMapping, rowValue);
                 }
-            }
-        }
-    }
-
-    private void addPendingChildRelation(RowResultWrapper rowResultWrapper, MetaObject metaResultObject, ResultMapping parentMapping) throws SQLException {
-        CacheKey cacheKey = createKeyForMultipleResults(rowResultWrapper, parentMapping, parentMapping.getColumn(), parentMapping.getColumn());
-        DefaultReactiveResultHandler.PendingRelation deferLoad = new DefaultReactiveResultHandler.PendingRelation();
-        deferLoad.metaObject = metaResultObject;
-        deferLoad.propertyMapping = parentMapping;
-        List<DefaultReactiveResultHandler.PendingRelation> relations = MapUtil.computeIfAbsent(pendingRelations, cacheKey, k -> new ArrayList<>());
-        // issue #255
-        relations.add(deferLoad);
-        ResultMapping previous = nextResultMaps.get(parentMapping.getResultSet());
-        if (previous == null) {
-            nextResultMaps.put(parentMapping.getResultSet(), parentMapping);
-        } else {
-            if (!previous.equals(parentMapping)) {
-                throw new ExecutorException("Two different properties are mapped to the same resultSet");
             }
         }
     }

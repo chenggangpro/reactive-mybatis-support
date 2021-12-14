@@ -16,18 +16,18 @@ public class ReactiveExecutorContext {
     private AtomicBoolean usingTransaction;
     private final boolean autoCommit;
     private final IsolationLevel isolationLevel;
-    private final AtomicReference<Connection> connectionReference = new AtomicReference<>();
+    private final AtomicReference<Connection> connectionReference;
     private final AtomicBoolean forceCommit = new AtomicBoolean(false);
     private final AtomicBoolean forceRollback = new AtomicBoolean(false);
     private final AtomicBoolean requireClosed = new AtomicBoolean(false);
-    private final StatementLogHelper statementLogHelper;
+    private StatementLogHelper statementLogHelper;
 
     public ReactiveExecutorContext(boolean autoCommit,
                                    IsolationLevel isolationLevel,
-                                   StatementLogHelper statementLogHelper) {
+                                   AtomicReference<Connection> connectionReference) {
         this.autoCommit = autoCommit;
         this.isolationLevel = isolationLevel;
-        this.statementLogHelper = statementLogHelper;
+        this.connectionReference = connectionReference;
     }
 
     public boolean isUsingTransaction() {
@@ -70,6 +70,10 @@ public class ReactiveExecutorContext {
         return isolationLevel;
     }
 
+    public void setStatementLogHelper(StatementLogHelper statementLogHelper) {
+        this.statementLogHelper = statementLogHelper;
+    }
+
     public StatementLogHelper getStatementLogHelper() {
         return statementLogHelper;
     }
@@ -86,4 +90,17 @@ public class ReactiveExecutorContext {
         return Optional.ofNullable(this.connectionReference.get());
     }
 
+    @Override
+    public String toString() {
+        return "ReactiveExecutorContext [" +
+                "usingTransaction=" + usingTransaction +
+                ", autoCommit=" + autoCommit +
+                ", isolationLevel=" + isolationLevel +
+                ", connectionReference=" + connectionReference +
+                ", forceCommit=" + forceCommit +
+                ", forceRollback=" + forceRollback +
+                ", requireClosed=" + requireClosed +
+                ", statementLogHelper=" + statementLogHelper +
+                " ]";
+    }
 }

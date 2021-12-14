@@ -1,5 +1,7 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.handler;
 
+import org.apache.ibatis.logging.Log;
+import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.type.TypeHandler;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.result.RowResultWrapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor.executor.type.R2dbcTypeHandlerAdapter;
@@ -19,6 +21,7 @@ import java.util.stream.Stream;
  */
 public class DelegateR2DbcResultRowDataHandler implements InvocationHandler {
 
+    private static final Log log = LogFactory.getLog(DelegateR2DbcResultRowDataHandler.class);
     private TypeHandler delegatedTypeHandler;
     private RowResultWrapper rowResultWrapper;
     private Class typeHandlerArgumentType;
@@ -57,6 +60,7 @@ public class DelegateR2DbcResultRowDataHandler implements InvocationHandler {
         }
         //using adapter
         if(r2dbcTypeHandlerAdapters.containsKey(this.typeHandlerArgumentType)){
+            log.debug("Found r2dbc type handler adapter fro result type : " + this.typeHandlerArgumentType);
             R2dbcTypeHandlerAdapter r2dbcTypeHandlerAdapter = r2dbcTypeHandlerAdapters.get(this.typeHandlerArgumentType);
             // T getResult(ResultSet rs, String columnName)
             if(secondArg instanceof String){
