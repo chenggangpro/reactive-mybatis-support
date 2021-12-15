@@ -1,6 +1,8 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.application.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.application.entity.extend.EmpWithDept;
+import reactor.core.publisher.Flux;
 
 /**
  * auto generated
@@ -8,4 +10,6 @@ import org.apache.ibatis.annotations.Mapper;
  */
 @Mapper
 public interface EmpMapper {
+
+    Flux<EmpWithDept> selectEmpWithDeptList();
 }

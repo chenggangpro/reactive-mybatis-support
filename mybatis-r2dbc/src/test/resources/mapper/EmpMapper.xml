@@ -34,4 +34,24 @@
     emp.dept_no AS emp_dept_no, 
     emp.create_time AS emp_create_time
   </sql>
+
+  <resultMap id="EmpWithDept" type="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.entity.extend.EmpWithDept">
+    <id column="emp_no" jdbcType="BIGINT" property="empNo" />
+    <result column="emp_name" jdbcType="VARCHAR" property="empName" />
+    <result column="job" jdbcType="VARCHAR" property="job" />
+    <result column="manager" jdbcType="VARCHAR" property="manager" />
+    <result column="hire_date" jdbcType="DATE" property="hireDate" />
+    <result column="salary" jdbcType="INTEGER" property="salary" />
+    <result column="kpi" jdbcType="DECIMAL" property="kpi" />
+    <result column="dept_no" jdbcType="BIGINT" property="deptNo" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <association property="dept" resultMap="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.mapper.DeptMapper.TableResultMap" />
+  </resultMap>
+
+  <select id="selectEmpWithDeptList" resultMap="EmpWithDept">
+    SELECT
+    emp.*,
+    <include refid="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.mapper.DeptMapper.columnNameWithTable" />
+    FROM emp LEFT JOIN dept ON emp.dept_no = dept.dept_no
+  </select>
 </mapper>

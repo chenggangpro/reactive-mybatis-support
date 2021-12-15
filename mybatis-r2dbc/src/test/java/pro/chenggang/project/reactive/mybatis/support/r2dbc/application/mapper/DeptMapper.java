@@ -1,6 +1,7 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.application.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.application.entity.extend.DeptWithEmp;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.application.entity.model.Dept;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -19,4 +20,12 @@ public interface DeptMapper {
     Mono<Dept> selectOneByDeptNo(Long deptNo);
 
     Flux<Dept> selectListByTime(LocalDateTime createTime);
+
+    Mono<Integer> insert(Dept dept);
+
+    Mono<Integer> deleteByDeptNo(Long deptNo);
+
+    Mono<Integer> updateByDeptNo(Dept dept);
+
+    Flux<DeptWithEmp> selectDeptWithEmpList();
 }

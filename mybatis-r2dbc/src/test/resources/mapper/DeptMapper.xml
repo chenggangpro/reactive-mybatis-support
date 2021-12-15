@@ -19,6 +19,20 @@
     dept.location AS dept_location, 
     dept.create_time AS dept_create_time
   </sql>
+  <insert id="insert" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.entity.model.Dept"
+          useGeneratedKeys="true"
+          keyColumn="dept_no"
+          keyProperty="deptNo">
+    INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})
+  </insert>
+  <update id="updateByDeptNo" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.entity.model.Dept">
+    UPDATE dept
+    SET dept_name = #{deptName}
+    WHERE dept_no = #{deptNo}
+  </update>
+  <delete id="deleteByDeptNo">
+    DELETE FROM dept WHERE dept_no = #{deptNo}
+  </delete>
   <select id="selectAll" resultType="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.entity.model.Dept">
     SELECT * FROM dept
   </select>
@@ -27,5 +41,20 @@
   </select>
   <select id="selectListByTime" resultType="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.entity.model.Dept">
     SELECT * FROM dept where DATE(create_time) = DATE(#{createTime})
+  </select>
+
+  <resultMap id="DeptWithEmp" type="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.entity.extend.DeptWithEmp">
+    <id column="dept_no" jdbcType="BIGINT" property="deptNo" />
+    <result column="dept_name" jdbcType="VARCHAR" property="deptName" />
+    <result column="location" jdbcType="VARCHAR" property="location" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <collection property="empList" resultMap="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.mapper.EmpMapper.TableResultMap" />
+  </resultMap>
+
+  <select id="selectDeptWithEmpList" resultMap="DeptWithEmp">
+    SELECT
+    dept.*,
+    <include refid="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.mapper.EmpMapper.columnNameWithTable" />
+    FROM dept LEFT JOIN emp ON dept.dept_no = emp.dept_no
   </select>
 </mapper>
