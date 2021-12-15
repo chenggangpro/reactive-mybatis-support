@@ -56,7 +56,7 @@ public class SimpleMapperTests extends MybatisR2dbcBaseTests {
     @Test
     public void testGetDeptTotalCount () throws Exception {
         StepVerifier.create(this.deptMapper.count())
-                .expectNext(4)
+                .expectNext(4L)
                 .verifyComplete();
     }
 

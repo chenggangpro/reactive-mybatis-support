@@ -17,7 +17,7 @@ mapperXmPackage: mapper
 # jdbc driver class name
 driverClass: com.mysql.cj.jdbc.Driver
 # jdbc connection url
-connectionUrl: jdbc:mysql://127.0.0.1:3306/mac?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
+connectionUrl: jdbc:mysql://127.0.0.1:3306/demo?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
 # jdbc username
 username: root
 # jdbc password
@@ -36,4 +36,5 @@ lombok:
   - EqualsAndHashCode
 # 不填写则表示全部表
 tableName:
-  - people
+  - dept
+  - emp

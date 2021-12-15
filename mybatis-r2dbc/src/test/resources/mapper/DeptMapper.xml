@@ -58,7 +58,7 @@
     FROM dept LEFT JOIN emp ON dept.dept_no = emp.dept_no
   </select>
 
-  <select id="count" resultType="java.lang.Integer">
+  <select id="count" resultType="java.lang.Long">
     SELECT COUNT(*) FROM dept
   </select>
 </mapper>
