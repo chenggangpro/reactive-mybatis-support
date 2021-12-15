@@ -7,8 +7,13 @@
 * Using `mybatis-generator` adapt `mybatis-dynamic-sql` to  reactive project
 * Support SpringBoot AutoConfiguration,AutoMapperScan and so on.
 * Support Spring's Transaction .
-* This project only works fine with `Spring Data R2dbc`.
-
+* Unsupported mybatis3 feature:
+    * ❌ 1 . plugin
+    * ❌ 2 . resultSet and resultOrdered = true
+    * ❌ 3 . nested query
+    * ❌ 4 . generated key by nested query
+    * ❌ 5 . blocking java type (aka: InputStream .eg)
+    * ⚠️ 6 . Mapper Method only support `Flux<T>`/`Mono<T>`/`Flux<Void>`/`Flux<Void>`,not supported `void` 
 #### Examples
 
 * Generate `mybatis-dynamic-sql` 
