@@ -1,7 +1,7 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.test;
 
 import org.junit.jupiter.api.Test;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.generator.core.MybatisDynamicCodeGenerator;
+import pro.chenggang.project.reactive.mybatis.support.generator.core.MybatisDynamicCodeGenerator;
 
 /**
  * @author: chenggang

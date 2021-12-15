@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pro.chenggang.project.reactive.mybatis.support.generator.mapper.PeopleMapper">
+  <resultMap id="BaseResultMap" type="pro.chenggang.project.reactive.mybatis.support.generator.entity.model.People">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="nick" jdbcType="VARCHAR" property="nick" />
+    <result column="created_at" jdbcType="TIMESTAMP" property="createdAt" />
+  </resultMap>
+  <resultMap id="TableResultMap" type="pro.chenggang.project.reactive.mybatis.support.generator.entity.model.People">
+    <id column="people_id" jdbcType="INTEGER" property="id" />
+    <result column="people_nick" jdbcType="VARCHAR" property="nick" />
+    <result column="people_created_at" jdbcType="TIMESTAMP" property="createdAt" />
+  </resultMap>
+</mapper>

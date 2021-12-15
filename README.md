@@ -8,58 +8,61 @@
 * Support SpringBoot AutoConfiguration,AutoMapperScan and so on.
 * Support Spring's Transaction .
 * Unsupported mybatis3 feature:
-    * ❌ 1 . plugin
+    * ❌ 1 . mybatis-plugin
     * ❌ 2 . resultSet and resultOrdered = true
     * ❌ 3 . nested query
     * ❌ 4 . generated key by nested query
     * ❌ 5 . blocking java type (aka: InputStream .eg)
-    * ⚠️ 6 . Mapper Method only support `Flux<T>`/`Mono<T>`/`Flux<Void>`/`Flux<Void>`,not supported `void` 
+    * ⚠️ 6 . Mapper Method only support `Flux<T>`/`Mono<T>`/`Mono<Void>`/`Flux<Void>`,not supported `void` 
 #### Examples
 
 * Generate `mybatis-dynamic-sql` 
 
-    * import dependency
-    
-    ```xml
-    <dependencies>
-          <dependency>
-              <groupId>mysql</groupId>
-              <artifactId>mysql-connector-java</artifactId>
-              <scope>test</scope>
-          </dependency>
-          <dependency>
-              <groupId>org.apache.commons</groupId>
-              <artifactId>commons-pool2</artifactId>
-              <scope>test</scope>
-          </dependency>
-          <dependency>
-              <groupId>org.mybatis.dynamic-sql</groupId>
-              <artifactId>mybatis-dynamic-sql</artifactId>
-          </dependency>
-          <dependency>
-              <groupId>pro.chenggang</groupId>
-              <artifactId>mybatis-r2dbc-generator</artifactId>
-              <version>${version}</version>
-              <scope>test</scope>
-          </dependency>
-    </dependencies>
-    ```
-    
-    * copy `mybatis-generator.yml` form `source-code/mybatis-r2dbc-generator/resources/META-INF/mybatis-generator.yml`
-    * modify source database settings in `mybatis-generator.yml`
-    * add a test case 
-    ```java
-    public class MyBatisGeneratorAction {
-    
-        @Test
-        public void generate(){
-            MybatisDynamicCodeGenerator.getInstance().generate(MyBatisGeneratorAction.class);
-        }
-    
+> Note:
+> the generator based on `mybatis-generator-core` ,that cause generator rely on jdbc-driver
+
+* import dependency
+
+```xml
+<dependencies>
+      <dependency>
+          <groupId>mysql</groupId>
+          <artifactId>mysql-connector-java</artifactId>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-pool2</artifactId>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.mybatis.dynamic-sql</groupId>
+          <artifactId>mybatis-dynamic-sql</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>pro.chenggang</groupId>
+          <artifactId>mybatis-reactive-generator</artifactId>
+          <version>${version}</version>
+          <scope>test</scope>
+      </dependency>
+</dependencies>
+```
+
+* copy `mybatis-generator.yml` form `source-code/mybatis-reactive-generator/resources/META-INF/mybatis-generator.yml`
+* modify source database settings in `mybatis-generator.yml`
+* add a test case 
+```java
+public class MyBatisGeneratorAction {
+
+    @Test
+    public void generate(){
+        MybatisDynamicCodeGenerator.getInstance().generate(MyBatisGeneratorAction.class);
     }
-    ```
-    * run the test ,then it will generate the dynamic code ,mapper interface ,mapper xml
-    * Also see `mybatis-r2dbc-generator`'s test cases
+
+}
+```
+* run the test ,then it will generate the dynamic code ,mapper interface ,mapper xml
+* Also see `mybatis-reactive-generator`'s test cases
     
 * Using in spring environment
 

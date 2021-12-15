@@ -15,7 +15,7 @@
     <modules>
         <module>mybatis-r2dbc</module>
         <module>mybatis-r2dbc-spring</module>
-        <module>mybatis-r2dbc-generator</module>
+        <module>mybatis-reactive-generator</module>
     </modules>
 
     <developers>
