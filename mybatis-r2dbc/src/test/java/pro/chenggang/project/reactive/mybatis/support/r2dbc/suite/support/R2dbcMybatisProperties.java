@@ -1,4 +1,4 @@
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.suite.support;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -20,8 +20,6 @@ import java.util.List;
 @Setter
 @ToString
 public class R2dbcMybatisProperties {
-
-    public static final String PREFIX = "r2dbc.mybatis";
 
     private boolean mapUnderscoreToCamelCase;
     private String[] mapperLocations;

@@ -6,7 +6,7 @@ r2dbc:
   mybatis:
     mapper-locations: classpath:mapper/*.xml
     map-underscore-to-camel-case: true
-    type-aliases-package: pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.model
+    type-aliases-package: pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application_back.model
 spring:
   r2dbc:
     jdbc-url: r2dbc:mysql://127.0.0.1:3306/mac

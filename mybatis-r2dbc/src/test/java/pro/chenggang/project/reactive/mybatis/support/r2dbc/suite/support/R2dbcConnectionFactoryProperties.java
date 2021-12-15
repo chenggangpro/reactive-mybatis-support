@@ -1,4 +1,4 @@
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.refactor;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.suite.support;
 
 import io.r2dbc.spi.ValidationDepth;
 import lombok.Getter;
@@ -22,8 +22,6 @@ import static org.springframework.util.StringUtils.hasText;
 @Setter
 @ToString
 public class R2dbcConnectionFactoryProperties {
-
-    public static final String PREFIX = "spring.r2dbc";
 
     /**
      * Name of the connection factory

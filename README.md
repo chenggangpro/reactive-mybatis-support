@@ -13,7 +13,8 @@
     * ❌ 3 . nested query
     * ❌ 4 . generated key by nested query
     * ❌ 5 . blocking java type (aka: InputStream .eg)
-    * ⚠️ 6 . Mapper Method only support `Flux<T>`/`Mono<T>`/`Mono<Void>`/`Flux<Void>`,not supported `void` 
+    * ⚠️ 6 . there is no reactive-sql-session cache implementation
+    * ⚠️ 7 . Mapper Method only support `Flux<T>`/`Mono<T>`/`Mono<Void>`/`Flux<Void>`, and not supported `void` 
 #### Examples
 
 * Generate `mybatis-dynamic-sql` 
