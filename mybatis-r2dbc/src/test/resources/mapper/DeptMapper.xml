@@ -57,4 +57,8 @@
     <include refid="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.mapper.EmpMapper.columnNameWithTable" />
     FROM dept LEFT JOIN emp ON dept.dept_no = emp.dept_no
   </select>
+
+  <select id="count" resultType="java.lang.Integer">
+    SELECT COUNT(*) FROM dept
+  </select>
 </mapper>

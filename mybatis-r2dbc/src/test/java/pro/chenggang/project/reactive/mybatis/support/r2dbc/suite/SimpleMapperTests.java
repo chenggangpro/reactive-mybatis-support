@@ -10,10 +10,13 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.application.entity.m
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.application.mapper.DeptMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.application.mapper.EmpMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.suite.setup.MybatisR2dbcBaseTests;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -24,20 +27,36 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Slf4j
 public class SimpleMapperTests extends MybatisR2dbcBaseTests {
 
-    private ReactiveSqlSession reactiveSqlSession;
+    private List<ReactiveSqlSession> reactiveSqlSessionList = new ArrayList<>();
     private DeptMapper deptMapper;
     private EmpMapper empMapper;
 
     @BeforeAll
     public void initSqlSession () throws Exception {
-        this.reactiveSqlSession = super.reactiveSqlSessionFactory.openSession();
-        this.deptMapper = this.reactiveSqlSession.withTransaction().getMapper(DeptMapper.class);
-        this.empMapper = this.reactiveSqlSession.withTransaction().getMapper(EmpMapper.class);
+        this.deptMapper = this.getMapperWithSession(DeptMapper.class);
+        this.empMapper = this.getMapperWithSession(EmpMapper.class);
+    }
+
+    private <T> T getMapperWithSession(Class<T> targetClass){
+        ReactiveSqlSession reactiveSqlSession = super.reactiveSqlSessionFactory.openSession();
+        this.reactiveSqlSessionList.add(reactiveSqlSession);
+        return reactiveSqlSession.withTransaction().getMapper(targetClass);
     }
 
     @AfterAll
     public void rollbackAndCloseSession () throws Exception {
-        StepVerifier.create(reactiveSqlSession.rollback(true))
+        Flux<Void> fluxExecution = Flux.fromIterable(this.reactiveSqlSessionList)
+                .flatMap(session -> session.rollback(true)
+                        .then(Mono.defer(session::close))
+                );
+        StepVerifier.create(fluxExecution)
+                .verifyComplete();
+    }
+
+    @Test
+    public void testGetDeptTotalCount () throws Exception {
+        StepVerifier.create(this.deptMapper.count())
+                .expectNext(4)
                 .verifyComplete();
     }
 

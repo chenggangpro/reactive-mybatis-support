@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 @Mapper
 public interface DeptMapper {
 
+    Mono<Integer> count();
+
     Flux<Dept> selectAll();
 
     Mono<Dept> selectOneByDeptNo(Long deptNo);
