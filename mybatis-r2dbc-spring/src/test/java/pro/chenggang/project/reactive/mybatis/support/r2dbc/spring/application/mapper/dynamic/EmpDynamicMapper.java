@@ -1,20 +1,6 @@
-package pro.chenggang.project.reactive.mybatis.support.generator.mapper.dynamic;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.dynamic;
 
-import static org.mybatis.dynamic.sql.SqlBuilder.isEqualTo;
-import static pro.chenggang.project.reactive.mybatis.support.generator.mapper.dynamic.EmpDynamicSqlSupport.*;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import org.apache.ibatis.annotations.DeleteProvider;
-import org.apache.ibatis.annotations.InsertProvider;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Options;
-import org.apache.ibatis.annotations.Result;
-import org.apache.ibatis.annotations.ResultMap;
-import org.apache.ibatis.annotations.Results;
-import org.apache.ibatis.annotations.SelectProvider;
-import org.apache.ibatis.annotations.UpdateProvider;
+import org.apache.ibatis.annotations.*;
 import org.apache.ibatis.type.JdbcType;
 import org.mybatis.dynamic.sql.BasicColumn;
 import org.mybatis.dynamic.sql.delete.DeleteDSLCompleter;
@@ -27,13 +13,17 @@ import org.mybatis.dynamic.sql.select.render.SelectStatementProvider;
 import org.mybatis.dynamic.sql.update.UpdateDSLCompleter;
 import org.mybatis.dynamic.sql.update.render.UpdateStatementProvider;
 import org.mybatis.dynamic.sql.util.SqlProviderAdapter;
-import org.mybatis.dynamic.sql.util.mybatis3.MyBatis3Utils;
 import org.mybatis.dynamic.sql.where.WhereApplier;
-import pro.chenggang.project.reactive.mybatis.support.generator.entity.model.Emp;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.CommonSelectMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.ReactiveMyBatis3Utils;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.entity.model.Emp;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.Collection;
+
+import static org.mybatis.dynamic.sql.SqlBuilder.isEqualTo;
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.dynamic.EmpDynamicSqlSupport.*;
 
 /**
  * auto generated

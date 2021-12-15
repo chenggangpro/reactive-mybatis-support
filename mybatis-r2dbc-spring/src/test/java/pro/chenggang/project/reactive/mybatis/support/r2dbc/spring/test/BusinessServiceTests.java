@@ -2,7 +2,7 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.test;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.service.PeopleBusinessService;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.service.BusinessService;
 import reactor.test.StepVerifier;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,14 +11,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author: chenggang
  * @date 7/6/21.
  */
-public class PeopleBusinessServiceTests extends TestApplicationTests {
+public class BusinessServiceTests extends TestApplicationTests {
 
     @Autowired
-    private PeopleBusinessService peopleBusinessService;
+    private BusinessService businessService;
 
     @Test
     public void testDoWithTransactionBusiness(){
-        peopleBusinessService.doWithTransactionBusiness()
+        businessService.doWithTransactionBusiness()
                 .as(this::withRollback)
                 .as(StepVerifier::create)
                 .expectNextCount(0)
@@ -27,9 +27,9 @@ public class PeopleBusinessServiceTests extends TestApplicationTests {
 
     @Test
     public void testDoWithTransactionBusinessRollback(){
-        peopleBusinessService.doWithTransactionBusinessRollback()
+        businessService.doWithTransactionBusinessRollback()
                 .as(StepVerifier::create)
-                .assertNext(people ->  assertThat(people.getNick()).isEqualTo("mybatis"))
+                .assertNext(dept ->  assertThat(dept.getDeptName()).isNotEqualTo("InsertDept"))
                 .verifyComplete();
     }
 }

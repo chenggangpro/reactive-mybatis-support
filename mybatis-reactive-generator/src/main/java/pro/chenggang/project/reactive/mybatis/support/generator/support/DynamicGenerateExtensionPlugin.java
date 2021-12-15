@@ -65,7 +65,7 @@ public class DynamicGenerateExtensionPlugin extends PluginAdapter {
                 interfaze.addImportedType(importOptionType);
             }
             //@Options(useGeneratedKeys = true,keyProperty = "record.id")
-            String optionsAnnotation = "@Options(useGeneratedKeys = true,keyProperty = \"record." + introspectedColumn.getActualColumnName() + "\")";
+            String optionsAnnotation = "@Options(useGeneratedKeys = true,keyProperty = \"record." + introspectedColumn.getJavaProperty() + "\")";
             method.addAnnotation(optionsAnnotation);
         });
         method.setReturnType(new FullyQualifiedJavaType("reactor.core.publisher.Mono<java.lang.Integer>"));

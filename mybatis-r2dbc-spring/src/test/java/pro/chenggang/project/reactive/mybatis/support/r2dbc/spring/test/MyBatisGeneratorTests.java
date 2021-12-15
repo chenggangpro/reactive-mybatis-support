@@ -11,7 +11,7 @@ public class MyBatisGeneratorTests {
 
     @Test
     public void testGenerate(){
-        MybatisDynamicCodeGenerator.getInstance().generate("pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application_back");
+        MybatisDynamicCodeGenerator.getInstance().generate("pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application");
     }
 
 }

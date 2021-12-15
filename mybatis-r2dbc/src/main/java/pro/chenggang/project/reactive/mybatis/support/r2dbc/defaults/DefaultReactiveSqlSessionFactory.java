@@ -25,6 +25,8 @@ public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFacto
         if(connectionFactory instanceof ConnectionPool){
             ConnectionFactory transactionSupportConnectionFactory = new DefaultTransactionSupportConnectionFactory(connectionFactory);
             this.configuration.setConnectionFactory(transactionSupportConnectionFactory);
+        }else{
+            this.configuration.setConnectionFactory(connectionFactory);
         }
     }
 

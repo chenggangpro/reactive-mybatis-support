@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.DeptMapper">
+  <resultMap id="BaseResultMap" type="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.entity.model.Dept">
+    <id column="dept_no" jdbcType="BIGINT" property="deptNo" />
+    <result column="dept_name" jdbcType="VARCHAR" property="deptName" />
+    <result column="location" jdbcType="VARCHAR" property="location" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+  </resultMap>
+  <resultMap id="TableResultMap" type="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.entity.model.Dept">
+    <id column="dept_dept_no" jdbcType="BIGINT" property="deptNo" />
+    <result column="dept_dept_name" jdbcType="VARCHAR" property="deptName" />
+    <result column="dept_location" jdbcType="VARCHAR" property="location" />
+    <result column="dept_create_time" jdbcType="TIMESTAMP" property="createTime" />
+  </resultMap>
+  <sql id="columnNameWithTable">
+    dept.dept_no AS dept_dept_no, 
+    dept.dept_name AS dept_dept_name, 
+    dept.location AS dept_location, 
+    dept.create_time AS dept_create_time
+  </sql>
+
+  <resultMap id="DeptWithEmp" type="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.entity.extend.DeptWithEmp">
+    <id column="dept_no" jdbcType="BIGINT" property="deptNo" />
+    <result column="dept_name" jdbcType="VARCHAR" property="deptName" />
+    <result column="location" jdbcType="VARCHAR" property="location" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <collection property="empList" resultMap="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.EmpMapper.TableResultMap" />
+  </resultMap>
+
+  <select id="selectDeptWithEmpList" resultMap="DeptWithEmp">
+    SELECT
+    dept.*,
+    <include refid="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.EmpMapper.columnNameWithTable" />
+    FROM dept LEFT JOIN emp ON dept.dept_no = emp.dept_no
+  </select>
+</mapper>

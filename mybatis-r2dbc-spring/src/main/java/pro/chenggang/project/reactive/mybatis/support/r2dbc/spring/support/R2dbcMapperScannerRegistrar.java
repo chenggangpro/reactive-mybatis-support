@@ -24,7 +24,7 @@ import java.util.List;
  */
 public class R2dbcMapperScannerRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware {
 
-    private static final Logger log = LoggerFactory.getLogger(R2dbcMapperFactoryBean.class);
+    private static final Logger log = LoggerFactory.getLogger(R2dbcMapperScannerRegistrar.class);
 
     private ResourceLoader resourceLoader;
 

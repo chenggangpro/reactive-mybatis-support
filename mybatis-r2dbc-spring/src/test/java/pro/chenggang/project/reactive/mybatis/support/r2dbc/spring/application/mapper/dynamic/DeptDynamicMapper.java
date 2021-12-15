@@ -1,4 +1,4 @@
-package pro.chenggang.project.reactive.mybatis.support.generator.mapper.dynamic;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.dynamic;
 
 import org.apache.ibatis.annotations.*;
 import org.apache.ibatis.type.JdbcType;
@@ -14,16 +14,16 @@ import org.mybatis.dynamic.sql.update.UpdateDSLCompleter;
 import org.mybatis.dynamic.sql.update.render.UpdateStatementProvider;
 import org.mybatis.dynamic.sql.util.SqlProviderAdapter;
 import org.mybatis.dynamic.sql.where.WhereApplier;
-import pro.chenggang.project.reactive.mybatis.support.generator.entity.model.Dept;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.CommonSelectMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.ReactiveMyBatis3Utils;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.entity.model.Dept;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
 
 import static org.mybatis.dynamic.sql.SqlBuilder.isEqualTo;
-import static pro.chenggang.project.reactive.mybatis.support.generator.mapper.dynamic.DeptDynamicSqlSupport.*;
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.dynamic.DeptDynamicSqlSupport.*;
 
 /**
  * auto generated

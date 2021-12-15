@@ -23,7 +23,7 @@ import static org.springframework.util.StringUtils.hasText;
 @ToString
 public class R2dbcConnectionFactoryProperties {
 
-    public static final String PREFIX = "spring.r2dbc";
+    public static final String PREFIX = "spring.r2dbc.mybatis";
 
     /**
      * Name of the connection factory

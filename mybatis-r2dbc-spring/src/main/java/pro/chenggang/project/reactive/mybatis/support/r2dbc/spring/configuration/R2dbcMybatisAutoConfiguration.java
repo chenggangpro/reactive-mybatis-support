@@ -59,6 +59,7 @@ public class R2dbcMybatisAutoConfiguration {
     @Bean
     public R2dbcMybatisConfiguration configuration(R2dbcMybatisProperties properties) {
         R2dbcMybatisConfiguration configuration = new R2dbcMybatisConfiguration();
+        configuration.setMapUnderscoreToCamelCase(properties.isMapUnderscoreToCamelCase());
         if (hasText(properties.getTypeAliasesPackage())) {
             String[] typeAliasPackageArray = tokenizeToStringArray(properties.getTypeAliasesPackage(),
                     ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
@@ -124,7 +125,6 @@ public class R2dbcMybatisAutoConfiguration {
     public R2dbcTransactionManager connectionFactoryTransactionManager(ConnectionFactory connectionFactory) {
         return new R2dbcTransactionManager(connectionFactory);
     }
-
 
     @Bean
     @ConditionalOnMissingBean(ReactiveSqlSessionFactory.class)

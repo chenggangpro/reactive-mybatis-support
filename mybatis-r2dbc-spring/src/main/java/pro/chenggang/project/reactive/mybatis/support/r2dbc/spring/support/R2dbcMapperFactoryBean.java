@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFactory;
 
 import static org.springframework.util.Assert.notNull;
@@ -21,7 +20,7 @@ public class R2dbcMapperFactoryBean<T> implements FactoryBean<T>, InitializingBe
 
     private Class<T> mapperInterface;
 
-    private ReactiveSqlSession sqlSession;
+    private ReactiveSqlSessionFactory reactiveSqlSessionFactory;
 
     public R2dbcMapperFactoryBean() {
 
@@ -33,7 +32,8 @@ public class R2dbcMapperFactoryBean<T> implements FactoryBean<T>, InitializingBe
 
     @Override
     public T getObject() throws Exception {
-        return sqlSession.getMapper(this.mapperInterface);
+        return reactiveSqlSessionFactory.openSession()
+                .getMapper(this.mapperInterface);
     }
 
     @Override
@@ -50,16 +50,16 @@ public class R2dbcMapperFactoryBean<T> implements FactoryBean<T>, InitializingBe
         this.mapperInterface = mapperInterface;
     }
 
-    public void setSqlSessionFactory(ReactiveSqlSessionFactory sqlSessionFactory) {
-        this.sqlSession = sqlSessionFactory.openSession();
+    public void setSqlSessionFactory(ReactiveSqlSessionFactory reactiveSqlSessionFactory) {
+        this.reactiveSqlSessionFactory = reactiveSqlSessionFactory;
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        notNull(this.sqlSession, "Property 'sqlSessionFactory' are required...");
-        if (!sqlSession.getConfiguration().hasMapper(this.mapperInterface)) {
+        notNull(this.reactiveSqlSessionFactory, "Property 'sqlSessionFactory' are required...");
+        if (!reactiveSqlSessionFactory.getConfiguration().hasMapper(this.mapperInterface)) {
             try {
-                sqlSession.getConfiguration().addMapper(this.mapperInterface);
+                reactiveSqlSessionFactory.getConfiguration().addMapper(this.mapperInterface);
             } catch (Exception e) {
                 log.error("Error while adding the mapper '" + this.mapperInterface + "' to configuration.", e);
                 throw new IllegalArgumentException(e);
