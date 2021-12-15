@@ -220,6 +220,7 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
 									log.debug("[Close connection](With Transaction)close connection");
 									return this.executeCloseConnection(reactiveExecutorContext);
 								}
+								log.debug("[Close connection](With Transaction)neither rollback or commit,nothing to do");
 								return Mono.empty();
 							}));
 				case "isClosed":
@@ -282,7 +283,6 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
 		}
 
 		private String proxyToString(@Nullable Object proxy) {
-			// Allow for differentiating between the proxy and the raw Connection.
 			return "Transaction-support proxy for target Connection [" + this.connection.toString() + "],Original Proxy ["+proxy+"]";
 		}
 

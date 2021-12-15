@@ -4,21 +4,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
-import org.mybatis.generator.api.dom.java.Field;
-import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
-import org.mybatis.generator.api.dom.java.Interface;
-import org.mybatis.generator.api.dom.java.JavaVisibility;
-import org.mybatis.generator.api.dom.java.Method;
-import org.mybatis.generator.api.dom.java.TopLevelClass;
-import org.mybatis.generator.api.dom.xml.Attribute;
-import org.mybatis.generator.api.dom.xml.Document;
-import org.mybatis.generator.api.dom.xml.TextElement;
-import org.mybatis.generator.api.dom.xml.VisitableElement;
-import org.mybatis.generator.api.dom.xml.XmlElement;
+import org.mybatis.generator.api.dom.java.*;
+import org.mybatis.generator.api.dom.xml.*;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.generator.core.PropertiesHolder;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.generator.option.LombokConfig;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.generator.properties.GeneratorExtensionProperties;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -36,13 +28,13 @@ public class GenerateExtensionPlugin extends PluginAdapter {
 
     @Override
     public boolean clientGenerated(Interface interfaze, IntrospectedTable introspectedTable) {
-        if((introspectedTable.getTargetRuntime() == IntrospectedTable.TargetRuntime.MYBATIS3)){
+        if ((introspectedTable.getTargetRuntime() == IntrospectedTable.TargetRuntime.MYBATIS3)) {
             interfaze.addImportedType(new FullyQualifiedJavaType("org.apache.ibatis.annotations.Mapper"));
             interfaze.addAnnotation("@Mapper");
-            if(extendDynamicMapper){
+            if (extendDynamicMapper) {
                 String fullyQualifiedName = interfaze.getType().getFullyQualifiedName();
                 String beforeLast = StringUtils.substringBeforeLast(fullyQualifiedName, "Mapper");
-                String dynamicMapperName = beforeLast+"DynamicMapper";
+                String dynamicMapperName = beforeLast + "DynamicMapper";
                 String importDynamicMapperName = interfaze.getType().getPackageName() + ".dynamic." + StringUtils.substringAfterLast(dynamicMapperName, ".");
                 interfaze.addImportedType(new FullyQualifiedJavaType(importDynamicMapperName));
                 interfaze.addSuperInterface(new FullyQualifiedJavaType(dynamicMapperName));
@@ -114,6 +106,7 @@ public class GenerateExtensionPlugin extends PluginAdapter {
                 .collect(Collectors.toList());
         newXmlElement.getAttributes().clear();
         attributeList.forEach(newXmlElement::addAttribute);
+        List<String> columnNameWithTable = new ArrayList<>();
         List<XmlElement> subXmlElements = newXmlElement.getElements()
                 .stream()
                 .map(element -> {
@@ -122,7 +115,9 @@ public class GenerateExtensionPlugin extends PluginAdapter {
                             .stream()
                             .map(attribute -> {
                                 if ("column".equals(attribute.getName())) {
-                                    return new Attribute(attribute.getName(), tableName + "_" + attribute.getValue());
+                                    String columnWithTableName = tableName + "_" + attribute.getValue();
+                                    columnNameWithTable.add(tableName + "." + attribute.getValue() + " AS " + columnWithTableName);
+                                    return new Attribute(attribute.getName(), columnWithTableName);
                                 }
                                 return new Attribute(attribute.getName(), attribute.getValue());
                             })
@@ -135,6 +130,12 @@ public class GenerateExtensionPlugin extends PluginAdapter {
         newXmlElement.getElements().clear();
         subXmlElements.forEach(newXmlElement::addElement);
         elements.add(newXmlElement);
+        XmlElement columnSqlXmlElement = new XmlElement("sql");
+        columnSqlXmlElement.addAttribute(new Attribute("id", "columnNameWithTable"));
+        String columnNameWithTableSql = String.join(", \n    ", columnNameWithTable);
+        TextElement columnSqlContentElement = new TextElement(columnNameWithTableSql);
+        columnSqlXmlElement.addElement(columnSqlContentElement);
+        elements.add(columnSqlXmlElement);
         return true;
     }
 
@@ -197,7 +198,7 @@ public class GenerateExtensionPlugin extends PluginAdapter {
     public boolean providerUpdateByPrimaryKeySelectiveMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         return false;
     }
-    
+
     @Override
     public boolean modelGetterMethodGenerated(Method method,
                                               TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn,
@@ -205,7 +206,7 @@ public class GenerateExtensionPlugin extends PluginAdapter {
                                               ModelClassType modelClassType) {
         return false;
     }
-    
+
     @Override
     public boolean modelSetterMethodGenerated(Method method,
                                               TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn,
@@ -213,19 +214,19 @@ public class GenerateExtensionPlugin extends PluginAdapter {
                                               ModelClassType modelClassType) {
         return false;
     }
-    
+
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         processExtension(topLevelClass, introspectedTable);
         return true;
     }
-    
+
     @Override
     public boolean modelPrimaryKeyClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         processExtension(topLevelClass, introspectedTable);
         return true;
     }
-    
+
     @Override
     public boolean modelRecordWithBLOBsClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         processExtension(topLevelClass, introspectedTable);
@@ -240,11 +241,11 @@ public class GenerateExtensionPlugin extends PluginAdapter {
         topLevelClass.getFields().forEach(field -> field.setVisibility(JavaVisibility.PROTECTED));
         GeneratorExtensionProperties extensionProperties = PropertiesHolder.getInstance().getProperties();
         LinkedHashSet<LombokConfig> lombokConfigs = extensionProperties.getLombok();
-        if(Objects.isNull(lombokConfigs) || lombokConfigs.isEmpty()){
+        if (Objects.isNull(lombokConfigs) || lombokConfigs.isEmpty()) {
             return;
         }
-        lombokConfigs.forEach(lombok->{
-            switch (lombok){
+        lombokConfigs.forEach(lombok -> {
+            switch (lombok) {
                 case Getter:
                     topLevelClass.addImportedType("lombok.Getter");
                     topLevelClass.addAnnotation("@Getter");
@@ -289,14 +290,14 @@ public class GenerateExtensionPlugin extends PluginAdapter {
             }
         });
         for (IntrospectedColumn introspectedColumn : introspectedTable.getAllColumns()) {
-            Field field = new Field(introspectedColumn.getActualColumnName().toUpperCase(),new FullyQualifiedJavaType(String.class.getName()));
+            Field field = new Field(introspectedColumn.getActualColumnName().toUpperCase(), new FullyQualifiedJavaType(String.class.getName()));
             field.setVisibility(JavaVisibility.PUBLIC);
             field.setStatic(true);
             field.setFinal(true);
             field.setInitializationString("\"" + introspectedColumn.getJavaProperty() + "\"");
             context.getCommentGenerator().addClassComment(topLevelClass, introspectedTable);
             topLevelClass.addField(field);
-            Field columnField = new Field("DB_" + introspectedColumn.getActualColumnName().toUpperCase(),new FullyQualifiedJavaType(String.class.getName()));
+            Field columnField = new Field("DB_" + introspectedColumn.getActualColumnName().toUpperCase(), new FullyQualifiedJavaType(String.class.getName()));
             columnField.setVisibility(JavaVisibility.PUBLIC);
             columnField.setStatic(true);
             columnField.setFinal(true);
