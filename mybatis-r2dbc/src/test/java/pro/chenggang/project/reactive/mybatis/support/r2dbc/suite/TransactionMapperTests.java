@@ -3,16 +3,16 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.suite;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionOperator;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.application.entity.model.Dept;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.application.mapper.DeptMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.application.mapper.EmpMapper;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReactiveSqlSessionOperator;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.suite.setup.MybatisR2dbcBaseTests;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,20 +22,17 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class TransactionMapperTests extends MybatisR2dbcBaseTests {
 
-    private Map<Class<?>,ReactiveSqlSession> reactiveSqlSessionMap = new HashMap<>();
     private DeptMapper deptMapper;
     private EmpMapper empMapper;
+    private ReactiveSqlSession reactiveSqlSession;
+    private ReactiveSqlSessionOperator reactiveSqlSessionOperator;
 
     @BeforeAll
     public void initSqlSession () throws Exception {
-        this.deptMapper = this.getMapperWithSession(DeptMapper.class);
-        this.empMapper = this.getMapperWithSession(EmpMapper.class);
-    }
-
-    private <T> T getMapperWithSession(Class<T> targetClass){
-        ReactiveSqlSession reactiveSqlSession = super.reactiveSqlSessionFactory.openSession();
-        this.reactiveSqlSessionMap.put(targetClass,reactiveSqlSession);
-        return reactiveSqlSession.withTransaction().getMapper(targetClass);
+        this.reactiveSqlSession = super.reactiveSqlSessionFactory.openSession().withTransaction();
+        this.deptMapper = this.reactiveSqlSession.getMapper(DeptMapper.class);
+        this.empMapper = this.reactiveSqlSession.getMapper(EmpMapper.class);
+        this.reactiveSqlSessionOperator = new DefaultReactiveSqlSessionOperator(reactiveSqlSessionFactory);
     }
 
     @Test
@@ -44,7 +41,7 @@ public class TransactionMapperTests extends MybatisR2dbcBaseTests {
         dept.setDeptName("Test_dept_name");
         dept.setCreateTime(LocalDateTime.now());
         dept.setLocation("Test_location");
-        Mono<Void> monoExecution = this.deptMapper.count()
+        Mono<Long> commitExecution = this.deptMapper.count()
                 .flatMap(totalCount -> {
                     assertThat(totalCount).isEqualTo(4);
                     return this.deptMapper.insert(dept);
@@ -52,31 +49,23 @@ public class TransactionMapperTests extends MybatisR2dbcBaseTests {
                 .flatMap(effectRowCount -> {
                     assertThat(effectRowCount).isEqualTo(1);
                     return this.deptMapper.count();
-                })
+                });
+        this.reactiveSqlSessionOperator.executeAndCommit(commitExecution)
+                .as(StepVerifier::create)
+                .expectNext(5L)
+                .verifyComplete();
+        Mono<Long> deleteExecution = this.deptMapper.count()
                 .flatMap(totalCount -> {
                     assertThat(totalCount).isEqualTo(5);
-                    ReactiveSqlSession reactiveSqlSession = reactiveSqlSessionMap.get(DeptMapper.class);
-                    return reactiveSqlSession
-                            .commit(true);
+                    return this.deptMapper.deleteByDeptNo(dept.getDeptNo());
                 })
-                .then(Mono.defer(() -> this.deptMapper.count()
-                        .flatMap(totalCount -> {
-                            assertThat(totalCount).isEqualTo(5);
-                            return this.deptMapper.deleteByDeptNo(dept.getDeptNo());
-                        })
-                        .flatMap(effectRowCount -> {
-                            assertThat(effectRowCount).isEqualTo(1);
-                            return this.deptMapper.count();
-                        })
-                        .flatMap(count -> {
-                            assertThat(count).isEqualTo(4);
-                            ReactiveSqlSession reactiveSqlSession = reactiveSqlSessionMap.get(DeptMapper.class);
-                            return reactiveSqlSession
-                                    .commit(true)
-                                    .then(Mono.defer(() -> reactiveSqlSession.close()));
-                        })
-                ));
-        StepVerifier.create(monoExecution)
+                .flatMap(effectRowCount -> {
+                    assertThat(effectRowCount).isEqualTo(1);
+                    return this.deptMapper.count();
+                });
+        this.reactiveSqlSessionOperator.executeAndCommit(deleteExecution)
+                .as(StepVerifier::create)
+                .expectNext(4L)
                 .verifyComplete();
     }
 
@@ -86,7 +75,7 @@ public class TransactionMapperTests extends MybatisR2dbcBaseTests {
         dept.setDeptName("Test_dept_name");
         dept.setCreateTime(LocalDateTime.now());
         dept.setLocation("Test_location");
-        Mono<Void> monoExecution = this.deptMapper.count()
+        Mono<Long> execution = this.deptMapper.count()
                 .flatMap(totalCount -> {
                     assertThat(totalCount).isEqualTo(4);
                     return this.deptMapper.insert(dept);
@@ -94,23 +83,14 @@ public class TransactionMapperTests extends MybatisR2dbcBaseTests {
                 .flatMap(effectRowCount -> {
                     assertThat(effectRowCount).isEqualTo(1);
                     return this.deptMapper.count();
-                })
-                .flatMap(totalCount -> {
-                    assertThat(totalCount).isEqualTo(5);
-                    ReactiveSqlSession reactiveSqlSession = reactiveSqlSessionMap.get(DeptMapper.class);
-                    return reactiveSqlSession
-                            .rollback(true);
-                })
-                .then(Mono.defer(() -> this.deptMapper.count()
-                        .flatMap(totalCount -> {
-                            assertThat(totalCount).isEqualTo(4);
-                            ReactiveSqlSession reactiveSqlSession = reactiveSqlSessionMap.get(DeptMapper.class);
-                            return reactiveSqlSession
-                                    .commit(true)
-                                    .then(Mono.defer(() -> reactiveSqlSession.close()));
-                        })
-                ));
-        StepVerifier.create(monoExecution)
+                });
+        this.reactiveSqlSessionOperator.executeAndRollback(execution)
+                .as(StepVerifier::create)
+                .expectNext(5L)
+                .verifyComplete();
+        this.reactiveSqlSessionOperator.executeAndRollback(this.deptMapper.count())
+                .as(StepVerifier::create)
+                .expectNext(4L)
                 .verifyComplete();
     }
 

@@ -34,11 +34,13 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
        return Mono.deferContextual(contextView -> Mono
                 .justOrEmpty(contextView.getOrEmpty(ReactiveExecutorContext.class))
                 .cast(ReactiveExecutorContext.class)
-                .map(ReactiveExecutorContext::getStatementLogHelper)
-                .flatMap(statementLogHelper -> this.inConnection(
-                        this.connectionFactory,
-                        connection -> this.doUpdateWithConnection(connection,mappedStatement,parameter)
-                ))
+               .flatMap(reactiveExecutorContext -> {
+                   reactiveExecutorContext.setDirty();
+                   return this.inConnection(
+                           this.connectionFactory,
+                           connection -> this.doUpdateWithConnection(connection,mappedStatement,parameter)
+                   );
+               })
        );
     }
 
@@ -56,9 +58,13 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
                 .justOrEmpty(contextView.getOrEmpty(ReactiveExecutorContext.class))
                 .cast(ReactiveExecutorContext.class)
                 .flatMap(reactiveExecutorContext -> {
-                    reactiveExecutorContext.setForceCommit(required || reactiveExecutorContext.isUsingTransaction());
+                    reactiveExecutorContext.setForceCommit(reactiveExecutorContext.isDirty() || required);
                     return Mono.justOrEmpty(reactiveExecutorContext.getConnection())
-                            .flatMap(connection -> Mono.from(connection.close()));
+                            .flatMap(connection -> Mono.from(connection.close()))
+                            .then(Mono.defer(() -> {
+                                reactiveExecutorContext.resetDirty();
+                                return Mono.empty();
+                            }));
                 })
         );
     }
@@ -69,9 +75,15 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
                 .justOrEmpty(contextView.getOrEmpty(ReactiveExecutorContext.class))
                 .cast(ReactiveExecutorContext.class)
                 .flatMap(reactiveExecutorContext -> {
-                    reactiveExecutorContext.setForceRollback(required || reactiveExecutorContext.isUsingTransaction());
+                    reactiveExecutorContext.setForceRollback(reactiveExecutorContext.isDirty() || required);
                     return Mono.justOrEmpty(reactiveExecutorContext.getConnection())
-                            .flatMap(connection -> Mono.from(connection.close()));
+                            .flatMap(connection -> {
+                                return Mono.from(connection.close());
+                            })
+                            .then(Mono.defer(() -> {
+                                reactiveExecutorContext.resetDirty();
+                                return Mono.empty();
+                            }));
                 })
         );
     }
@@ -82,10 +94,16 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
                 .justOrEmpty(contextView.getOrEmpty(ReactiveExecutorContext.class))
                 .cast(ReactiveExecutorContext.class)
                 .flatMap(reactiveExecutorContext -> {
-                    reactiveExecutorContext.setForceRollback(forceRollback || reactiveExecutorContext.isUsingTransaction());
+                    reactiveExecutorContext.setForceRollback(forceRollback);
                     reactiveExecutorContext.setRequireClosed(true);
                     return Mono.justOrEmpty(reactiveExecutorContext.getConnection())
-                            .flatMap(connection -> Mono.from(connection.close()));
+                            .flatMap(connection -> {
+                                return Mono.from(connection.close());
+                            })
+                            .then(Mono.defer(() -> {
+                                reactiveExecutorContext.resetDirty();
+                                return Mono.empty();
+                            }));
                 })
         );
     }
@@ -168,9 +186,9 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
      * @param connection
      * @return
      */
-    private Mono<Void> closeConnection(Connection connection) {
+    protected Mono<Void> closeConnection(Connection connection) {
         return Mono.from(connection.close())
-                .onErrorResume(Exception.class,e -> Mono.from(connection.close()));
+                .onErrorResume(e -> Mono.from(connection.close()));
     }
 
 }

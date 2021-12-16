@@ -2,7 +2,6 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults;
 
 import io.r2dbc.pool.ConnectionPool;
 import io.r2dbc.spi.ConnectionFactory;
-import io.r2dbc.spi.IsolationLevel;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.connection.DefaultTransactionSupportConnectionFactory;
@@ -19,6 +18,7 @@ import java.io.Closeable;
 public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFactory {
 
     private final R2dbcMybatisConfiguration configuration;
+    private final ReactiveSqlSession reactiveSqlSession;
 
     public DefaultReactiveSqlSessionFactory(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory) {
         this.configuration = configuration;
@@ -28,18 +28,18 @@ public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFacto
         }else{
             this.configuration.setConnectionFactory(connectionFactory);
         }
+        ReactiveMybatisExecutor reactiveMybatisExecutor = new DefaultReactiveMybatisExecutor(this.configuration);
+        this.reactiveSqlSession = new DefaultReactiveSqlSession(this.configuration, reactiveMybatisExecutor);
+    }
+
+    public DefaultReactiveSqlSessionFactory(R2dbcMybatisConfiguration configuration, ReactiveMybatisExecutor reactiveMybatisExecutor) {
+        this.configuration = configuration;
+        this.reactiveSqlSession = new DefaultReactiveSqlSession(this.configuration, reactiveMybatisExecutor);
     }
 
     @Override
-    public ReactiveSqlSession openSession(boolean autoCommit) {
-        ReactiveMybatisExecutor reactiveMybatisExecutor = new DefaultReactiveMybatisExecutor(this.configuration,this.configuration.getConnectionFactory());
-        return new DefaultReactiveSqlSession(this.configuration, reactiveMybatisExecutor,autoCommit, null);
-    }
-
-    @Override
-    public ReactiveSqlSession openSession(IsolationLevel level) {
-        ReactiveMybatisExecutor reactiveMybatisExecutor = new DefaultReactiveMybatisExecutor(this.configuration,this.configuration.getConnectionFactory());
-        return new DefaultReactiveSqlSession(this.configuration, reactiveMybatisExecutor,false, level);
+    public ReactiveSqlSession openSession() {
+        return this.reactiveSqlSession;
     }
 
     @Override

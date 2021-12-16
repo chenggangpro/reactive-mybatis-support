@@ -34,7 +34,13 @@ public class BusinessServiceImpl implements BusinessService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public Mono<Dept> doWithTransactionBusinessRollback() {
-        return this.doBusinessInternal();
+        return this.doBusinessInternal()
+                .then(Mono.defer(() -> {
+                    if(true){
+                        throw new RuntimeException("manually rollback with @Transaction");
+                    }
+                    return Mono.empty();
+                }));
     }
 
     private Mono<Dept> doBusinessInternal(){
@@ -47,17 +53,7 @@ public class BusinessServiceImpl implements BusinessService {
                         dsl -> dsl.where(deptNo,isEqualTo(4L))))
                 .flatMap(value -> deptMapper.selectOne(dsl -> dsl.where(deptNo, isEqualTo(4L))))
                 .doOnNext(updatePeople -> log.debug("[After Update] Get People ,People:{}",updatePeople))
-                .flatMap(updatePeople -> {
-                    return deptMapper.delete(dsl -> dsl.where(deptNo, isEqualTo(4L)));
-                })
-                .flatMap(deleteResult -> {
-                    return deptMapper.selectOne(dsl -> dsl.where(deptNo, isEqualTo(4L)));
-                })
-                .then(Mono.defer(() -> {
-                    if(true){
-                        throw new RuntimeException("111");
-                    }
-                    return Mono.empty();
-                }));
+                .flatMap(updatePeople -> deptMapper.delete(dsl -> dsl.where(deptNo, isEqualTo(4L))))
+                .flatMap(deleteResult -> deptMapper.selectOne(dsl -> dsl.where(deptNo, isEqualTo(4L))));
     }
 }

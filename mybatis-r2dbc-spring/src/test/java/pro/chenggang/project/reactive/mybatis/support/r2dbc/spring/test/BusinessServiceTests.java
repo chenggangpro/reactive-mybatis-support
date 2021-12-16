@@ -28,7 +28,9 @@ public class BusinessServiceTests extends TestApplicationTests {
         businessService.doWithTransactionBusinessRollback()
                 .as(this::withRollback)
                 .as(StepVerifier::create)
-                .expectError()
+                .expectErrorMatches(throwable -> {
+                    return "manually rollback with @Transaction".equals(throwable.getMessage());
+                })
                 .verify();
     }
 }

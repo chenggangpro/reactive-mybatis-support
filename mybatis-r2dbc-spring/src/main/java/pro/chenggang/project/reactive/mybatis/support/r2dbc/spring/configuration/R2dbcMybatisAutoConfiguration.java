@@ -24,6 +24,7 @@ import org.springframework.transaction.ReactiveTransactionManager;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.executor.SpringReactiveMybatisExecutor;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcConnectionFactoryProperties;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcConnectionFactoryProperties.Pool;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcMybatisProperties;
@@ -123,13 +124,15 @@ public class R2dbcMybatisAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(ReactiveTransactionManager.class)
     public R2dbcTransactionManager connectionFactoryTransactionManager(ConnectionFactory connectionFactory) {
-        return new R2dbcTransactionManager(new TransactionAwareConnectionFactoryProxy(connectionFactory));
+        return new R2dbcTransactionManager(connectionFactory);
     }
 
     @Bean
     @ConditionalOnMissingBean(ReactiveSqlSessionFactory.class)
-    public ReactiveSqlSessionFactory reactiveSqlSessionFactoryWithTransaction(R2dbcMybatisConfiguration configuration, R2dbcTransactionManager r2dbcTransactionManager) {
-        return new DefaultReactiveSqlSessionFactory(configuration, r2dbcTransactionManager.getConnectionFactory());
+    public ReactiveSqlSessionFactory reactiveSqlSessionFactoryWithTransaction(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory) {
+        configuration.setConnectionFactory(new TransactionAwareConnectionFactoryProxy(connectionFactory));
+        SpringReactiveMybatisExecutor springReactiveMybatisExecutor = new SpringReactiveMybatisExecutor(configuration);
+        return new DefaultReactiveSqlSessionFactory(configuration, springReactiveMybatisExecutor);
     }
 
 }

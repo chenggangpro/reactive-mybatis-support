@@ -1,5 +1,6 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc;
 
+import io.r2dbc.spi.IsolationLevel;
 import org.apache.ibatis.session.RowBounds;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import reactor.core.publisher.Flux;
@@ -12,7 +13,21 @@ import reactor.core.publisher.Mono;
 public interface ReactiveSqlSession {
 
     /**
-     * enable transaction
+     * set auto commit
+     * @param autoCommit
+     * @return
+     */
+    ReactiveSqlSession setAutoCommit(boolean autoCommit);
+
+    /**
+     * set isolation level
+     * @param isolationLevel
+     * @return
+     */
+    ReactiveSqlSession setIsolationLevel(IsolationLevel isolationLevel);
+
+    /**
+     * with transaction
      * @return
      */
     ReactiveSqlSession withTransaction();

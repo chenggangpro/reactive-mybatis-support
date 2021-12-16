@@ -1,7 +1,6 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor;
 
 import io.r2dbc.spi.Connection;
-import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.Statement;
 import org.apache.ibatis.executor.parameter.ParameterHandler;
 import org.apache.ibatis.executor.statement.StatementHandler;
@@ -36,8 +35,8 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
 
     private static final Log log = LogFactory.getLog(DefaultReactiveMybatisExecutor.class);
 
-    public DefaultReactiveMybatisExecutor(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory) {
-        super(configuration, connectionFactory);
+    public DefaultReactiveMybatisExecutor(R2dbcMybatisConfiguration configuration) {
+        super(configuration, configuration.getConnectionFactory());
     }
 
     @Override

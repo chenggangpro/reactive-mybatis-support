@@ -1,6 +1,5 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults;
 
-import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.IsolationLevel;
 import org.apache.ibatis.exceptions.TooManyResultsException;
 import org.apache.ibatis.logging.Log;
@@ -8,59 +7,55 @@ import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.reflection.ParamNameResolver;
 import org.apache.ibatis.session.RowBounds;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextHelper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveMybatisExecutor;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveExecutorContext;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveMybatisExecutor;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.StatementLogHelper;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author: chenggang
  * @date 12/8/21.
  */
-public class DefaultReactiveSqlSession implements ReactiveSqlSession {
+public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisReactiveContextHelper {
 
     private static final Log log = LogFactory.getLog(DefaultReactiveSqlSession.class);
 
-    private final boolean autoCommit;
+    private boolean autoCommit = false;
+    private IsolationLevel isolationLevel;
+    private boolean withTransaction = false;
     private final R2dbcMybatisConfiguration configuration;
     private final ReactiveMybatisExecutor reactiveMybatisExecutor;
-    private final IsolationLevel isolationLevel;
-    private final AtomicBoolean dirty = new AtomicBoolean(false);
-    private final AtomicBoolean withinTransaction = new AtomicBoolean(false);
-    //due to the whenever create a ReactiveSqlSession ,only initialize executor once,
-    //so just retain the connection Reference for the entire session context
-    private final AtomicReference<Connection> connectionReference = new AtomicReference<>();
-    private final AtomicBoolean sessionClosed = new AtomicBoolean(false);
-
-    public DefaultReactiveSqlSession(R2dbcMybatisConfiguration configuration, ReactiveMybatisExecutor reactiveMybatisExecutor, boolean autoCommit, IsolationLevel isolationLevel) {
-        this.configuration = configuration;
-        this.reactiveMybatisExecutor = reactiveMybatisExecutor;
-        this.autoCommit = autoCommit;
-        this.isolationLevel = isolationLevel;
-    }
 
     public DefaultReactiveSqlSession(R2dbcMybatisConfiguration configuration, ReactiveMybatisExecutor reactiveMybatisExecutor) {
-        this(configuration, reactiveMybatisExecutor,false, null);
+        this.configuration = configuration;
+        this.reactiveMybatisExecutor = reactiveMybatisExecutor;
     }
 
-    public DefaultReactiveSqlSession(R2dbcMybatisConfiguration configuration, ReactiveMybatisExecutor reactiveMybatisExecutor, IsolationLevel isolationLevel) {
-        this(configuration, reactiveMybatisExecutor,false, isolationLevel);
+    @Override
+    public ReactiveSqlSession setAutoCommit(boolean autoCommit) {
+        if(!withTransaction && autoCommit){
+            this.autoCommit = true;
+        }
+        return this;
+    }
+
+    @Override
+    public ReactiveSqlSession setIsolationLevel(IsolationLevel isolationLevel) {
+        this.isolationLevel = isolationLevel;
+        return this;
     }
 
     @Override
     public ReactiveSqlSession withTransaction() {
-        this.checkSessionClosed();
-        if(this.withinTransaction.compareAndSet(false,true)){
-            log.debug("ReactiveSqlSession operation start with transaction");
-        }
+        this.withTransaction = true;
+        this.autoCommit = false;
         return this;
     }
 
@@ -81,7 +76,6 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
 
     @Override
     public <E> Flux<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
-        this.checkSessionClosed();
         MappedStatement mappedStatement = configuration.getMappedStatement(statement);
         return reactiveMybatisExecutor.<E>query(mappedStatement, wrapCollection(parameter), rowBounds)
                 .contextWrite(context -> initReactiveExecutorContext(context,new StatementLogHelper(mappedStatement.getStatementLog())));
@@ -94,8 +88,6 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
 
     @Override
     public Mono<Integer> update(String statement, Object parameter) {
-        this.checkSessionClosed();
-        dirty.compareAndSet(false,true);
         MappedStatement mappedStatement = configuration.getMappedStatement(statement);
         return reactiveMybatisExecutor.update(mappedStatement, wrapCollection(parameter))
                 .contextWrite(context -> initReactiveExecutorContext(context,new StatementLogHelper(mappedStatement.getStatementLog())));
@@ -108,18 +100,14 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
 
     @Override
     public Mono<Void> commit(boolean force) {
-        this.checkSessionClosed();
-        return reactiveMybatisExecutor.commit(isCommitOrRollbackRequired(force))
-                .contextWrite(this::initReactiveExecutorContext)
-                .doOnSubscribe(s -> dirty.compareAndSet(true,false));
+        return reactiveMybatisExecutor.commit((force))
+                .contextWrite(this::initReactiveExecutorContext);
     }
 
     @Override
     public Mono<Void> rollback(boolean force) {
-        this.checkSessionClosed();
-        return reactiveMybatisExecutor.rollback(isCommitOrRollbackRequired(force))
-                .contextWrite(this::initReactiveExecutorContext)
-                .doOnSubscribe(s -> dirty.compareAndSet(true,false));
+        return reactiveMybatisExecutor.rollback(force)
+                .contextWrite(this::initReactiveExecutorContext);
     }
 
     @Override
@@ -134,57 +122,51 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
 
     @Override
     public Mono<Void> close() {
-        this.checkSessionClosed();
-        return reactiveMybatisExecutor.close(isCommitOrRollbackRequired(false))
-                .contextWrite(this::initReactiveExecutorContext)
-                .doOnSubscribe(s -> {
-                    dirty.compareAndSet(true, false);
-                    sessionClosed.compareAndSet(false,true);
-                });
-    }
-
-    private boolean isCommitOrRollbackRequired(boolean force) {
-        return (!autoCommit && dirty.get()) || force;
+        return reactiveMybatisExecutor.close(false)
+                .contextWrite(this::initReactiveExecutorContext);
     }
 
     private Object wrapCollection(final Object object) {
         return ParamNameResolver.wrapToMapIfCollection(object, null);
     }
 
-    private void checkSessionClosed(){
-        if(sessionClosed.get()){
-            throw new IllegalStateException("Reactive session already closed");
-        }
-    }
-
-    private Context initReactiveExecutorContext(Context context, StatementLogHelper statementLogHelper) {
+    @Override
+    public Context initReactiveExecutorContext(Context context, StatementLogHelper statementLogHelper) {
         Optional<ReactiveExecutorContext> optionalContext = context.getOrEmpty(ReactiveExecutorContext.class)
                 .map(ReactiveExecutorContext.class::cast);
         if(optionalContext.isPresent()){
-            optionalContext.get().setUsingTransaction(this.withinTransaction);
+            ReactiveExecutorContext reactiveExecutorContext = optionalContext.get();
+            if(this.withTransaction){
+                reactiveExecutorContext.setWithTransaction();
+            }
+            reactiveExecutorContext.setStatementLogHelper(statementLogHelper);
             return context;
         }
-        ReactiveExecutorContext newContext = new ReactiveExecutorContext(autoCommit, this.isolationLevel, connectionReference);
+        ReactiveExecutorContext newContext = new ReactiveExecutorContext(autoCommit, isolationLevel);
         newContext.setStatementLogHelper(statementLogHelper);
-        newContext.setUsingTransaction(this.withinTransaction);
+        if(this.withTransaction){
+            newContext.setWithTransaction();
+        }
         return context.put(ReactiveExecutorContext.class,newContext);
     }
 
-    private Context initReactiveExecutorContext(Context context) {
+    @Override
+    public Context initReactiveExecutorContext(Context context) {
         Optional<ReactiveExecutorContext> optionalContext = context.getOrEmpty(ReactiveExecutorContext.class)
                 .map(ReactiveExecutorContext.class::cast);
         if(optionalContext.isPresent()){
             if(log.isTraceEnabled()){
                 log.trace("Initialize reactive executor context,context already exist :" + optionalContext);
             }
-            optionalContext.get().setUsingTransaction(this.withinTransaction);
             return context;
         }
         if(log.isTraceEnabled()){
             log.trace("Initialize reactive executor context,context not exist,create new one");
         }
-        ReactiveExecutorContext newContext = new ReactiveExecutorContext(autoCommit, this.isolationLevel, connectionReference);
-        newContext.setUsingTransaction(this.withinTransaction);
+        ReactiveExecutorContext newContext = new ReactiveExecutorContext(autoCommit, isolationLevel);
+        if(this.withTransaction){
+            newContext.setWithTransaction();
+        }
         return context.put(ReactiveExecutorContext.class,newContext);
     }
 }

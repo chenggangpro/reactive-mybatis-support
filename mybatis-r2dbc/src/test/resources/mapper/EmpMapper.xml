@@ -54,4 +54,18 @@
     <include refid="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.mapper.DeptMapper.columnNameWithTable" />
     FROM emp LEFT JOIN dept ON emp.dept_no = dept.dept_no
   </select>
+
+  <parameterMap id="empParamMap" type="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.entity.model.Emp">
+    <parameter property="createTime" javaType="java.time.LocalDateTime" />
+  </parameterMap>
+
+  <select id="selectByParameterMap"
+          resultType="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.entity.model.Emp"
+          parameterMap="empParamMap" >
+    SELECT *
+    FROM emp
+    WHERE emp.create_time &lt;= #{createTime}
+  </select>
+
+
 </mapper>
