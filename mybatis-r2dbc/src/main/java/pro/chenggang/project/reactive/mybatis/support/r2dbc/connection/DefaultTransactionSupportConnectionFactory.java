@@ -7,8 +7,6 @@ import io.r2dbc.spi.ConnectionFactoryMetadata;
 import io.r2dbc.spi.Wrapped;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
-import org.springframework.lang.Nullable;
-import org.springframework.r2dbc.connection.ConnectionFactoryUtils;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveExecutorContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
 import reactor.core.publisher.Mono;
@@ -248,7 +246,7 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
                     .then(Mono.error(e));
 		}
 
-		private String proxyToString(@Nullable Object proxy) {
+		private String proxyToString(Object proxy) {
 			return "Transaction-support proxy for target Connection [" + this.connection.toString() + "],Original Proxy ["+proxy+"]";
 		}
 
