@@ -18,8 +18,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.Resource;
-import org.springframework.data.r2dbc.connectionfactory.R2dbcTransactionManager;
-import org.springframework.data.r2dbc.connectionfactory.TransactionAwareConnectionFactoryProxy;
+import org.springframework.r2dbc.connection.R2dbcTransactionManager;
+import org.springframework.r2dbc.connection.TransactionAwareConnectionFactoryProxy;
 import org.springframework.transaction.ReactiveTransactionManager;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReactiveSqlSessionFactory;
@@ -123,13 +123,13 @@ public class R2dbcMybatisAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(ReactiveTransactionManager.class)
     public R2dbcTransactionManager connectionFactoryTransactionManager(ConnectionFactory connectionFactory) {
-        return new R2dbcTransactionManager(connectionFactory);
+        return new R2dbcTransactionManager(new TransactionAwareConnectionFactoryProxy(connectionFactory));
     }
 
     @Bean
     @ConditionalOnMissingBean(ReactiveSqlSessionFactory.class)
-    public ReactiveSqlSessionFactory reactiveSqlSessionFactoryWithTransaction(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory) {
-        return new DefaultReactiveSqlSessionFactory(configuration, new TransactionAwareConnectionFactoryProxy(connectionFactory));
+    public ReactiveSqlSessionFactory reactiveSqlSessionFactoryWithTransaction(R2dbcMybatisConfiguration configuration, R2dbcTransactionManager r2dbcTransactionManager) {
+        return new DefaultReactiveSqlSessionFactory(configuration, r2dbcTransactionManager.getConnectionFactory());
     }
 
 }

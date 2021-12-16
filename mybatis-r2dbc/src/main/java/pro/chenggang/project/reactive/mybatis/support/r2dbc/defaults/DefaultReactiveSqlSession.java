@@ -10,7 +10,7 @@ import org.apache.ibatis.reflection.ParamNameResolver;
 import org.apache.ibatis.session.RowBounds;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveExecutor;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveMybatisExecutor;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveExecutorContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.StatementLogHelper;
 import reactor.core.publisher.Flux;
@@ -31,7 +31,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
 
     private final boolean autoCommit;
     private final R2dbcMybatisConfiguration configuration;
-    private final ReactiveExecutor reactiveExecutor;
+    private final ReactiveMybatisExecutor reactiveMybatisExecutor;
     private final IsolationLevel isolationLevel;
     private final AtomicBoolean dirty = new AtomicBoolean(false);
     private final AtomicBoolean withinTransaction = new AtomicBoolean(false);
@@ -40,19 +40,19 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
     private final AtomicReference<Connection> connectionReference = new AtomicReference<>();
     private final AtomicBoolean sessionClosed = new AtomicBoolean(false);
 
-    public DefaultReactiveSqlSession(R2dbcMybatisConfiguration configuration, ReactiveExecutor reactiveExecutor, boolean autoCommit, IsolationLevel isolationLevel) {
+    public DefaultReactiveSqlSession(R2dbcMybatisConfiguration configuration, ReactiveMybatisExecutor reactiveMybatisExecutor, boolean autoCommit, IsolationLevel isolationLevel) {
         this.configuration = configuration;
-        this.reactiveExecutor = reactiveExecutor;
+        this.reactiveMybatisExecutor = reactiveMybatisExecutor;
         this.autoCommit = autoCommit;
         this.isolationLevel = isolationLevel;
     }
 
-    public DefaultReactiveSqlSession(R2dbcMybatisConfiguration configuration, ReactiveExecutor reactiveExecutor) {
-        this(configuration,reactiveExecutor,false, null);
+    public DefaultReactiveSqlSession(R2dbcMybatisConfiguration configuration, ReactiveMybatisExecutor reactiveMybatisExecutor) {
+        this(configuration, reactiveMybatisExecutor,false, null);
     }
 
-    public DefaultReactiveSqlSession(R2dbcMybatisConfiguration configuration, ReactiveExecutor reactiveExecutor, IsolationLevel isolationLevel) {
-        this(configuration,reactiveExecutor,false, isolationLevel);
+    public DefaultReactiveSqlSession(R2dbcMybatisConfiguration configuration, ReactiveMybatisExecutor reactiveMybatisExecutor, IsolationLevel isolationLevel) {
+        this(configuration, reactiveMybatisExecutor,false, isolationLevel);
     }
 
     @Override
@@ -83,7 +83,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
     public <E> Flux<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
         this.checkSessionClosed();
         MappedStatement mappedStatement = configuration.getMappedStatement(statement);
-        return reactiveExecutor.<E>query(mappedStatement, wrapCollection(parameter), rowBounds)
+        return reactiveMybatisExecutor.<E>query(mappedStatement, wrapCollection(parameter), rowBounds)
                 .contextWrite(context -> initReactiveExecutorContext(context,new StatementLogHelper(mappedStatement.getStatementLog())));
     }
 
@@ -97,7 +97,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
         this.checkSessionClosed();
         dirty.compareAndSet(false,true);
         MappedStatement mappedStatement = configuration.getMappedStatement(statement);
-        return reactiveExecutor.update(mappedStatement, wrapCollection(parameter))
+        return reactiveMybatisExecutor.update(mappedStatement, wrapCollection(parameter))
                 .contextWrite(context -> initReactiveExecutorContext(context,new StatementLogHelper(mappedStatement.getStatementLog())));
     }
 
@@ -109,7 +109,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
     @Override
     public Mono<Void> commit(boolean force) {
         this.checkSessionClosed();
-        return reactiveExecutor.commit(isCommitOrRollbackRequired(force))
+        return reactiveMybatisExecutor.commit(isCommitOrRollbackRequired(force))
                 .contextWrite(this::initReactiveExecutorContext)
                 .doOnSubscribe(s -> dirty.compareAndSet(true,false));
     }
@@ -117,7 +117,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
     @Override
     public Mono<Void> rollback(boolean force) {
         this.checkSessionClosed();
-        return reactiveExecutor.rollback(isCommitOrRollbackRequired(force))
+        return reactiveMybatisExecutor.rollback(isCommitOrRollbackRequired(force))
                 .contextWrite(this::initReactiveExecutorContext)
                 .doOnSubscribe(s -> dirty.compareAndSet(true,false));
     }
@@ -135,7 +135,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
     @Override
     public Mono<Void> close() {
         this.checkSessionClosed();
-        return reactiveExecutor.close(isCommitOrRollbackRequired(false))
+        return reactiveMybatisExecutor.close(isCommitOrRollbackRequired(false))
                 .contextWrite(this::initReactiveExecutorContext)
                 .doOnSubscribe(s -> {
                     dirty.compareAndSet(true, false);

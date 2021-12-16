@@ -6,6 +6,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.e
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.entity.model.Dept;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.DeptMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.EmpMapper;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDateTime;
@@ -82,37 +83,12 @@ public class DeptMapperTest extends TestApplicationTests {
         dept.setDeptName("Test_dept_name");
         dept.setCreateTime(LocalDateTime.now());
         dept.setLocation("Test_location");
-//        this.transactionalOperator().execute(action -> {
-//            return this.deptMapper.insert(dept)
-//                    .flatMap(effectRowCount -> {
-//                        assertThat(effectRowCount).isEqualTo(1);
-//                        return deptMapper.deleteByDeptNo(dept.getDeptNo())
-//                                .flatMap(rowCount -> {
-////                                assertThat(effectRowCount).isZero();
-//                                    return Mono.empty();
-//                                });
-//                    });
-//        }).blockLast();
-//                .as(StepVerifier::create)
-//                .verifyComplete();
-//        this.deptMapper.insert(dept)
-//                .flatMap(effectRowCount -> {
-//                    assertThat(effectRowCount).isEqualTo(1);
-//                    return deptMapper.deleteByDeptNo(dept.getDeptNo())
-//                            .flatMap(rowCount -> {
-////                                assertThat(effectRowCount).isZero();
-//                                return Mono.empty();
-//                            });
-//                })
-//                .block();
-        this.transactionalOperator().execute(tx -> {
-            tx.setRollbackOnly();
-            return this.deptMapper.deleteByDeptNo(4L);
-        })
+        this.deptMapper.insert(dept)
+                .then(Mono.defer(() -> deptMapper.deleteByDeptNo(dept.getDeptNo())))
+                .as(this::withRollback)
                 .as(StepVerifier::create)
-                .expectNext(1)
+                .expectNextMatches(effectRowCount -> effectRowCount == 1)
                 .verifyComplete();
-
     }
 
     @Test

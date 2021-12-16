@@ -7,8 +7,8 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.connection.DefaultTransactionSupportConnectionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.DefaultReactiveExecutor;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveExecutor;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.DefaultReactiveMybatisExecutor;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveMybatisExecutor;
 
 import java.io.Closeable;
 
@@ -32,14 +32,14 @@ public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFacto
 
     @Override
     public ReactiveSqlSession openSession(boolean autoCommit) {
-        ReactiveExecutor reactiveExecutor = new DefaultReactiveExecutor(this.configuration,this.configuration.getConnectionFactory());
-        return new DefaultReactiveSqlSession(this.configuration,reactiveExecutor,autoCommit, null);
+        ReactiveMybatisExecutor reactiveMybatisExecutor = new DefaultReactiveMybatisExecutor(this.configuration,this.configuration.getConnectionFactory());
+        return new DefaultReactiveSqlSession(this.configuration, reactiveMybatisExecutor,autoCommit, null);
     }
 
     @Override
     public ReactiveSqlSession openSession(IsolationLevel level) {
-        ReactiveExecutor reactiveExecutor = new DefaultReactiveExecutor(this.configuration,this.configuration.getConnectionFactory());
-        return new DefaultReactiveSqlSession(this.configuration,reactiveExecutor,false, level);
+        ReactiveMybatisExecutor reactiveMybatisExecutor = new DefaultReactiveMybatisExecutor(this.configuration,this.configuration.getConnectionFactory());
+        return new DefaultReactiveSqlSession(this.configuration, reactiveMybatisExecutor,false, level);
     }
 
     @Override

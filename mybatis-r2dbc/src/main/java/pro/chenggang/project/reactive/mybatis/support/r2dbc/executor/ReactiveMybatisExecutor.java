@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
  * @author: chenggang
  * @date 12/7/21.
  */
-public interface ReactiveExecutor {
+public interface ReactiveMybatisExecutor {
 
     /**
      * update

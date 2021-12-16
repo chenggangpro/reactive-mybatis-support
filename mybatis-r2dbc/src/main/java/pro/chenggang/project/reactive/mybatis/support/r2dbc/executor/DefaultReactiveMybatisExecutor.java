@@ -32,11 +32,11 @@ import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.resu
  * @author: chenggang
  * @date 12/9/21.
  */
-public class DefaultReactiveExecutor extends AbstractReactiveExecutor{
+public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecutor {
 
-    private static final Log log = LogFactory.getLog(DefaultReactiveExecutor.class);
+    private static final Log log = LogFactory.getLog(DefaultReactiveMybatisExecutor.class);
 
-    public DefaultReactiveExecutor(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory) {
+    public DefaultReactiveMybatisExecutor(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory) {
         super(configuration, connectionFactory);
     }
 

@@ -5,8 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.service.BusinessService;
 import reactor.test.StepVerifier;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 /**
  * @author: chenggang
  * @date 7/6/21.
@@ -26,10 +24,11 @@ public class BusinessServiceTests extends TestApplicationTests {
     }
 
     @Test
-    public void testDoWithTransactionBusinessRollback(){
+    public void testDoWithTransactionBusinessRollback() throws Exception{
         businessService.doWithTransactionBusinessRollback()
+                .as(this::withRollback)
                 .as(StepVerifier::create)
-                .assertNext(dept ->  assertThat(dept.getDeptName()).isNotEqualTo("InsertDept"))
-                .verifyComplete();
+                .expectError()
+                .verify();
     }
 }

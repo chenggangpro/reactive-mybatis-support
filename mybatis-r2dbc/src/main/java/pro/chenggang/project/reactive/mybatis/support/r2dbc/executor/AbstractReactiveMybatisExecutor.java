@@ -17,14 +17,14 @@ import java.util.function.Function;
  * @author: chenggang
  * @date 12/8/21.
  */
-public abstract class AbstractReactiveExecutor implements ReactiveExecutor {
+public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatisExecutor {
 
-    private static final Log log = LogFactory.getLog(AbstractReactiveExecutor.class);
+    private static final Log log = LogFactory.getLog(AbstractReactiveMybatisExecutor.class);
 
     protected final R2dbcMybatisConfiguration configuration;
     protected final ConnectionFactory connectionFactory;
 
-    protected AbstractReactiveExecutor(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory) {
+    protected AbstractReactiveMybatisExecutor(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory) {
         this.configuration = configuration;
         this.connectionFactory = connectionFactory;
     }
@@ -78,17 +78,15 @@ public abstract class AbstractReactiveExecutor implements ReactiveExecutor {
 
     @Override
     public Mono<Void> close(boolean forceRollback) {
-        return Mono.deferContextual(contextView -> {
-                    return Mono
-                            .justOrEmpty(contextView.getOrEmpty(ReactiveExecutorContext.class))
-                            .cast(ReactiveExecutorContext.class)
-                            .flatMap(reactiveExecutorContext -> {
-                                reactiveExecutorContext.setForceRollback(forceRollback || reactiveExecutorContext.isUsingTransaction());
-                                reactiveExecutorContext.setRequireClosed(true);
-                                return Mono.justOrEmpty(reactiveExecutorContext.getConnection())
-                                        .flatMap(connection -> Mono.from(connection.close()));
-                            });
-                }
+        return Mono.deferContextual(contextView -> Mono
+                .justOrEmpty(contextView.getOrEmpty(ReactiveExecutorContext.class))
+                .cast(ReactiveExecutorContext.class)
+                .flatMap(reactiveExecutorContext -> {
+                    reactiveExecutorContext.setForceRollback(forceRollback || reactiveExecutorContext.isUsingTransaction());
+                    reactiveExecutorContext.setRequireClosed(true);
+                    return Mono.justOrEmpty(reactiveExecutorContext.getConnection())
+                            .flatMap(connection -> Mono.from(connection.close()));
+                })
         );
     }
 

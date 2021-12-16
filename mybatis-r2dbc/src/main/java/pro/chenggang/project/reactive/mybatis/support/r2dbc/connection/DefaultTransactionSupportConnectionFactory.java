@@ -98,11 +98,13 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
 						.switchIfEmpty(Mono.defer(
 								() -> {
 									log.debug("[Get connection](Simple)");
-									return Mono.from(targetConnectionFactory.create())
-											.map(newConnection -> {
-												log.debug("[Get connection](Simple)Create connection : " + newConnection);
-												return this.getConnectionProxy(newConnection, false);
-											})
+									return Mono.justOrEmpty(reactiveExecutorContext.getConnection())
+											.switchIfEmpty(Mono.from(targetConnectionFactory.create())
+													.map(newConnection -> {
+														log.debug("[Get connection](Simple)Create connection : " + newConnection);
+														return this.getConnectionProxy(newConnection, false);
+													})
+											)
 											.doOnNext(simpleConnection -> {
 												log.debug("[Get connection](Simple)Register to context : " + simpleConnection);
 												reactiveExecutorContext.registerConnection(simpleConnection);

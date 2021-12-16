@@ -1,7 +1,6 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.service;
 
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.entity.model.Dept;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -14,7 +13,4 @@ public interface BusinessService {
 
     Mono<Dept> doWithTransactionBusinessRollback();
 
-    Mono<Integer> doInsertPerformance(Dept dept);
-
-    Flux<Dept> doSelectAllPerformance();
 }
