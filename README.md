@@ -15,7 +15,7 @@
     * ❌ 5 . blocking java type (aka: InputStream .eg)
     * ⚠️ 6 . Mapper Method only support `Flux<T>`/`Mono<T>`/`Mono<Void>`/`Flux<Void>`, and not supported `void`
 * ⚠️ Haven't test the concurrency performance
-* More detail, please see source code and test suits
+* More detail, please see source code and test suits, tests use MySQL database with `test-prepare.sql` schema setup
 #### Examples
 
 * Generate `mybatis-dynamic-sql` 
