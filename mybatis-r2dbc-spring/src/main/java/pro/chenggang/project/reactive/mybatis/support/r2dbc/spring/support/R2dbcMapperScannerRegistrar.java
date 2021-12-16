@@ -1,5 +1,6 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -12,7 +13,6 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.annotation.R2dbcMapperScan;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -40,7 +40,7 @@ public class R2dbcMapperScannerRegistrar implements ImportBeanDefinitionRegistra
 
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
-        AnnotationAttributes annoAttrs = AnnotationAttributes.fromMap(importingClassMetadata.getAnnotationAttributes(R2dbcMapperScan.class.getName()));
+        AnnotationAttributes annoAttrs = AnnotationAttributes.fromMap(importingClassMetadata.getAnnotationAttributes(MapperScan.class.getName()));
         if(annoAttrs != null) {
             R2dbcClasspathMapperScanner scanner = new R2dbcClasspathMapperScanner(registry);
 
@@ -82,7 +82,7 @@ public class R2dbcMapperScannerRegistrar implements ImportBeanDefinitionRegistra
             scanner.registerFilters();
             scanner.doScan(StringUtils.toStringArray(basePackages));
         } else {
-            log.info("R2dbcMapperScan is not configured,default by scan with spring context");
+            log.debug("MapperScan is not configured,default by scan with spring context");
         }
     }
 }

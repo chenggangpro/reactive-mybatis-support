@@ -6,15 +6,16 @@
 * `mybatis-r2dbc` Base on [linux-china/mybatis-r2dbc](https://github.com/linux-china/mybatis-r2dbc) 
 * Using `mybatis-generator` adapt `mybatis-dynamic-sql` to  reactive project
 * Support SpringBoot AutoConfiguration,AutoMapperScan and so on.
-* Support Spring's Transaction .
+* Support Spring's Transaction.
 * Unsupported mybatis3 feature:
     * ❌ 1 . mybatis-plugin
     * ❌ 2 . resultSet and resultOrdered = true
     * ❌ 3 . nested query
     * ❌ 4 . generated key by nested query
     * ❌ 5 . blocking java type (aka: InputStream .eg)
-    * ⚠️ 6 . there is no reactive-sql-session cache implementation
-    * ⚠️ 7 . Mapper Method only support `Flux<T>`/`Mono<T>`/`Mono<Void>`/`Flux<Void>`, and not supported `void` 
+    * ⚠️ 6 . Mapper Method only support `Flux<T>`/`Mono<T>`/`Mono<Void>`/`Flux<Void>`, and not supported `void`
+* ⚠️ Haven't test the concurrency performance
+* More detail, please see source code and test suits
 #### Examples
 
 * Generate `mybatis-dynamic-sql` 
@@ -52,6 +53,7 @@
 * copy `mybatis-generator.yml` form `source-code/mybatis-reactive-generator/resources/META-INF/mybatis-generator.yml`
 * modify source database settings in `mybatis-generator.yml`
 * add a test case 
+
 ```java
 public class MyBatisGeneratorAction {
 
@@ -97,17 +99,6 @@ public class MyBatisGeneratorAction {
     * before run the `mybatis-r2dbc-spring`'s test cases ,you should execute `test_prepare.sql` in the test resources.
     * spring-boot-test is not support `@Transaction` in tests ,link [Spring Issue](https://github.com/spring-projects/spring-framework/issues/24226)
     
-
-
-#### Adapt Spring
-
-* In the original project [linux-china/mybatis-r2dbc](https://github.com/linux-china/mybatis-r2dbc) ,
-the `ReactiveSqlSession` get the `Connection` use the `ConnecionFactory` directly.This cause an issue when you used in
-spring environment and multiple database operation in one transaction.In reactive environment,if you want handle with resource 
-,you should use `Mono.usingWhen() or Flux.usingWhen()` and not `doFinally()`.
-* To resolve above issue, refer to the `spring-data-r2dbc` project .
-Found the [DefaultDatabaseClient](https://github.com/spring-projects/spring-data-r2dbc/blob/main/src/main/java/org/springframework/data/r2dbc/core/DefaultDatabaseClient.java)
- resolve this issue perfectly
 
 #### Reference
 
