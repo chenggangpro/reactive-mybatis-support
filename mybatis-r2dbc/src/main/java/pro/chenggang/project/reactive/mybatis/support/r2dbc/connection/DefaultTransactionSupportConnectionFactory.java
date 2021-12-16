@@ -109,7 +109,6 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
 
 	/**
 	 * Invocation handler that delegates close calls on R2DBC Connections to
-	 * {@link ConnectionFactoryUtils} for being aware of context-bound transactions.
 	 */
 	private static class TransactionAwareConnection implements InvocationHandler {
 
