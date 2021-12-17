@@ -45,8 +45,6 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
     private final TypeHandlerRegistry typeHandlerRegistry;
     // temporary marking flag that indicate using constructor mapping (use field to reduce memory usage)
     private boolean useConstructorMappings;
-    // multiple resultsets
-    private final Map<String, ResultMapping> nextResultMaps = new HashMap<>();
     private final Map<CacheKey, List<DefaultReactiveResultHandler.PendingRelation>> pendingRelations = new HashMap<>();
     // Cached Automappings
     private final Map<String, List<DefaultReactiveResultHandler.UnMappedColumnAutoMapping>> autoMappingsCache = new HashMap<>();

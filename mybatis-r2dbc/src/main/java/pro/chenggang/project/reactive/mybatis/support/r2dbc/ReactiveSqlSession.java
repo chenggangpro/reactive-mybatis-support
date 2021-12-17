@@ -15,20 +15,20 @@ public interface ReactiveSqlSession {
     /**
      * set auto commit
      * @param autoCommit
-     * @return
+     * @return current ReactiveSqlSession
      */
     ReactiveSqlSession setAutoCommit(boolean autoCommit);
 
     /**
      * set isolation level
      * @param isolationLevel
-     * @return
+     * @return current ReactiveSqlSession
      */
     ReactiveSqlSession setIsolationLevel(IsolationLevel isolationLevel);
 
     /**
      * with transaction
-     * @return
+     * @return current ReactiveSqlSession
      */
     ReactiveSqlSession withTransaction();
 
@@ -138,7 +138,7 @@ public interface ReactiveSqlSession {
     Mono<Integer> delete(String statement, Object parameter);
 
     /**
-     * Flushes batch statements and commits database connection.
+     * Perform commits database connection.
      * Note that database connection will not be committed if no updates/deletes/inserts were called.
      * To force the commit call {@link ReactiveSqlSession#commit(boolean)}
      * @return
@@ -148,14 +148,14 @@ public interface ReactiveSqlSession {
     }
 
     /**
-     * Flushes batch statements and commits database connection.
+     * Perform commits database connection.
      * @param force forces connection commit
      * @return
      */
     Mono<Void> commit(boolean force);
 
     /**
-     * Discards pending batch statements and rolls database connection back.
+     * Perform rollback database connection .
      * Note that database connection will not be rolled back if no updates/deletes/inserts were called.
      * To force the rollback call {@link ReactiveSqlSession#rollback(boolean)}
      * @return
@@ -180,7 +180,7 @@ public interface ReactiveSqlSession {
 
     /**
      * Retrieves current configuration.
-     * @return Configuration
+     * @return R2dbcMybatisConfiguration
      */
     R2dbcMybatisConfiguration getConfiguration();
 

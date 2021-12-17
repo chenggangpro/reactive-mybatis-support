@@ -77,9 +77,7 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
                 .flatMap(reactiveExecutorContext -> {
                     reactiveExecutorContext.setForceRollback(reactiveExecutorContext.isDirty() || required);
                     return Mono.justOrEmpty(reactiveExecutorContext.getConnection())
-                            .flatMap(connection -> {
-                                return Mono.from(connection.close());
-                            })
+                            .flatMap(connection -> Mono.from(connection.close()))
                             .then(Mono.defer(() -> {
                                 reactiveExecutorContext.resetDirty();
                                 return Mono.empty();
