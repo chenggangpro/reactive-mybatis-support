@@ -1,12 +1,12 @@
 # Reactive-Mybatis-Support
 
 This project has met the general business usage scenarios, including:
-1 . Parameter parsing and mapping
-2 . One-to-many associative relationships for result mapping
-3 . Result mapping for one-to-one relationships
-4 . Returning a generated key
-5 . Manual transaction operation
-6 . SpringBoot transaction Integration
+* 1 . Parameter parsing and mapping
+* 2 . One-to-many associative relationships for result mapping
+* 3 . Result mapping for one-to-one relationships
+* 4 . Returning a generated key
+* 5 . Manual transaction operation
+* 6 . SpringBoot transaction Integration
 
 #### Instruction
 
