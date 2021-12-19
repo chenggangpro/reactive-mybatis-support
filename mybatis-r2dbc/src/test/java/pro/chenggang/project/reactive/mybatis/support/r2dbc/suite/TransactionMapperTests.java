@@ -29,7 +29,7 @@ public class TransactionMapperTests extends MybatisR2dbcBaseTests {
 
     @BeforeAll
     public void initSqlSession () throws Exception {
-        this.reactiveSqlSession = super.reactiveSqlSessionFactory.openSession().withTransaction();
+        this.reactiveSqlSession = super.reactiveSqlSessionFactory.openSession().usingTransaction(true);
         this.deptMapper = this.reactiveSqlSession.getMapper(DeptMapper.class);
         this.empMapper = this.reactiveSqlSession.getMapper(EmpMapper.class);
         this.reactiveSqlSessionOperator = new DefaultReactiveSqlSessionOperator(reactiveSqlSessionFactory);

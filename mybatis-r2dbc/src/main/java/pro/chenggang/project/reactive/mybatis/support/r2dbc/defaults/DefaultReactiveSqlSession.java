@@ -53,9 +53,11 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
     }
 
     @Override
-    public ReactiveSqlSession withTransaction() {
-        this.withTransaction = true;
-        this.autoCommit = false;
+    public ReactiveSqlSession usingTransaction(boolean usingTransactionSupport) {
+        this.withTransaction = usingTransactionSupport;
+        if(this.withTransaction){
+            this.autoCommit = false;
+        }
         return this;
     }
 

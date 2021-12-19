@@ -27,10 +27,11 @@ public interface ReactiveSqlSession {
     ReactiveSqlSession setIsolationLevel(IsolationLevel isolationLevel);
 
     /**
-     * with transaction
+     * set transaction or not
+     * @param usingTransactionSupport
      * @return current ReactiveSqlSession
      */
-    ReactiveSqlSession withTransaction();
+    ReactiveSqlSession usingTransaction(boolean usingTransactionSupport);
 
     /**
      * Retrieve a single row mapped from the statement key.

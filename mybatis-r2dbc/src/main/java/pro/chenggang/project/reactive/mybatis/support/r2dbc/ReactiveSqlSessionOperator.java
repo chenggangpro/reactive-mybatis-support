@@ -10,6 +10,14 @@ import reactor.core.publisher.Mono;
 public interface ReactiveSqlSessionOperator {
 
     /**
+     * execute with Mono
+     * @param monoExecution
+     * @param <T>
+     * @return
+     */
+    <T> Mono<T> execute(Mono<T> monoExecution);
+
+    /**
      * execute with Mono then commit
      * @param monoExecution
      * @param <T>
@@ -26,7 +34,15 @@ public interface ReactiveSqlSessionOperator {
     <T> Mono<T> executeAndRollback(Mono<T> monoExecution);
 
     /**
-     * execute with Flux then commit
+     * execute with Mono then commit
+     * @param fluxExecution
+     * @param <T>
+     * @return
+     */
+    <T> Flux<T> executeMany(Flux<T> fluxExecution);
+
+    /**
+     * execute with Flux
      * @param fluxExecution
      * @param <T>
      * @return
