@@ -139,6 +139,9 @@ public class MybatisR2dbcBaseTests extends R2dbcTestConfig {
     }
 
     public ReactiveSqlSessionFactory reactiveSqlSessionFactory(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory) {
-        return new DefaultReactiveSqlSessionFactory(configuration, connectionFactory);
+        return DefaultReactiveSqlSessionFactory.newBuilder()
+                .withConnectionFactory(connectionFactory)
+                .withR2dbcMybatisConfiguration(configuration)
+                .build();
     }
 }

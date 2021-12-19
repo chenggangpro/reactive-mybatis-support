@@ -132,7 +132,11 @@ public class R2dbcMybatisAutoConfiguration {
     public ReactiveSqlSessionFactory reactiveSqlSessionFactoryWithTransaction(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory) {
         configuration.setConnectionFactory(new TransactionAwareConnectionFactoryProxy(connectionFactory));
         SpringReactiveMybatisExecutor springReactiveMybatisExecutor = new SpringReactiveMybatisExecutor(configuration);
-        return new DefaultReactiveSqlSessionFactory(configuration, springReactiveMybatisExecutor);
+        return DefaultReactiveSqlSessionFactory.newBuilder()
+                .withR2dbcMybatisConfiguration(configuration)
+                .withReactiveMybatisExecutor(springReactiveMybatisExecutor)
+                .withDefaultConnectionFactoryProxy(false)
+                .build();
     }
 
 }
