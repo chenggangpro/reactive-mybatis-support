@@ -1,5 +1,13 @@
 # Reactive-Mybatis-Support
 
+> This project has met the general business usage scenarios, including:
+> 1 . Parameter parsing and mapping
+> 2 . One-to-many associative relationships for result mapping
+> 3 . Result mapping for one-to-one relationships
+> 4 . Returning a generated key
+> 5 . Manual transaction operation
+> 6 . SpringBoot transaction Integration
+
 #### Instruction
 
 * Aimed to adapt mybatis to reactive project (aka WebFlux/Reactor3)
@@ -15,7 +23,9 @@
     * ❌ 5 . blocking java type (aka: InputStream .eg)
     * ⚠️ 6 . Mapper Method only support `Flux<T>`/`Mono<T>`/`Mono<Void>`/`Flux<Void>`, and not supported `void`
 * ⚠️ Haven't test the concurrency performance
+* Using Reactor's Context to implement Transaction
 * More detail, please see source code and test suits, tests use MySQL database with `test-prepare.sql` schema setup
+
 #### Examples
 
 * Generate `mybatis-dynamic-sql` 
