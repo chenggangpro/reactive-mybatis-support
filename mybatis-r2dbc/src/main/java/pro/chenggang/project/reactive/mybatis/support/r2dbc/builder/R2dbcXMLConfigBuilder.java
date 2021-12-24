@@ -66,7 +66,7 @@ public class R2dbcXMLConfigBuilder extends BaseBuilder {
     }
 
     private R2dbcXMLConfigBuilder(XPathParser parser, String environment, Properties props) {
-        super(new Configuration());
+        super(new R2dbcMybatisConfiguration());
         ErrorContext.instance().resource("SQL Mapper Configuration");
         this.configuration.setVariables(props);
         this.parsed = false;
