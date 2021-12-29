@@ -59,7 +59,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                     int keyPropertiesLength = mappedStatement.getKeyProperties().length;
                                     return Flux.just(result)
                                             .takeWhile(targetResult -> r2dbcKeyGenerator.getResultRowCount() < keyPropertiesLength)
-                                            .concatMap(targetResult -> targetResult.map((row, rowMetadata) -> {
+                                            .flatMap(targetResult -> targetResult.map((row, rowMetadata) -> {
                                                 RowResultWrapper rowResultWrapper = new RowResultWrapper(row, rowMetadata, configuration);
                                                 return r2dbcKeyGenerator.handleKeyResult(rowResultWrapper, parameter);
                                             }));
@@ -84,7 +84,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                     return Flux.from(statement.execute())
                             .checkpoint("SQL: \"" + boundSql + "\" [DefaultReactiveExecutor]")
                             .skip(rowBounds.getOffset())
-                            .takeWhile(result -> reactiveResultHandler.getResultRowTotalCount() < rowBounds.getLimit())
+                            .take(rowBounds.getLimit(),true)
                             .concatMap(result -> result.map((row,rowMetadata) -> {
                                 RowResultWrapper rowResultWrapper = new RowResultWrapper(row, rowMetadata, configuration);
                                 return (List<E>) reactiveResultHandler.handleResult(rowResultWrapper);
