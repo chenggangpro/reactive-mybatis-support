@@ -58,7 +58,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                 } else {
                                     int keyPropertiesLength = mappedStatement.getKeyProperties().length;
                                     return Flux.just(result)
-                                            .takeWhile(targetResult -> r2dbcKeyGenerator.getResultRowCount() < keyPropertiesLength)
+                                            .take(keyPropertiesLength,true)
                                             .flatMap(targetResult -> targetResult.map((row, rowMetadata) -> {
                                                 RowResultWrapper rowResultWrapper = new RowResultWrapper(row, rowMetadata, configuration);
                                                 return r2dbcKeyGenerator.handleKeyResult(rowResultWrapper, parameter);
