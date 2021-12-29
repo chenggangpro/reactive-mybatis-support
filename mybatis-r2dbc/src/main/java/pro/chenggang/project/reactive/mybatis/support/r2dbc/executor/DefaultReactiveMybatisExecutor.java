@@ -89,7 +89,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                 RowResultWrapper rowResultWrapper = new RowResultWrapper(row, rowMetadata, configuration);
                                 return (List<E>) reactiveResultHandler.handleResult(rowResultWrapper);
                             }))
-                            .flatMap(Flux::fromIterable)
+                            .concatMap(Flux::fromIterable)
                             .filter(data -> !Objects.equals(data,DEFERRED))
                             .doOnComplete(() -> statementLogHelper.logTotal(reactiveResultHandler.getResultRowTotalCount()));
                 })
