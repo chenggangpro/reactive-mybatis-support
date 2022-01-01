@@ -17,14 +17,15 @@ This project has met the general business usage scenarios, including:
 * Support Spring's Transaction.
 * Unsupported mybatis3 feature:
     * ❌ 1 . mybatis-plugin
-    * ❌ 2 . resultSet and resultOrdered = true
-    * ❌ 3 . nested query
+    * ❌ 2 . multi resultSet and `resultOrdered = true` in mapper.XML
+    * ❌ 3 . nested query with multi SQL
     * ❌ 4 . generated key by nested query
     * ❌ 5 . blocking java type (aka: InputStream .eg)
     * ⚠️ 6 . Mapper Method only support `Flux<T>`/`Mono<T>`/`Mono<Void>`/`Flux<Void>`, and not supported `void`
 * ⚠️ Haven't test the concurrency performance
 * Using Reactor's Context to implement Transaction
 * More detail, please see source code and test suits, tests use MySQL database with `test-prepare.sql` schema setup
+* It has been piloted in a small scale within the company, and any bugs found will be updated at any time
 
 #### Examples
 
