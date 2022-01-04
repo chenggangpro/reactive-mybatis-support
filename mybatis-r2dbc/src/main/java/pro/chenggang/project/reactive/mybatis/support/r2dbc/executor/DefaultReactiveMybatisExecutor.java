@@ -8,6 +8,7 @@ import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.RowBounds;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextHelper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.exception.R2dbcParameterException;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.DefaultR2dbcKeyGenerator;
@@ -41,9 +42,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
 
     @Override
     protected Mono<Integer> doUpdateWithConnection(Connection connection, MappedStatement mappedStatement, Object parameter) {
-        return Mono.deferContextual(contextView -> Mono
-                .justOrEmpty(contextView.getOrEmpty(ReactiveExecutorContext.class))
-                .cast(ReactiveExecutorContext.class)
+        return MybatisReactiveContextHelper.currentContext()
                 .map(ReactiveExecutorContext::getStatementLogHelper)
                 .flatMap(statementLogHelper -> {
                     String boundSql = mappedStatement.getBoundSql(parameter).getSql();
@@ -69,15 +68,12 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                             ))
                             .collect(Collectors.summingInt(Integer::intValue))
                             .doOnNext(statementLogHelper::logUpdates);
-                })
-        );
+                });
     }
 
     @Override
     protected <E> Flux<E> doQueryWithConnection(Connection connection, MappedStatement mappedStatement, Object parameter, RowBounds rowBounds) {
-        return Flux.deferContextual(contextView -> Mono
-                .justOrEmpty(contextView.getOrEmpty(ReactiveExecutorContext.class))
-                .cast(ReactiveExecutorContext.class)
+        return MybatisReactiveContextHelper.currentContext()
                 .map(ReactiveExecutorContext::getStatementLogHelper)
                 .flatMapMany(statementLogHelper -> {
                     String boundSql = mappedStatement.getBoundSql(parameter).getSql();
@@ -94,8 +90,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                             .concatMap(Flux::fromIterable)
                             .filter(data -> !Objects.equals(data,DEFERRED))
                             .doOnComplete(() -> statementLogHelper.logTotal(reactiveResultHandler.getResultRowTotalCount()));
-                })
-        );
+                });
 
     }
 

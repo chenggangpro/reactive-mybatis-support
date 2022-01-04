@@ -7,6 +7,7 @@ import io.r2dbc.spi.ConnectionFactoryMetadata;
 import io.r2dbc.spi.Wrapped;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextHelper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveExecutorContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
 import reactor.core.publisher.Mono;
@@ -63,9 +64,7 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
 	 * @return
 	 */
 	private Mono<Connection> getOptionalTransactionAwareConnectionProxy(ConnectionFactory targetConnectionFactory) {
-		return Mono.deferContextual(contextView -> Mono
-				.justOrEmpty(contextView.getOrEmpty(ReactiveExecutorContext.class))
-				.cast(ReactiveExecutorContext.class)
+		return MybatisReactiveContextHelper.currentContext()
 				.flatMap(reactiveExecutorContext -> Mono.justOrEmpty(reactiveExecutorContext.getConnection())
                         .switchIfEmpty(Mono.from(targetConnectionFactory.create())
                                 .map(newConnection -> {
@@ -95,7 +94,7 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
 									}
 									return Mono.just(newConnection);
 								})))
-				));
+				);
 	}
 
 	private Connection getConnectionProxy(Connection connection,boolean suspendClose){
@@ -138,9 +137,7 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
 					if(this.closed){
 						return Mono.empty();
 					}
-					return Mono.deferContextual(contextView -> Mono
-							.justOrEmpty(contextView.getOrEmpty(ReactiveExecutorContext.class))
-							.cast(ReactiveExecutorContext.class)
+					return MybatisReactiveContextHelper.currentContext()
 							.flatMap(reactiveExecutorContext -> {
 								if(reactiveExecutorContext.isForceRollback()){
 									return Mono.just(reactiveExecutorContext.isRequireClosed())
@@ -195,7 +192,7 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
                                 }
 								log.trace("[Close connection]neither rollback or commit,nothing to do");
 								return Mono.empty();
-							}));
+							});
 				case "isClosed":
 					return this.closed;
 			}

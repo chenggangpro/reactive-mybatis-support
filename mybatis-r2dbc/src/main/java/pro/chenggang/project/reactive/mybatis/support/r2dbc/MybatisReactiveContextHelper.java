@@ -1,6 +1,8 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc;
 
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveExecutorContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.StatementLogHelper;
+import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
 /**
@@ -8,6 +10,19 @@ import reactor.util.context.Context;
  * @date 12/16/21.
  */
 public interface MybatisReactiveContextHelper {
+
+    /**
+     * current context
+     *
+     * @return
+     */
+    static Mono<ReactiveExecutorContext> currentContext() {
+        return Mono.deferContextual(contextView -> Mono
+                .justOrEmpty(contextView.getOrEmpty(ReactiveExecutorContext.class))
+                .switchIfEmpty(Mono.error(new IllegalStateException("ReactiveExecutorContext is empty")))
+                .cast(ReactiveExecutorContext.class)
+        );
+    }
 
     /**
      * init reactive executor context with StatementLogHelper
