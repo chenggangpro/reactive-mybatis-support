@@ -14,4 +14,4 @@ workflows:
     jobs:
       - maven/test:
           command: 'clean package -DskipTests'
-          app_src_directory: reactive-mybatis-support
+            app_src_directory: reactive-mybatis-support
