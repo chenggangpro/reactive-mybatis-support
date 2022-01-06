@@ -37,7 +37,7 @@ public class R2dbcClasspathMapperScanner extends ClassPathBeanDefinitionScanner 
     private R2dbcMapperFactoryBean<?> mapperFactoryBean = new R2dbcMapperFactoryBean<>();
 
     /**
-     * Instantiates a new R 2 dbc classpath mapper scanner.
+     * Instantiates a new r2dbc classpath mapper scanner.
      *
      * @param registry the registry
      */

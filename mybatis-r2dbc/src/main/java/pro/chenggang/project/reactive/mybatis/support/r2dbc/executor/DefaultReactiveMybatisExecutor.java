@@ -16,6 +16,8 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.parameter.D
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowResultWrapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.DefaultReactiveResultHandler;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.ReactiveResultHandler;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContext;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.R2dbcStatementLog;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -118,8 +120,8 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                               MappedStatement mappedStatement,
                                               Object parameter,
                                               RowBounds rowBounds,
-                                              StatementLogHelper statementLogHelper) {
-        statementLogHelper.logSql(boundSql);
+                                              R2dbcStatementLog r2dbcStatementLog) {
+        r2dbcStatementLog.logSql(boundSql);
         StatementHandler handler = configuration.newStatementHandler(null, mappedStatement, parameter, rowBounds, null, null);
         ParameterHandler parameterHandler = handler.getParameterHandler();
         Statement statement = connection.createStatement(boundSql);
@@ -135,7 +137,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                         this.configuration,
                         parameterHandler,
                         statement,
-                        statementLogHelper)
+                        r2dbcStatementLog)
         );
         try {
             delegateParameterHandler.setParameters(null);

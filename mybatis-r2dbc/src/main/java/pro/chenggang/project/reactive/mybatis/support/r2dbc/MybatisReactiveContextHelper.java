@@ -1,7 +1,7 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc;
 
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveExecutorContext;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.StatementLogHelper;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContext;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.R2dbcStatementLog;
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
@@ -31,10 +31,10 @@ public interface MybatisReactiveContextHelper {
      * init reactive executor context with StatementLogHelper
      *
      * @param context            the context
-     * @param statementLogHelper the statement log helper
+     * @param r2dbcStatementLog the statement log helper
      * @return context
      */
-    Context initReactiveExecutorContext(Context context, StatementLogHelper statementLogHelper);
+    Context initReactiveExecutorContext(Context context, R2dbcStatementLog r2dbcStatementLog);
 
     /**
      * init reactive executor context

@@ -13,7 +13,7 @@ import org.apache.ibatis.type.TypeException;
 import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.StatementLogHelper;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.R2dbcStatementLog;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
 
@@ -47,7 +47,7 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
     private final Statement delegateStatement;
     private final PreparedStatement delegatedPreparedStatement;
     private final AtomicReference<ParameterHandlerContext> parameterHandlerContextReference = new AtomicReference<>();
-    private final StatementLogHelper statementLogHelper;
+    private final R2dbcStatementLog r2dbcStatementLog;
 
     /**
      * Instantiates a new Delegate R2dbc parameter handler.
@@ -55,16 +55,16 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
      * @param r2DbcMybatisConfiguration the R2dbc mybatis configuration
      * @param parameterHandler          the parameter handler
      * @param statement                 the statement
-     * @param statementLogHelper        the statement log helper
+     * @param r2dbcStatementLog        the statement log helper
      */
     public DelegateR2dbcParameterHandler(R2dbcMybatisConfiguration r2DbcMybatisConfiguration,
                                          ParameterHandler parameterHandler,
                                          Statement statement,
-                                         StatementLogHelper statementLogHelper) {
+                                         R2dbcStatementLog r2dbcStatementLog) {
         this.configuration = r2DbcMybatisConfiguration;
         this.parameterHandler = parameterHandler;
         this.delegateStatement = statement;
-        this.statementLogHelper = statementLogHelper;
+        this.r2dbcStatementLog = r2dbcStatementLog;
         this.delegatedPreparedStatement = initDelegatedPreparedStatement();
         parameterHandlerFieldMap = Stream.of(parameterHandler.getClass().getDeclaredFields())
                 .collect(Collectors.toMap(
@@ -172,7 +172,7 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
                 }
             }
         }
-        statementLogHelper.logParameters(columnValues);
+        r2dbcStatementLog.logParameters(columnValues);
     }
 
 
