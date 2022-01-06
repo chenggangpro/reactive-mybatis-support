@@ -45,8 +45,8 @@ public class R2dbcStatementLogFactory {
     /**
      * Get r2dbc statement log optional.
      *
-     * @param id the id
-     * @return the optional
+     * @param mappedStatement the MappedStatement
+     * @return the R2dbcStatementLog
      */
     public R2dbcStatementLog getR2dbcStatementLog(MappedStatement mappedStatement){
         String logId = mappedStatement.getId();
