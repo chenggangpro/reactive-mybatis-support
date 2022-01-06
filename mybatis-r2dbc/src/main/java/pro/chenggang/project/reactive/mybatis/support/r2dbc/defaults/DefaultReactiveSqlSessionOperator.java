@@ -24,7 +24,7 @@ public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOper
      * @param reactiveSqlSessionFactory the reactive sql session factory
      */
     public DefaultReactiveSqlSessionOperator(ReactiveSqlSessionFactory reactiveSqlSessionFactory) {
-        this(reactiveSqlSessionFactory, false);
+        this(reactiveSqlSessionFactory, true);
     }
 
     /**
