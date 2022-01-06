@@ -12,5 +12,7 @@ orbs:
 workflows:
   maven_test:
     jobs:
-      - maven/test:
-          app_src_directory: 'reactive-mybatis-support'
+      - maven/test: # checkout, build, test, and upload test results
+dependencies:
+  override:
+    - mvn install -DskipTests
