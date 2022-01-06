@@ -13,4 +13,4 @@ workflows:
   maven_test:
     jobs:
       - maven/test:
-          command: 'clean package -DskipTests'
+          command: 'clean package -DskipTests -am'
