@@ -16,6 +16,9 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 /**
+ * The type Mapper proxy.
+ *
+ * @param <T> the type parameter
  * @author Clinton Begin
  * @author Eduardo Macarron
  */
@@ -26,15 +29,6 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
             | Lookup.PACKAGE | Lookup.PUBLIC;
     private static final Constructor<Lookup> lookupConstructor;
     private static final Method privateLookupInMethod;
-    private final ReactiveSqlSession sqlSession;
-    private final Class<T> mapperInterface;
-    private final Map<Method, MapperMethodInvoker> methodCache;
-
-    public MapperProxy(ReactiveSqlSession reactiveSqlSession, Class<T> mapperInterface, Map<Method, MapperMethodInvoker> methodCache) {
-        this.sqlSession = reactiveSqlSession;
-        this.mapperInterface = mapperInterface;
-        this.methodCache = methodCache;
-    }
 
     static {
         Method privateLookupIn;
@@ -60,6 +54,23 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
             }
         }
         lookupConstructor = lookup;
+    }
+
+    private final ReactiveSqlSession sqlSession;
+    private final Class<T> mapperInterface;
+    private final Map<Method, MapperMethodInvoker> methodCache;
+
+    /**
+     * Instantiates a new Mapper proxy.
+     *
+     * @param reactiveSqlSession the reactive sql session
+     * @param mapperInterface    the mapper interface
+     * @param methodCache        the method cache
+     */
+    public MapperProxy(ReactiveSqlSession reactiveSqlSession, Class<T> mapperInterface, Map<Method, MapperMethodInvoker> methodCache) {
+        this.sqlSession = reactiveSqlSession;
+        this.mapperInterface = mapperInterface;
+        this.methodCache = methodCache;
     }
 
     @Override
@@ -113,13 +124,31 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
         return lookupConstructor.newInstance(declaringClass, ALLOWED_MODES).unreflectSpecial(method, declaringClass);
     }
 
+    /**
+     * The interface Mapper method invoker.
+     */
     interface MapperMethodInvoker {
+        /**
+         * Invoke object.
+         *
+         * @param proxy      the proxy
+         * @param method     the method
+         * @param args       the args
+         * @param sqlSession the sql session
+         * @return the object
+         * @throws Throwable the throwable
+         */
         Object invoke(Object proxy, Method method, Object[] args, ReactiveSqlSession sqlSession) throws Throwable;
     }
 
     private static class PlainMethodInvoker implements MapperMethodInvoker {
         private final MapperMethod mapperMethod;
 
+        /**
+         * Instantiates a new Plain method invoker.
+         *
+         * @param mapperMethod the mapper method
+         */
         public PlainMethodInvoker(MapperMethod mapperMethod) {
             super();
             this.mapperMethod = mapperMethod;
@@ -134,6 +163,11 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
     private static class DefaultMethodInvoker implements MapperMethodInvoker {
         private final MethodHandle methodHandle;
 
+        /**
+         * Instantiates a new Default method invoker.
+         *
+         * @param methodHandle the method handle
+         */
         public DefaultMethodInvoker(MethodHandle methodHandle) {
             super();
             this.methodHandle = methodHandle;

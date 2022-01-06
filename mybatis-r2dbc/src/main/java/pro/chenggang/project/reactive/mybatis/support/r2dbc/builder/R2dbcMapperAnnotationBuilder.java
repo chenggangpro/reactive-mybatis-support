@@ -1,8 +1,26 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.builder;
 
-import org.apache.ibatis.annotations.*;
-import org.apache.ibatis.annotations.ResultMap;
+import org.apache.ibatis.annotations.Arg;
+import org.apache.ibatis.annotations.CacheNamespace;
+import org.apache.ibatis.annotations.CacheNamespaceRef;
+import org.apache.ibatis.annotations.Case;
+import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.DeleteProvider;
+import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.InsertProvider;
+import org.apache.ibatis.annotations.Lang;
+import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Options.FlushCachePolicy;
+import org.apache.ibatis.annotations.Property;
+import org.apache.ibatis.annotations.Result;
+import org.apache.ibatis.annotations.ResultMap;
+import org.apache.ibatis.annotations.Results;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.SelectKey;
+import org.apache.ibatis.annotations.SelectProvider;
+import org.apache.ibatis.annotations.TypeDiscriminator;
+import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.UpdateProvider;
 import org.apache.ibatis.binding.MapperMethod.ParamMap;
 import org.apache.ibatis.builder.BuilderException;
 import org.apache.ibatis.builder.CacheRefResolver;
@@ -18,7 +36,15 @@ import org.apache.ibatis.executor.keygen.KeyGenerator;
 import org.apache.ibatis.executor.keygen.NoKeyGenerator;
 import org.apache.ibatis.executor.keygen.SelectKeyGenerator;
 import org.apache.ibatis.io.Resources;
-import org.apache.ibatis.mapping.*;
+import org.apache.ibatis.mapping.Discriminator;
+import org.apache.ibatis.mapping.FetchType;
+import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.ResultFlag;
+import org.apache.ibatis.mapping.ResultMapping;
+import org.apache.ibatis.mapping.ResultSetType;
+import org.apache.ibatis.mapping.SqlCommandType;
+import org.apache.ibatis.mapping.SqlSource;
+import org.apache.ibatis.mapping.StatementType;
 import org.apache.ibatis.parsing.PropertyParser;
 import org.apache.ibatis.reflection.TypeParameterResolver;
 import org.apache.ibatis.scripting.LanguageDriver;
@@ -34,12 +60,27 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.*;
-import java.util.*;
+import java.lang.reflect.Array;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
+ * The type R2dbc mapper annotation builder.
+ *
  * @author Clinton Begin
  * @author Kazuki Shimizu
  */
@@ -54,8 +95,14 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
     private final MapperBuilderAssistant assistant;
     private final Class<?> type;
 
+    /**
+     * Instantiates a new R2dbc mapper annotation builder.
+     *
+     * @param configuration the configuration
+     * @param type          the type
+     */
     public R2dbcMapperAnnotationBuilder(Configuration configuration, Class<?> type) {
-        super(configuration,type);
+        super(configuration, type);
         String resource = type.getName().replace('.', '/') + ".java (best guess)";
         this.assistant = new MapperBuilderAssistant(configuration, resource);
         this.configuration = configuration;
@@ -244,6 +291,11 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
         return null;
     }
 
+    /**
+     * Parse statement.
+     *
+     * @param method the method
+     */
     void parseStatement(Method method) {
         final Class<?> parameterTypeClass = getParameterType(method);
         final LanguageDriver languageDriver = getLanguageDriver(method);
@@ -251,7 +303,7 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
         getAnnotationWrapper(method, true, statementAnnotationTypes).ifPresent(statementAnnotation -> {
             final SqlSource sqlSource = buildSqlSource(statementAnnotation.getAnnotation(), parameterTypeClass, languageDriver, method);
             final SqlCommandType sqlCommandType = statementAnnotation.getSqlCommandType();
-            final Options options = getAnnotationWrapper(method, false, Options.class).map(x -> (Options)x.getAnnotation()).orElse(null);
+            final Options options = getAnnotationWrapper(method, false, Options.class).map(x -> (Options) x.getAnnotation()).orElse(null);
             final String mappedStatementId = type.getName() + "." + method.getName();
 
             final KeyGenerator keyGenerator;
@@ -259,7 +311,7 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
             String keyColumn = null;
             if (SqlCommandType.INSERT.equals(sqlCommandType) || SqlCommandType.UPDATE.equals(sqlCommandType)) {
                 // first check for SelectKey annotation - that overrides everything else
-                SelectKey selectKey = getAnnotationWrapper(method, false, SelectKey.class).map(x -> (SelectKey)x.getAnnotation()).orElse(null);
+                SelectKey selectKey = getAnnotationWrapper(method, false, SelectKey.class).map(x -> (SelectKey) x.getAnnotation()).orElse(null);
                 if (selectKey != null) {
                     keyGenerator = handleSelectKeyAnnotation(selectKey, mappedStatementId, getParameterType(method), languageDriver);
                     keyProperty = selectKey.keyProperty();
@@ -364,10 +416,10 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
         if (resolvedReturnType instanceof ParameterizedType) {
             ParameterizedType parameterizedType = (ParameterizedType) resolvedReturnType;
             Class<?> rawType = (Class<?>) parameterizedType.getRawType();
-            if(Cursor.class.isAssignableFrom(rawType)){
-                throw new UnsupportedOperationException("Unsupported return type ("+rawType.getSimpleName()+") should be either Mono or Flux");
+            if (Cursor.class.isAssignableFrom(rawType)) {
+                throw new UnsupportedOperationException("Unsupported return type (" + rawType.getSimpleName() + ") should be either Mono or Flux");
             }
-            if(!Mono.class.equals(rawType) && !Flux.class.equals(rawType)){
+            if (!Mono.class.equals(rawType) && !Flux.class.equals(rawType)) {
                 throw new UnsupportedOperationException("Return type only support Mono / Flux");
             }
             Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
@@ -382,12 +434,12 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
                     // (gcode issue #525) support List<byte[]>
                     returnType = Array.newInstance(componentType, 0).getClass();
                 }
-                if(Mono.class.equals(rawType)
-                        && Collection.class.isAssignableFrom(returnType)){
+                if (Mono.class.equals(rawType)
+                        && Collection.class.isAssignableFrom(returnType)) {
                     throw new UnsupportedOperationException("Return type assignable from Mono<Collection> should be changed to Flux<Object>");
                 }
             }
-        }else {
+        } else {
             throw new UnsupportedOperationException("Return type should by either Mono or Flux");
         }
         return returnType;
@@ -602,6 +654,11 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
         private final String databaseId;
         private final SqlCommandType sqlCommandType;
 
+        /**
+         * Instantiates a new Annotation wrapper.
+         *
+         * @param annotation the annotation
+         */
         AnnotationWrapper(Annotation annotation) {
             super();
             this.annotation = annotation;
@@ -641,14 +698,29 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
             }
         }
 
+        /**
+         * Gets annotation.
+         *
+         * @return the annotation
+         */
         Annotation getAnnotation() {
             return annotation;
         }
 
+        /**
+         * Gets sql command type.
+         *
+         * @return the sql command type
+         */
         SqlCommandType getSqlCommandType() {
             return sqlCommandType;
         }
 
+        /**
+         * Gets database id.
+         *
+         * @return the database id
+         */
         String getDatabaseId() {
             return databaseId;
         }

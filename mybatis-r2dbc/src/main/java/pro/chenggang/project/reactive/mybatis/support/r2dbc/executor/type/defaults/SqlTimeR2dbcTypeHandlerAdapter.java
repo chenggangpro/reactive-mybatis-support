@@ -10,8 +10,11 @@ import java.sql.Time;
 import java.time.LocalTime;
 
 /**
- * @author: chenggang
- * @date 12/9/21.
+ * The type Sql time r2dbc type handler adapter.
+ *
+ * @author chenggang
+ * @version 1.0.0
+ * @date 12 /9/21.
  */
 public class SqlTimeR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerAdapter<Time> {
 
@@ -22,13 +25,13 @@ public class SqlTimeR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerAdapter<T
 
     @Override
     public void setParameter(Statement statement, ParameterHandlerContext parameterHandlerContext, Time parameter) {
-        statement.bind(parameterHandlerContext.getIndex(),parameter.toLocalTime());
+        statement.bind(parameterHandlerContext.getIndex(), parameter.toLocalTime());
     }
 
     @Override
     public Time getResult(Row row, RowMetadata rowMetadata, String columnName) {
         LocalTime localTime = row.get(columnName, LocalTime.class);
-        if(null == localTime){
+        if (null == localTime) {
             return null;
         }
         return Time.valueOf(localTime);
@@ -37,7 +40,7 @@ public class SqlTimeR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerAdapter<T
     @Override
     public Time getResult(Row row, RowMetadata rowMetadata, int columnIndex) {
         LocalTime localTime = row.get(columnIndex, LocalTime.class);
-        if(null == localTime){
+        if (null == localTime) {
             return null;
         }
         return Time.valueOf(localTime);

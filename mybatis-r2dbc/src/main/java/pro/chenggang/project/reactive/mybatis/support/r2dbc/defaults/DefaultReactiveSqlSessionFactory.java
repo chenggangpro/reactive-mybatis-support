@@ -12,17 +12,29 @@ import java.io.Closeable;
 import java.util.Objects;
 
 /**
- * @author: chenggang
- * @date 12/8/21.
+ * The type Default reactive sql session factory.
+ *
+ * @author chenggang
+ * @version 1.0.0
+ * @date 12 /8/21.
  */
 public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFactory {
 
     private final R2dbcMybatisConfiguration configuration;
     private final ReactiveSqlSession reactiveSqlSession;
 
-    private DefaultReactiveSqlSessionFactory(R2dbcMybatisConfiguration configuration,ReactiveMybatisExecutor reactiveMybatisExecutor) {
+    private DefaultReactiveSqlSessionFactory(R2dbcMybatisConfiguration configuration, ReactiveMybatisExecutor reactiveMybatisExecutor) {
         this.configuration = configuration;
         this.reactiveSqlSession = new DefaultReactiveSqlSession(this.configuration, reactiveMybatisExecutor);
+    }
+
+    /**
+     * New default reactive sql session factory builder.
+     *
+     * @return the builder
+     */
+    public static Builder newBuilder() {
+        return new Builder();
     }
 
     @Override
@@ -37,16 +49,15 @@ public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFacto
 
     @Override
     public void close() throws Exception {
-        if(this.configuration.getConnectionFactory() instanceof Closeable){
+        if (this.configuration.getConnectionFactory() instanceof Closeable) {
             Closeable closeableConnectionFactory = ((Closeable) this.configuration.getConnectionFactory());
             closeableConnectionFactory.close();
         }
     }
 
-    public static Builder newBuilder() {
-        return new Builder();
-    }
-
+    /**
+     * The type Builder.
+     */
     public static class Builder {
 
         private R2dbcMybatisConfiguration r2dbcMybatisConfiguration;
@@ -56,10 +67,11 @@ public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFacto
 
         /**
          * Target R2dbcMybatisConfiguration Must Not Be Null
-         * @param r2dbcMybatisConfiguration
-         * @return
+         *
+         * @param r2dbcMybatisConfiguration the r2dbc mybatis configuration
+         * @return builder
          */
-        public Builder withR2dbcMybatisConfiguration(R2dbcMybatisConfiguration r2dbcMybatisConfiguration){
+        public Builder withR2dbcMybatisConfiguration(R2dbcMybatisConfiguration r2dbcMybatisConfiguration) {
             Objects.requireNonNull(r2dbcMybatisConfiguration, "R2dbcMybatisConfiguration Could not be null");
             this.r2dbcMybatisConfiguration = r2dbcMybatisConfiguration;
             return this;
@@ -67,10 +79,11 @@ public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFacto
 
         /**
          * Specific ConnectionFactory Must Not Be Null
-         * @param connectionFactory
-         * @return
+         *
+         * @param connectionFactory the connection factory
+         * @return builder
          */
-        public Builder withConnectionFactory(ConnectionFactory connectionFactory){
+        public Builder withConnectionFactory(ConnectionFactory connectionFactory) {
             Objects.requireNonNull(connectionFactory, "ConnectionFactory Could not be null");
             this.connectionFactory = connectionFactory;
             return this;
@@ -78,10 +91,11 @@ public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFacto
 
         /**
          * Specific ReactiveMybatisExecutor
-         * @param reactiveMybatisExecutor
-         * @return
+         *
+         * @param reactiveMybatisExecutor the reactive mybatis executor
+         * @return builder
          */
-        public Builder withReactiveMybatisExecutor(ReactiveMybatisExecutor reactiveMybatisExecutor){
+        public Builder withReactiveMybatisExecutor(ReactiveMybatisExecutor reactiveMybatisExecutor) {
             Objects.requireNonNull(reactiveMybatisExecutor, "ReactiveMybatisExecutor Could not be null");
             this.reactiveMybatisExecutor = reactiveMybatisExecutor;
             return this;
@@ -89,35 +103,37 @@ public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFacto
 
         /**
          * whether using default connection factory proxy or not ,default is true
-         * @param usingDefault
-         * @return
+         *
+         * @param usingDefault the using default
+         * @return builder
          */
-        public Builder withDefaultConnectionFactoryProxy(boolean usingDefault){
+        public Builder withDefaultConnectionFactoryProxy(boolean usingDefault) {
             this.usingDefaultConnectionFactoryProxy = usingDefault;
             return this;
         }
 
         /**
          * build DefaultReactiveSqlSessionFactory
-         * @return
+         *
+         * @return default reactive sql session factory
          */
         public DefaultReactiveSqlSessionFactory build() {
             Objects.requireNonNull(this.r2dbcMybatisConfiguration, "R2dbcMybatisConfiguration Could not be null");
-            if(Objects.isNull(this.r2dbcMybatisConfiguration.getConnectionFactory()) && Objects.isNull(this.connectionFactory)){
+            if (Objects.isNull(this.r2dbcMybatisConfiguration.getConnectionFactory()) && Objects.isNull(this.connectionFactory)) {
                 throw new IllegalArgumentException("ConnectionFactory Could not be null");
             }
-            if(Objects.nonNull(this.connectionFactory)){
+            if (Objects.nonNull(this.connectionFactory)) {
                 this.r2dbcMybatisConfiguration.setConnectionFactory(this.connectionFactory);
             }
-            if(Objects.nonNull(this.reactiveMybatisExecutor)){
-                return new DefaultReactiveSqlSessionFactory(this.r2dbcMybatisConfiguration,this.reactiveMybatisExecutor);
+            if (Objects.nonNull(this.reactiveMybatisExecutor)) {
+                return new DefaultReactiveSqlSessionFactory(this.r2dbcMybatisConfiguration, this.reactiveMybatisExecutor);
             }
-            if(usingDefaultConnectionFactoryProxy){
+            if (usingDefaultConnectionFactoryProxy) {
                 ConnectionFactory transactionSupportConnectionFactory = new DefaultTransactionSupportConnectionFactory(this.r2dbcMybatisConfiguration.getConnectionFactory());
                 this.r2dbcMybatisConfiguration.setConnectionFactory(transactionSupportConnectionFactory);
-                return new DefaultReactiveSqlSessionFactory(this.r2dbcMybatisConfiguration,new DefaultReactiveMybatisExecutor(this.r2dbcMybatisConfiguration));
+                return new DefaultReactiveSqlSessionFactory(this.r2dbcMybatisConfiguration, new DefaultReactiveMybatisExecutor(this.r2dbcMybatisConfiguration));
             }
-            return new DefaultReactiveSqlSessionFactory(this.r2dbcMybatisConfiguration,new DefaultReactiveMybatisExecutor(this.r2dbcMybatisConfiguration));
+            return new DefaultReactiveSqlSessionFactory(this.r2dbcMybatisConfiguration, new DefaultReactiveMybatisExecutor(this.r2dbcMybatisConfiguration));
         }
     }
 }

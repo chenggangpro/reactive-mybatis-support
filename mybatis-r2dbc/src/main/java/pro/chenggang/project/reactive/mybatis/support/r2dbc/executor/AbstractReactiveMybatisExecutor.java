@@ -15,16 +15,33 @@ import reactor.core.publisher.Mono;
 import java.util.function.Function;
 
 /**
- * @author: chenggang
- * @date 12/8/21.
+ * The type Abstract reactive mybatis executor.
+ * <p>
+ * Concentrate on operation with connection
+ *
+ * @author chenggang
+ * @date 12 /8/21.
+ * @since 1.0.0
  */
 public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatisExecutor {
 
     private static final Log log = LogFactory.getLog(AbstractReactiveMybatisExecutor.class);
 
+    /**
+     * The Configuration.
+     */
     protected final R2dbcMybatisConfiguration configuration;
+    /**
+     * The Connection factory.
+     */
     protected final ConnectionFactory connectionFactory;
 
+    /**
+     * Instantiates a new Abstract reactive mybatis executor.
+     *
+     * @param configuration     the configuration
+     * @param connectionFactory the connection factory
+     */
     protected AbstractReactiveMybatisExecutor(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory) {
         this.configuration = configuration;
         this.connectionFactory = connectionFactory;
@@ -32,22 +49,21 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
 
     @Override
     public Mono<Integer> update(MappedStatement mappedStatement, Object parameter) {
-       return MybatisReactiveContextHelper.currentContext()
-               .flatMap(reactiveExecutorContext -> {
-                   reactiveExecutorContext.setDirty();
-                   return this.inConnection(
-                           this.connectionFactory,
-                           connection -> this.doUpdateWithConnection(connection,mappedStatement,parameter)
-                   );
-               }
-       );
+        return MybatisReactiveContextHelper.currentContext()
+                .flatMap(reactiveExecutorContext -> {
+                    reactiveExecutorContext.setDirty();
+                    return this.inConnection(
+                            this.connectionFactory,
+                            connection -> this.doUpdateWithConnection(connection, mappedStatement, parameter)
+                    );
+                });
     }
 
     @Override
     public <E> Flux<E> query(MappedStatement mappedStatement, Object parameter, RowBounds rowBounds) {
         return this.inConnectionMany(
                 this.connectionFactory,
-                connection -> this.doQueryWithConnection(connection,mappedStatement,parameter,rowBounds)
+                connection -> this.doQueryWithConnection(connection, mappedStatement, parameter, rowBounds)
         );
     }
 
@@ -97,30 +113,34 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
     }
 
     /**
-     * do update with connection
-     * @param connection
-     * @param mappedStatement
-     * @param parameter
-     * @return
+     * do update with connection actually
+     *
+     * @param connection      the connection
+     * @param mappedStatement the mapped statement
+     * @param parameter       the parameter
+     * @return mono
      */
     protected abstract Mono<Integer> doUpdateWithConnection(Connection connection, MappedStatement mappedStatement, Object parameter);
 
     /**
-     * do query with connection
-     * @param connection
-     * @param mappedStatement
-     * @param parameter
-     * @param rowBounds
-     * @return
+     * do query with connection actually
+     *
+     * @param <E>             the type parameter
+     * @param connection      the connection
+     * @param mappedStatement the mapped statement
+     * @param parameter       the parameter
+     * @param rowBounds       the row bounds
+     * @return flux
      */
-    protected abstract <E> Flux<E> doQueryWithConnection(Connection connection, MappedStatement mappedStatement, Object parameter,RowBounds rowBounds);
+    protected abstract <E> Flux<E> doQueryWithConnection(Connection connection, MappedStatement mappedStatement, Object parameter, RowBounds rowBounds);
 
     /**
      * in connection
-     * @param connectionFactory
-     * @param action
-     * @param <T>
-     * @return
+     *
+     * @param <T>               the type parameter
+     * @param connectionFactory the connection factory
+     * @param action            the action
+     * @return mono
      */
     protected <T> Mono<T> inConnection(ConnectionFactory connectionFactory, Function<Connection, Mono<T>> action) {
         Mono<ConnectionCloseHolder> connectionMono = MybatisReactiveContextHelper.currentContext()
@@ -130,7 +150,7 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
                             log.debug("Execute Statement With Mono,Get Connection [" + connection + "] From Connection Factory ");
                         })
                 )
-                .map(connection -> new ConnectionCloseHolder(connection,this::closeConnection));
+                .map(connection -> new ConnectionCloseHolder(connection, this::closeConnection));
         // ensure close method only execute once with Mono.usingWhen() operator
         return Mono.usingWhen(connectionMono,
                 connection -> action.apply(connection.getTarget()),
@@ -141,10 +161,11 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
 
     /**
      * in connection many
-     * @param connectionFactory
-     * @param action
-     * @param <T>
-     * @return
+     *
+     * @param <T>               the type parameter
+     * @param connectionFactory the connection factory
+     * @param action            the action
+     * @return flux
      */
     protected <T> Flux<T> inConnectionMany(ConnectionFactory connectionFactory, Function<Connection, Flux<T>> action) {
         Mono<ConnectionCloseHolder> connectionMono = MybatisReactiveContextHelper.currentContext()
@@ -154,7 +175,7 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
                             log.debug("Execute Statement With Flux,Get Connection [" + connection + "] From Connection Factory ");
                         })
                 )
-                .map(connection -> new ConnectionCloseHolder(connection,this::closeConnection));
+                .map(connection -> new ConnectionCloseHolder(connection, this::closeConnection));
         // ensure close method only execute once with Mono.usingWhen() operator
         return Flux.usingWhen(connectionMono,
                 connection -> action.apply(connection.getTarget()),
@@ -165,8 +186,9 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
 
     /**
      * Release the {@link Connection}.
-     * @param connection
-     * @return
+     *
+     * @param connection the connection
+     * @return mono
      */
     protected Mono<Void> closeConnection(Connection connection) {
         return Mono.from(connection.close())

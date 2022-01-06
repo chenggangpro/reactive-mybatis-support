@@ -14,19 +14,29 @@ import java.util.List;
 
 /**
  * r2dbc mybatis properties
- * @author evans
+ *
+ * @author chenggang
+ * @version 1.0.0
  */
 @Getter
 @Setter
 @ToString
 public class R2dbcMybatisProperties {
 
+    /**
+     * The constant PREFIX.
+     */
     public static final String PREFIX = "r2dbc.mybatis";
 
     private boolean mapUnderscoreToCamelCase;
     private String[] mapperLocations;
     private String typeAliasesPackage;
 
+    /**
+     * Resolve mapper locations resource [ ].
+     *
+     * @return the resource [ ]
+     */
     public Resource[] resolveMapperLocations() {
         ResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver();
         List<Resource> resources = new ArrayList<>();

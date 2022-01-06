@@ -1,0 +1,40 @@
+# generate type
+generateType:
+  - SIMPLE
+  - DYNAMIC
+# target trim pattern
+# tableTrimPattern: ^Sys
+#parentLocation
+# bacePackage:
+javaLocation: src/test/java
+mapperXmlLocation: src/test/resources
+# model location
+modelPackage: entity.model
+# mapper package
+mapperInterfacePackage: mapper
+# xml package
+mapperXmPackage: mapper
+# jdbc driver class name
+driverClass: com.mysql.cj.jdbc.Driver
+# jdbc connection url
+connectionUrl: jdbc:mysql://127.0.0.1:3306/r2dbc?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
+# jdbc username
+username: root
+# jdbc password
+password: 123456
+extendDynamicMapper: true
+overwrite: true
+#lombok
+lombok:
+  - ToString
+  - Getter
+  - Setter
+  - AccessorsChain
+  - NoArgsConstructor
+  - AllArgsConstructor
+  - Builder
+  - EqualsAndHashCode
+# all tables if not exist
+tableName:
+  - dept
+  - emp

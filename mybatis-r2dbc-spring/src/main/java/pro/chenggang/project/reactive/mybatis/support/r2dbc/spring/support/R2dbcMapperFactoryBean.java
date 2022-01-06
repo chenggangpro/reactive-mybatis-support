@@ -11,8 +11,10 @@ import static org.springframework.util.Assert.notNull;
 
 /**
  * R2dbcMapperFactoryBean
- * @param <T>
- * @author evans
+ *
+ * @param <T> the type parameter
+ * @author chenggang
+ * @version 1.0.0
  */
 public class R2dbcMapperFactoryBean<T> implements FactoryBean<T>, InitializingBean {
 
@@ -22,10 +24,18 @@ public class R2dbcMapperFactoryBean<T> implements FactoryBean<T>, InitializingBe
 
     private ReactiveSqlSessionFactory reactiveSqlSessionFactory;
 
+    /**
+     * Instantiates a new R 2 dbc mapper factory bean.
+     */
     public R2dbcMapperFactoryBean() {
 
     }
 
+    /**
+     * Instantiates a new R 2 dbc mapper factory bean.
+     *
+     * @param clazz the clazz
+     */
     public R2dbcMapperFactoryBean(Class<T> clazz) {
         this.mapperInterface = clazz;
     }
@@ -46,10 +56,20 @@ public class R2dbcMapperFactoryBean<T> implements FactoryBean<T>, InitializingBe
         return true;
     }
 
+    /**
+     * Sets mapper interface.
+     *
+     * @param mapperInterface the mapper interface
+     */
     public void setMapperInterface(Class<T> mapperInterface) {
         this.mapperInterface = mapperInterface;
     }
 
+    /**
+     * Sets sql session factory.
+     *
+     * @param reactiveSqlSessionFactory the reactive sql session factory
+     */
     public void setSqlSessionFactory(ReactiveSqlSessionFactory reactiveSqlSessionFactory) {
         this.reactiveSqlSessionFactory = reactiveSqlSessionFactory;
     }

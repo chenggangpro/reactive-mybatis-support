@@ -4,7 +4,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.e
 import reactor.core.publisher.Mono;
 
 /**
- * @author: chenggang
+ * @author chenggang
  * @date 7/5/21.
  */
 public interface BusinessService {

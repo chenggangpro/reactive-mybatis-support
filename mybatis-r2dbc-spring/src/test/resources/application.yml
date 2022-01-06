@@ -9,18 +9,20 @@ r2dbc:
 spring:
   r2dbc:
     mybatis:
-      jdbc-url: r2dbc:mysql://127.0.0.1:3306/demo
+      r2dbc-url: r2dbc:mysql://127.0.0.1:3306/r2dbc?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
       username: root
       password: 123456
       pool:
-        max-idle-time: PT5M
+        max-idle-time: PT3M
         validation-query: SELECT 1 FROM DUAL
-        initial-size: 5
-        max-size: 500
+        initial-size: 100
+        max-size: 100
         acquire-retry: 3
+        validation-depth: REMOTE
+        max-create-connection-time: PT30S
 logging:
   level:
     pro.chenggang: DEBUG
-    org.springframework.r2dbc: DEBUG
+    org.springframework: INFO
   file:
     path: ./logs

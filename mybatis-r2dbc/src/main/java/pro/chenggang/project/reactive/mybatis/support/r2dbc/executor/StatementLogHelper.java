@@ -10,29 +10,63 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * The type Statement log helper. modify according to ConnectionLogger
+ * <p>
+ * {@link org.apache.ibatis.logging.jdbc.ConnectionLogger}
+ *
+ * @author chenggang
+ * @version 1.0.0
+ * @date 12/7/21.
+ */
 public class StatementLogHelper {
 
     private final Log statementLog;
 
+    /**
+     * Instantiates a new Statement log helper.
+     *
+     * @param statementLog the statement log
+     */
     public StatementLogHelper(Log statementLog) {
         this.statementLog = statementLog;
     }
 
-    public void logSql(String sql){
-        if(statementLog.isDebugEnabled()){
+    /**
+     * Log sql.
+     *
+     * @param sql the sql
+     */
+    public void logSql(String sql) {
+        if (statementLog.isDebugEnabled()) {
             debug(" Preparing: " + removeExtraWhitespace(sql), true);
         }
     }
 
-    public void logParameters(List<Object> columnValues){
+    /**
+     * Log parameters.
+     *
+     * @param columnValues the column values
+     */
+    public void logParameters(List<Object> columnValues) {
         debug("Parameters: " + getParameterValueString(columnValues), true);
     }
 
-    public void logUpdates(Integer updateCount){
+    /**
+     * Log updates.
+     *
+     * @param updateCount the update count
+     */
+    public void logUpdates(Integer updateCount) {
         debug("   Updates: " + updateCount, false);
     }
 
-    public void logTotal(Integer rows){
+    /**
+     * Log total.
+     *
+     * @param rows the rows
+     */
+    public void logTotal(Integer rows) {
         debug("     Total: " + rows, false);
     }
 

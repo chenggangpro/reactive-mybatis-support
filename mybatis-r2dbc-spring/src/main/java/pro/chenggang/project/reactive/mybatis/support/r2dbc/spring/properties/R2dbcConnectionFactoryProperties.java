@@ -16,14 +16,20 @@ import java.util.UUID;
 import static org.springframework.util.StringUtils.hasText;
 
 /**
- * @author: chenggang
- * @date 6/25/21.
+ * The type R2dbc connection factory properties.
+ *
+ * @author chenggang
+ * @version 1.0.0
+ * @date 6 /25/21.
  */
 @Getter
 @Setter
 @ToString
 public class R2dbcConnectionFactoryProperties {
 
+    /**
+     * The configuration properties prefix.
+     */
     public static final String PREFIX = "spring.r2dbc.mybatis";
 
     /**
@@ -63,6 +69,7 @@ public class R2dbcConnectionFactoryProperties {
 
     /**
      * r2dbc connection factory name based on configuration
+     *
      * @return the connection factory name to use or {@code null}
      */
     public String determineConnectionFactoryName() {
@@ -74,10 +81,11 @@ public class R2dbcConnectionFactoryProperties {
 
     /**
      * r2dbc connection url
-     * @return
+     *
+     * @return string
      */
-    public String determineConnectionFactoryUrl(){
-        if(!hasText(this.r2dbcUrl)){
+    public String determineConnectionFactoryUrl() {
+        if (!hasText(this.r2dbcUrl)) {
             return null;
         }
         String encodedUsername;
@@ -94,15 +102,19 @@ public class R2dbcConnectionFactoryProperties {
             //fallback to original password
             encodedPassword = password;
         }
-        String credential =encodedUsername + (password == null || password.isEmpty() ? "" : ":" + encodedPassword);
+        String credential = encodedUsername + (password == null || password.isEmpty() ? "" : ":" + encodedPassword);
+        //only replace 'r2dbc:mysql:' with 'r2dbc:mariadb' when using 'MariadbConnectionFactory'
         boolean isMariadbConnectionfactoryPresent = ClassUtils.isPresent("org.mariadb.r2dbc.MariadbConnectionFactory", this.getClass().getClassLoader());
-        if(isMariadbConnectionfactoryPresent && this.r2dbcUrl.startsWith("r2dbc:mysql:")){
+        if (isMariadbConnectionfactoryPresent && this.r2dbcUrl.startsWith("r2dbc:mysql:")) {
             this.r2dbcUrl = this.r2dbcUrl.replace("r2dbc:mysql:", "r2dbc:mariadb:");
         }
         this.r2dbcUrl = r2dbcUrl.replace("//", "//" + credential + "@");
         return this.r2dbcUrl;
     }
 
+    /**
+     * The type Pool.
+     */
     @Getter
     @Setter
     @ToString
@@ -137,7 +149,7 @@ public class R2dbcConnectionFactoryProperties {
         private Duration maxAcquireTime = Duration.ZERO;
 
         /**
-         * r2dbc connection factory max life time
+         * r2dbc connection factory max lifetime
          * ZERO indicates no-lifetime
          */
         private Duration maxLifeTime = Duration.ZERO;

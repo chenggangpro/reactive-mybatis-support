@@ -6,15 +6,18 @@ import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
 /**
- * @author: chenggang
- * @date 12/16/21.
+ * The interface Mybatis reactive context helper.
+ *
+ * @author chenggang
+ * @version 1.0.0
+ * @date 12 /16/21.
  */
 public interface MybatisReactiveContextHelper {
 
     /**
      * current context
      *
-     * @return
+     * @return mono
      */
     static Mono<ReactiveExecutorContext> currentContext() {
         return Mono.deferContextual(contextView -> Mono
@@ -26,16 +29,18 @@ public interface MybatisReactiveContextHelper {
 
     /**
      * init reactive executor context with StatementLogHelper
-     * @param context
-     * @param statementLogHelper
-     * @return
+     *
+     * @param context            the context
+     * @param statementLogHelper the statement log helper
+     * @return context
      */
     Context initReactiveExecutorContext(Context context, StatementLogHelper statementLogHelper);
 
     /**
      * init reactive executor context
-     * @param context
-     * @return
+     *
+     * @param context the context
+     * @return context
      */
     Context initReactiveExecutorContext(Context context);
 }

@@ -10,8 +10,11 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 /**
- * @author: chenggang
- * @date 12/9/21.
+ * The type Timestamp r2dbc type handler adapter.
+ *
+ * @author chenggang
+ * @version 1.0.0
+ * @date 12 /9/21.
  */
 public class TimestampR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerAdapter<Timestamp> {
 
@@ -22,13 +25,13 @@ public class TimestampR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerAdapter
 
     @Override
     public void setParameter(Statement statement, ParameterHandlerContext parameterHandlerContext, Timestamp parameter) {
-        statement.bind(parameterHandlerContext.getIndex(),parameter.toLocalDateTime());
+        statement.bind(parameterHandlerContext.getIndex(), parameter.toLocalDateTime());
     }
 
     @Override
     public Timestamp getResult(Row row, RowMetadata rowMetadata, String columnName) {
         LocalDateTime localDateTime = row.get(columnName, LocalDateTime.class);
-        if(null == localDateTime){
+        if (null == localDateTime) {
             return null;
         }
         return Timestamp.valueOf(localDateTime);
@@ -37,7 +40,7 @@ public class TimestampR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerAdapter
     @Override
     public Timestamp getResult(Row row, RowMetadata rowMetadata, int columnIndex) {
         LocalDateTime localDateTime = row.get(columnIndex, LocalDateTime.class);
-        if(null == localDateTime){
+        if (null == localDateTime) {
             return null;
         }
         return Timestamp.valueOf(localDateTime);

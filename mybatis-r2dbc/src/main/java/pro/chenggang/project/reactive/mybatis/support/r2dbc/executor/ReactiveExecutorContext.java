@@ -8,8 +8,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * @author: chenggang
- * @date 12/9/21.
+ * The type Reactive executor context.
+ *
+ * @author chenggang
+ * @version 1.0.0
+ * @date 12 /9/21.
  */
 public class ReactiveExecutorContext {
 
@@ -24,87 +27,186 @@ public class ReactiveExecutorContext {
     private final IsolationLevel isolationLevel;
     private StatementLogHelper statementLogHelper;
 
+    /**
+     * Instantiates a new Reactive executor context.
+     *
+     * @param autoCommit     the auto commit
+     * @param isolationLevel the isolation level
+     */
     public ReactiveExecutorContext(boolean autoCommit, IsolationLevel isolationLevel) {
         this.autoCommit = autoCommit;
         this.isolationLevel = isolationLevel;
     }
 
+    /**
+     * Is auto commit boolean.
+     *
+     * @return the boolean
+     */
     public boolean isAutoCommit() {
         return autoCommit;
     }
 
+    /**
+     * Is force commit boolean.
+     *
+     * @return the boolean
+     */
     public boolean isForceCommit() {
         return forceCommit.get();
     }
 
+    /**
+     * Set force commit.
+     *
+     * @param forceCommit the force commit
+     */
+    public void setForceCommit(boolean forceCommit) {
+        this.forceCommit.getAndSet(forceCommit);
+    }
+
+    /**
+     * Is force rollback boolean.
+     *
+     * @return the boolean
+     */
     public boolean isForceRollback() {
         return forceRollback.get();
     }
 
-    public void setForceCommit(boolean forceCommit){
-        this.forceCommit.getAndSet(forceCommit);
-    }
-
-    public void setForceRollback(boolean forceRollback){
+    /**
+     * Set force rollback.
+     *
+     * @param forceRollback the force rollback
+     */
+    public void setForceRollback(boolean forceRollback) {
         this.forceRollback.getAndSet(forceRollback);
     }
 
+    /**
+     * Is dirty boolean.
+     *
+     * @return the boolean
+     */
     public boolean isDirty() {
         return dirty.get();
     }
 
-    public void setDirty(){
-        this.dirty.compareAndSet(false,true);
+    /**
+     * Set dirty.
+     */
+    public void setDirty() {
+        this.dirty.compareAndSet(false, true);
     }
 
-    public void resetDirty(){
-        this.dirty.compareAndSet(true,false);
+    /**
+     * Reset dirty.
+     */
+    public void resetDirty() {
+        this.dirty.compareAndSet(true, false);
     }
 
-    public void setWithTransaction(){
-        this.withTransaction.compareAndSet(false,true);
+    /**
+     * Set with transaction.
+     */
+    public void setWithTransaction() {
+        this.withTransaction.compareAndSet(false, true);
     }
 
-    public void resetWithTransaction(){
-        this.withTransaction.compareAndSet(true,false);
+    /**
+     * Reset with transaction.
+     */
+    public void resetWithTransaction() {
+        this.withTransaction.compareAndSet(true, false);
     }
 
-    public boolean isWithTransaction(){
+    /**
+     * Is with transaction boolean.
+     *
+     * @return the boolean
+     */
+    public boolean isWithTransaction() {
         return this.withTransaction.get();
     }
 
-    public boolean setActiveTransaction(){
-        return this.activeTransaction.compareAndSet(false,true);
+    /**
+     * Set active transaction boolean.
+     *
+     * @return the boolean
+     */
+    public boolean setActiveTransaction() {
+        return this.activeTransaction.compareAndSet(false, true);
     }
 
-    public boolean isRequireClosed(){
+    /**
+     * Is require closed boolean.
+     *
+     * @return the boolean
+     */
+    public boolean isRequireClosed() {
         return this.requireClosed.get();
     }
 
-    public void setRequireClosed(boolean requireClosed){
+    /**
+     * Set require closed.
+     *
+     * @param requireClosed the require closed
+     */
+    public void setRequireClosed(boolean requireClosed) {
         this.requireClosed.getAndSet(requireClosed);
     }
 
+    /**
+     * Gets isolation level.
+     *
+     * @return the isolation level
+     */
     public IsolationLevel getIsolationLevel() {
         return isolationLevel;
     }
 
-    public void setStatementLogHelper(StatementLogHelper statementLogHelper) {
-        this.statementLogHelper = statementLogHelper;
-    }
-
+    /**
+     * Gets statement log helper.
+     *
+     * @return the statement log helper
+     */
     public StatementLogHelper getStatementLogHelper() {
         return statementLogHelper;
     }
 
-    public boolean bindConnection(Connection connection){
-        return this.connectionReference.compareAndSet(null,connection);
+    /**
+     * Sets statement log helper.
+     *
+     * @param statementLogHelper the statement log helper
+     */
+    public void setStatementLogHelper(StatementLogHelper statementLogHelper) {
+        this.statementLogHelper = statementLogHelper;
     }
 
-    public Optional<Connection> clearConnection(){
+    /**
+     * Bind connection boolean.
+     *
+     * @param connection the connection
+     * @return the boolean
+     */
+    public boolean bindConnection(Connection connection) {
+        return this.connectionReference.compareAndSet(null, connection);
+    }
+
+    /**
+     * Clear connection optional.
+     *
+     * @return the optional
+     */
+    public Optional<Connection> clearConnection() {
         return Optional.ofNullable(this.connectionReference.getAndSet(null));
     }
 
+    /**
+     * Gets connection.
+     *
+     * @return the connection
+     */
     public Optional<Connection> getConnection() {
         return Optional.ofNullable(this.connectionReference.get());
     }

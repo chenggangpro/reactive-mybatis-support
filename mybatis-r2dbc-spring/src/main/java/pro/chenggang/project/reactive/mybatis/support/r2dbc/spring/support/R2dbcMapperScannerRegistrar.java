@@ -20,7 +20,9 @@ import java.util.List;
 
 /**
  * R2dbcMapperScannerRegistrar
- * @author evans
+ *
+ * @author chenggang
+ * @version 1.0.0
  */
 public class R2dbcMapperScannerRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware {
 

@@ -8,16 +8,33 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * @author: chenggang
- * @date 12/16/21.
+ * The type Default reactive sql session operator.
+ *
+ * @author chenggang
+ * @date 12 /16/21.
  */
 public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOperator {
 
     private final ReactiveSqlSession reactiveSqlSession;
     private final MybatisReactiveContextHelper mybatisReactiveContextHelper;
 
+    /**
+     * Instantiates a new Default reactive sql session operator.
+     *
+     * @param reactiveSqlSessionFactory the reactive sql session factory
+     */
     public DefaultReactiveSqlSessionOperator(ReactiveSqlSessionFactory reactiveSqlSessionFactory) {
-        this.reactiveSqlSession = reactiveSqlSessionFactory.openSession().usingTransaction(true);
+        this(reactiveSqlSessionFactory, false);
+    }
+
+    /**
+     * Instantiates a new Default reactive sql session operator.
+     *
+     * @param reactiveSqlSessionFactory the reactive sql session factory
+     * @param enableTransaction         the enable transaction
+     */
+    public DefaultReactiveSqlSessionOperator(ReactiveSqlSessionFactory reactiveSqlSessionFactory, boolean enableTransaction) {
+        this.reactiveSqlSession = reactiveSqlSessionFactory.openSession().usingTransaction(enableTransaction);
         this.mybatisReactiveContextHelper = (MybatisReactiveContextHelper) this.reactiveSqlSession;
     }
 

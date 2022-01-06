@@ -10,9 +10,20 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 import org.apache.ibatis.type.UnknownTypeHandler;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 /**
+ * The type Row result wrapper.
+ * <p>
+ * {@link org.apache.ibatis.executor.resultset.ResultSetWrapper}
+ *
  * @author Iwao AVE!
  */
 public class RowResultWrapper {
@@ -27,6 +38,13 @@ public class RowResultWrapper {
     private final Map<String, List<String>> mappedColumnNamesMap = new HashMap<>();
     private final Map<String, List<String>> unMappedColumnNamesMap = new HashMap<>();
 
+    /**
+     * Instantiates a new Row result wrapper.
+     *
+     * @param row           the row
+     * @param rowMetadata   the row metadata
+     * @param configuration the configuration
+     */
     public RowResultWrapper(Row row, RowMetadata rowMetadata, R2dbcMybatisConfiguration configuration) {
         this.typeHandlerRegistry = configuration.getTypeHandlerRegistry();
         this.row = row;
@@ -34,7 +52,7 @@ public class RowResultWrapper {
         rowMetadata.getColumnMetadatas().forEach(columnMetadata -> {
             columnNames.add(columnMetadata.getName());
             Class<?> javaType = columnMetadata.getJavaType();
-            if(null == javaType){
+            if (null == javaType) {
                 javaType = Object.class;
             }
             javaTypes.add(javaType);
@@ -42,22 +60,47 @@ public class RowResultWrapper {
         });
     }
 
+    /**
+     * Gets row.
+     *
+     * @return the row
+     */
     public Row getRow() {
         return row;
     }
 
+    /**
+     * Gets row metadata.
+     *
+     * @return the row metadata
+     */
     public RowMetadata getRowMetadata() {
         return rowMetadata;
     }
 
+    /**
+     * Gets column names.
+     *
+     * @return the column names
+     */
     public List<String> getColumnNames() {
         return this.columnNames;
     }
 
+    /**
+     * Gets class names.
+     *
+     * @return the class names
+     */
     public List<String> getClassNames() {
         return Collections.unmodifiableList(classNames);
     }
 
+    /**
+     * Gets java types.
+     *
+     * @return the java types
+     */
     public List<Class> getJavaTypes() {
         return javaTypes;
     }
@@ -67,10 +110,8 @@ public class RowResultWrapper {
      * Tries to get from the TypeHandlerRegistry by searching for the property type.
      * If not found it gets the column JDBC type and tries to get a handler for it.
      *
-     * @param propertyType
-     *          the property type
-     * @param columnName
-     *          the column name
+     * @param propertyType the property type
+     * @param columnName   the column name
      * @return the type handler
      */
     public TypeHandler<?> getTypeHandler(Class<?> propertyType, String columnName) {
@@ -130,6 +171,13 @@ public class RowResultWrapper {
         unMappedColumnNamesMap.put(getMapKey(resultMap, columnPrefix), unmappedColumnNames);
     }
 
+    /**
+     * Gets mapped column names.
+     *
+     * @param resultMap    the result map
+     * @param columnPrefix the column prefix
+     * @return the mapped column names
+     */
     public List<String> getMappedColumnNames(ResultMap resultMap, String columnPrefix) {
         List<String> mappedColumnNames = mappedColumnNamesMap.get(getMapKey(resultMap, columnPrefix));
         if (mappedColumnNames == null) {
@@ -139,6 +187,13 @@ public class RowResultWrapper {
         return mappedColumnNames;
     }
 
+    /**
+     * Gets unmapped column names.
+     *
+     * @param resultMap    the result map
+     * @param columnPrefix the column prefix
+     * @return the unmapped column names
+     */
     public List<String> getUnmappedColumnNames(ResultMap resultMap, String columnPrefix) {
         List<String> unMappedColumnNames = unMappedColumnNamesMap.get(getMapKey(resultMap, columnPrefix));
         if (unMappedColumnNames == null) {

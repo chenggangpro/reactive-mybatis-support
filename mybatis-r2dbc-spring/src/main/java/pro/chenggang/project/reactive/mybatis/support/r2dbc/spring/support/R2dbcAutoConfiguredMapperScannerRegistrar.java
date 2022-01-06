@@ -18,12 +18,14 @@ import java.util.List;
 
 /**
  * R2dbcAutoConfiguredMapperScannerRegistrar
- * @author evans 
+ *
+ * @author evans
+ * @version 1.0.0
  */
 public class R2dbcAutoConfiguredMapperScannerRegistrar implements BeanFactoryAware, ImportBeanDefinitionRegistrar, ResourceLoaderAware {
 
     private static final Logger log = LoggerFactory.getLogger(R2dbcAutoConfiguredMapperScannerRegistrar.class);
-    
+
     private BeanFactory beanFactory;
 
     private ResourceLoader resourceLoader;

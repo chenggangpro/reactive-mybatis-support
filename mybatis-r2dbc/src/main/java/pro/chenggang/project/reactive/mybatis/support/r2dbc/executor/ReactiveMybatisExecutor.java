@@ -6,47 +6,55 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * @author: chenggang
+ * The interface Reactive mybatis executor.
+ *
+ * @author chenggang
+ * @version 1.0.0
  * @date 12/7/21.
  */
 public interface ReactiveMybatisExecutor {
 
     /**
-     * update
-     * @param mappedStatement
-     * @param parameter
-     * @return
+     * execute update
+     *
+     * @param mappedStatement the mapped statement
+     * @param parameter       the parameter
+     * @return mono
      */
     Mono<Integer> update(MappedStatement mappedStatement, Object parameter);
 
     /**
-     * query
-     * @param mappedStatement
-     * @param parameter
-     * @param rowBounds
-     * @param <E>
-     * @return
+     * execute query
+     *
+     * @param <E>             the type parameter
+     * @param mappedStatement the mapped statement
+     * @param parameter       the parameter
+     * @param rowBounds       the row bounds
+     * @return flux
      */
     <E> Flux<E> query(MappedStatement mappedStatement, Object parameter, RowBounds rowBounds);
 
     /**
-     * commit
-     * @param required
-     * @return
+     * commit transaction
+     *
+     * @param required the required
+     * @return mono
      */
     Mono<Void> commit(boolean required);
 
     /**
-     * rollback
-     * @param required
-     * @return
+     * rollback transaction
+     *
+     * @param required the required
+     * @return mono
      */
     Mono<Void> rollback(boolean required);
 
     /**
-     * close
-     * @param forceRollback
-     * @return
+     * close session
+     *
+     * @param forceRollback the force rollback
+     * @return mono
      */
     Mono<Void> close(boolean forceRollback);
 

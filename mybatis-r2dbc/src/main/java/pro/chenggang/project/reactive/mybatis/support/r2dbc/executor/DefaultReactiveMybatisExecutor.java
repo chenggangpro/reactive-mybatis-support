@@ -12,7 +12,6 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveConte
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.exception.R2dbcParameterException;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.DefaultR2dbcKeyGenerator;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.R2dbcKeyGenerator;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.parameter.DelegateR2dbcParameterHandler;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowResultWrapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.DefaultReactiveResultHandler;
@@ -29,13 +28,21 @@ import java.util.stream.Collectors;
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.ReactiveResultHandler.DEFERRED;
 
 /**
- * @author: chenggang
+ * The type Default reactive mybatis executor.
+ *
+ * @author chenggang
+ * @version 1.0.0
  * @date 12/9/21.
  */
 public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecutor {
 
     private static final Log log = LogFactory.getLog(DefaultReactiveMybatisExecutor.class);
 
+    /**
+     * Instantiates a new Default reactive mybatis executor.
+     *
+     * @param configuration the configuration
+     */
     public DefaultReactiveMybatisExecutor(R2dbcMybatisConfiguration configuration) {
         super(configuration, configuration.getConnectionFactory());
     }
@@ -46,26 +53,29 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                 .map(ReactiveExecutorContext::getStatementLogHelper)
                 .flatMap(statementLogHelper -> {
                     String boundSql = mappedStatement.getBoundSql(parameter).getSql();
-                    Statement statement = createStatementInternal(connection,boundSql, mappedStatement, parameter, RowBounds.DEFAULT,statementLogHelper);
-                    R2dbcKeyGenerator r2dbcKeyGenerator = new DefaultR2dbcKeyGenerator(mappedStatement, super.configuration);
+                    Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameter, RowBounds.DEFAULT, statementLogHelper);
                     return Mono.just(this.isUseGeneratedKeys(mappedStatement))
                             .filter(useGeneratedKeys -> useGeneratedKeys)
-                            .flatMapMany(useGeneratedKeys -> Flux.from(statement.execute())
+                            .map(useGeneratedKeys -> new DefaultR2dbcKeyGenerator(mappedStatement, super.configuration))
+                            .flatMapMany(r2dbcKeyGenerator -> Flux.from(statement.execute())
                                     .checkpoint("SQL: \"" + boundSql + "\" [DefaultReactiveExecutor]")
                                     .flatMap(result -> {
                                         int keyPropertiesLength = mappedStatement.getKeyProperties().length;
                                         return Flux.just(result)
-                                                .take(keyPropertiesLength,true)
+                                                .take(keyPropertiesLength, true)
                                                 .flatMap(targetResult -> targetResult.map((row, rowMetadata) -> {
                                                     RowResultWrapper rowResultWrapper = new RowResultWrapper(row, rowMetadata, configuration);
                                                     return r2dbcKeyGenerator.handleKeyResult(rowResultWrapper, parameter);
                                                 }));
                                     })
                             )
-                            .switchIfEmpty(Flux.defer(() -> Flux.from(statement.execute())
-                                    .checkpoint("SQL: \"" + boundSql + "\" [DefaultReactiveExecutor]")
-                                    .flatMap(result -> Mono.from(result.getRowsUpdated()))
-                            ))
+                            .switchIfEmpty(Flux
+                                    .defer(() -> Flux
+                                            .from(statement.execute())
+                                            .checkpoint("SQL: \"" + boundSql + "\" [DefaultReactiveExecutor]")
+                                            .flatMap(result -> Mono.from(result.getRowsUpdated()))
+                                    )
+                            )
                             .collect(Collectors.summingInt(Integer::intValue))
                             .doOnNext(statementLogHelper::logUpdates);
                 });
@@ -77,25 +87,26 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                 .map(ReactiveExecutorContext::getStatementLogHelper)
                 .flatMapMany(statementLogHelper -> {
                     String boundSql = mappedStatement.getBoundSql(parameter).getSql();
-                    Statement statement = this.createStatementInternal(connection,boundSql, mappedStatement, parameter, rowBounds,statementLogHelper);
+                    Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameter, rowBounds, statementLogHelper);
                     ReactiveResultHandler reactiveResultHandler = new DefaultReactiveResultHandler(configuration, mappedStatement);
                     return Flux.from(statement.execute())
                             .checkpoint("SQL: \"" + boundSql + "\" [DefaultReactiveExecutor]")
                             .skip(rowBounds.getOffset())
-                            .take(rowBounds.getLimit(),true)
-                            .concatMap(result -> result.map((row,rowMetadata) -> {
+                            .take(rowBounds.getLimit(), true)
+                            .concatMap(result -> result.map((row, rowMetadata) -> {
                                 RowResultWrapper rowResultWrapper = new RowResultWrapper(row, rowMetadata, configuration);
                                 return (List<E>) reactiveResultHandler.handleResult(rowResultWrapper);
                             }))
                             .concatMap(Flux::fromIterable)
-                            .filter(data -> !Objects.equals(data,DEFERRED))
+                            .filter(data -> !Objects.equals(data, DEFERRED))
                             .doOnComplete(() -> statementLogHelper.logTotal(reactiveResultHandler.getResultRowTotalCount()));
                 });
 
     }
 
     /**
-     * create statement
+     * create statement internal
+     *
      * @param connection
      * @param mappedStatement
      * @param parameter
@@ -107,12 +118,12 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                               MappedStatement mappedStatement,
                                               Object parameter,
                                               RowBounds rowBounds,
-                                              StatementLogHelper statementLogHelper){
+                                              StatementLogHelper statementLogHelper) {
         statementLogHelper.logSql(boundSql);
         StatementHandler handler = configuration.newStatementHandler(null, mappedStatement, parameter, rowBounds, null, null);
         ParameterHandler parameterHandler = handler.getParameterHandler();
         Statement statement = connection.createStatement(boundSql);
-        //only support generated keys by  key properties
+        //only support generated keys by key properties
         //not support generated keys by select key
         final boolean useGeneratedKeys = this.isUseGeneratedKeys(mappedStatement);
         if (useGeneratedKeys) {
@@ -136,10 +147,11 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
 
     /**
      * is use generated keys or not
-     * @param mappedStatement
-     * @return
+     *
+     * @param mappedStatement MappedStatement
+     * @return true when using generated keys
      */
-    private boolean isUseGeneratedKeys (MappedStatement mappedStatement) {
+    private boolean isUseGeneratedKeys(MappedStatement mappedStatement) {
         boolean hasKeyProperties = mappedStatement.getKeyProperties() != null && mappedStatement.getKeyProperties().length != 0;
         return mappedStatement.getKeyGenerator() != null && hasKeyProperties;
     }

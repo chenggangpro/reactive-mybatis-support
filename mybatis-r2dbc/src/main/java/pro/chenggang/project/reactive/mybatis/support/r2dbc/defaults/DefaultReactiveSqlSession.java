@@ -20,19 +20,28 @@ import reactor.util.context.Context;
 import java.util.Optional;
 
 /**
- * @author: chenggang
+ * The type Default reactive sql session.
+ *
+ * @author chenggang
+ * @version 1.0.0
  * @date 12/8/21.
  */
 public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisReactiveContextHelper {
 
     private static final Log log = LogFactory.getLog(DefaultReactiveSqlSession.class);
 
+    private final R2dbcMybatisConfiguration configuration;
+    private final ReactiveMybatisExecutor reactiveMybatisExecutor;
     private boolean autoCommit = false;
     private IsolationLevel isolationLevel;
     private boolean withTransaction = false;
-    private final R2dbcMybatisConfiguration configuration;
-    private final ReactiveMybatisExecutor reactiveMybatisExecutor;
 
+    /**
+     * Instantiates a new Default reactive sql session.
+     *
+     * @param configuration           the configuration
+     * @param reactiveMybatisExecutor the reactive mybatis executor
+     */
     public DefaultReactiveSqlSession(R2dbcMybatisConfiguration configuration, ReactiveMybatisExecutor reactiveMybatisExecutor) {
         this.configuration = configuration;
         this.reactiveMybatisExecutor = reactiveMybatisExecutor;
@@ -40,7 +49,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
 
     @Override
     public ReactiveSqlSession setAutoCommit(boolean autoCommit) {
-        if(!withTransaction && autoCommit){
+        if (!withTransaction && autoCommit) {
             this.autoCommit = true;
         }
         return this;
@@ -55,7 +64,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
     @Override
     public ReactiveSqlSession usingTransaction(boolean usingTransactionSupport) {
         this.withTransaction = usingTransactionSupport;
-        if(this.withTransaction){
+        if (this.withTransaction) {
             this.autoCommit = false;
         }
         return this;
@@ -63,13 +72,13 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
 
     @Override
     public <T> Mono<T> selectOne(String statement, Object parameter) {
-        return this.<T>selectList(statement,parameter)
+        return this.<T>selectList(statement, parameter)
                 .buffer(2)
                 .flatMap(results -> {
                     if (results.isEmpty()) {
                         return Mono.empty();
                     }
-                    if(results.size() > 1){
+                    if (results.size() > 1) {
                         return Mono.error(new TooManyResultsException("Expected one result (or null) to be returned by selectOne()"));
                     }
                     return Mono.justOrEmpty(results.get(0));
@@ -80,24 +89,24 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
     public <E> Flux<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
         MappedStatement mappedStatement = configuration.getMappedStatement(statement);
         return reactiveMybatisExecutor.<E>query(mappedStatement, wrapCollection(parameter), rowBounds)
-                .contextWrite(context -> initReactiveExecutorContext(context,new StatementLogHelper(mappedStatement.getStatementLog())));
+                .contextWrite(context -> initReactiveExecutorContext(context, new StatementLogHelper(mappedStatement.getStatementLog())));
     }
 
     @Override
     public Mono<Integer> insert(String statement, Object parameter) {
-        return this.update(statement,parameter);
+        return this.update(statement, parameter);
     }
 
     @Override
     public Mono<Integer> update(String statement, Object parameter) {
         MappedStatement mappedStatement = configuration.getMappedStatement(statement);
         return reactiveMybatisExecutor.update(mappedStatement, wrapCollection(parameter))
-                .contextWrite(context -> initReactiveExecutorContext(context,new StatementLogHelper(mappedStatement.getStatementLog())));
+                .contextWrite(context -> initReactiveExecutorContext(context, new StatementLogHelper(mappedStatement.getStatementLog())));
     }
 
     @Override
     public Mono<Integer> delete(String statement, Object parameter) {
-        return this.update(statement,parameter);
+        return this.update(statement, parameter);
     }
 
     @Override
@@ -119,7 +128,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
 
     @Override
     public <T> T getMapper(Class<T> type) {
-        return this.configuration.getMapper(type,this);
+        return this.configuration.getMapper(type, this);
     }
 
     @Override
@@ -136,9 +145,9 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
     public Context initReactiveExecutorContext(Context context, StatementLogHelper statementLogHelper) {
         Optional<ReactiveExecutorContext> optionalContext = context.getOrEmpty(ReactiveExecutorContext.class)
                 .map(ReactiveExecutorContext.class::cast);
-        if(optionalContext.isPresent()){
+        if (optionalContext.isPresent()) {
             ReactiveExecutorContext reactiveExecutorContext = optionalContext.get();
-            if(this.withTransaction){
+            if (this.withTransaction) {
                 reactiveExecutorContext.setWithTransaction();
             }
             reactiveExecutorContext.setStatementLogHelper(statementLogHelper);
@@ -146,29 +155,29 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
         }
         ReactiveExecutorContext newContext = new ReactiveExecutorContext(autoCommit, isolationLevel);
         newContext.setStatementLogHelper(statementLogHelper);
-        if(this.withTransaction){
+        if (this.withTransaction) {
             newContext.setWithTransaction();
         }
-        return context.put(ReactiveExecutorContext.class,newContext);
+        return context.put(ReactiveExecutorContext.class, newContext);
     }
 
     @Override
     public Context initReactiveExecutorContext(Context context) {
         Optional<ReactiveExecutorContext> optionalContext = context.getOrEmpty(ReactiveExecutorContext.class)
                 .map(ReactiveExecutorContext.class::cast);
-        if(optionalContext.isPresent()){
-            if(log.isTraceEnabled()){
+        if (optionalContext.isPresent()) {
+            if (log.isTraceEnabled()) {
                 log.trace("Initialize reactive executor context,context already exist :" + optionalContext);
             }
             return context;
         }
-        if(log.isTraceEnabled()){
+        if (log.isTraceEnabled()) {
             log.trace("Initialize reactive executor context,context not exist,create new one");
         }
         ReactiveExecutorContext newContext = new ReactiveExecutorContext(autoCommit, isolationLevel);
-        if(this.withTransaction){
+        if (this.withTransaction) {
             newContext.setWithTransaction();
         }
-        return context.put(ReactiveExecutorContext.class,newContext);
+        return context.put(ReactiveExecutorContext.class, newContext);
     }
 }

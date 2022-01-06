@@ -11,7 +11,9 @@ import java.util.function.Function;
 
 /**
  * Holder for a connection that makes sure the close action is invoked atomically only once.
- * @author evans
+ *
+ * @author chenggang
+ * @version 1.0.0
  */
 public class ConnectionCloseHolder {
 
@@ -21,6 +23,12 @@ public class ConnectionCloseHolder {
     private final Connection connection;
     private final Function<Connection, Publisher<Void>> closeFunction;
 
+    /**
+     * Instantiates a new Connection close holder.
+     *
+     * @param connection    the connection
+     * @param closeFunction the close function
+     */
     public ConnectionCloseHolder(Connection connection, Function<Connection, Publisher<Void>> closeFunction) {
         this.connection = connection;
         this.closeFunction = closeFunction;
@@ -28,27 +36,34 @@ public class ConnectionCloseHolder {
 
     /**
      * get target
-     * @return
+     *
+     * @return connection
      */
-    public Connection getTarget(){
+    public Connection getTarget() {
         return this.connection;
     }
 
     /**
      * close
-     * @return
+     *
+     * @return mono
      */
     public Mono<Void> close() {
         return Mono.defer(() -> {
             if (this.isClosed.compareAndSet(false, true)) {
                 return Mono.from(this.closeFunction.apply(this.connection))
-                        .doOnNext(aVoid -> log.debug("Release Connection ["+connection+"] "));
+                        .doOnNext(aVoid -> log.debug("Release Connection [" + connection + "] "));
             }
             return Mono.empty();
         });
     }
 
-    public boolean isClosed(){
+    /**
+     * Is closed boolean.
+     *
+     * @return the boolean
+     */
+    public boolean isClosed() {
         return this.isClosed.get();
     }
 }
