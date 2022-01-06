@@ -7,11 +7,22 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.DefaultReac
 import reactor.core.publisher.Mono;
 
 /**
- * @author: chenggang
- * @date 12/16/21.
+ * The type Spring reactive mybatis executor.
+ * override closeConnection with {@link ConnectionFactoryUtils}
+ * <p>
+ * {@link org.springframework.r2dbc.core.DatabaseClient}
+ *
+ * @author chenggang
+ * @date 12 /16/21.
+ * @since 1.0.0
  */
 public class SpringReactiveMybatisExecutor extends DefaultReactiveMybatisExecutor {
 
+    /**
+     * Instantiates a new Spring reactive mybatis executor.
+     *
+     * @param configuration the configuration
+     */
     public SpringReactiveMybatisExecutor(R2dbcMybatisConfiguration configuration) {
         super(configuration);
     }

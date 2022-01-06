@@ -7,46 +7,53 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * @author: chenggang
- * @date 12/7/21.
+ * The interface Reactive sql session.
+ *
+ * @author chenggang
+ * @version 1.0.0
+ * @date 12 /7/21.
  */
 public interface ReactiveSqlSession {
 
     /**
      * set auto commit
-     * @param autoCommit
+     *
+     * @param autoCommit the auto commit
      * @return current ReactiveSqlSession
      */
     ReactiveSqlSession setAutoCommit(boolean autoCommit);
 
     /**
      * set isolation level
-     * @param isolationLevel
+     *
+     * @param isolationLevel the isolation level
      * @return current ReactiveSqlSession
      */
     ReactiveSqlSession setIsolationLevel(IsolationLevel isolationLevel);
 
     /**
      * set transaction or not
-     * @param usingTransactionSupport
+     *
+     * @param usingTransactionSupport the using transaction support
      * @return current ReactiveSqlSession
      */
     ReactiveSqlSession usingTransaction(boolean usingTransactionSupport);
 
     /**
      * Retrieve a single row mapped from the statement key.
-     * @param <T> the returned object type
-     * @param statement
-     *          the statement
+     *
+     * @param <T>       the returned object type
+     * @param statement the statement
      * @return Mapped object
      */
     default <T> Mono<T> selectOne(String statement) {
-        return selectOne(statement,null);
+        return selectOne(statement, null);
     }
 
     /**
      * Retrieve a single row mapped from the statement key and parameter.
-     * @param <T> the returned object type
+     *
+     * @param <T>       the returned object type
      * @param statement Unique identifier matching the statement to use.
      * @param parameter A parameter object to pass to the statement.
      * @return Mapped object
@@ -54,50 +61,55 @@ public interface ReactiveSqlSession {
     <T> Mono<T> selectOne(String statement, Object parameter);
 
     /**
-     * Retrieve a list of mapped objects from the statement key.
-     * @param <E> the returned list element type
+     * Retrieve many mapped objects from the statement key.
+     *
+     * @param <E>       the returned list element type
      * @param statement Unique identifier matching the statement to use.
      * @return List of mapped object
      */
     default <E> Flux<E> selectList(String statement) {
-        return selectList(statement,null);
+        return selectList(statement, null);
     }
 
     /**
-     * Retrieve a list of mapped objects from the statement key and parameter.
-     * @param <E> the returned list element type
+     * Retrieve many mapped objects from the statement key and parameter.
+     *
+     * @param <E>       the returned list element type
      * @param statement Unique identifier matching the statement to use.
      * @param parameter A parameter object to pass to the statement.
      * @return List of mapped object
      */
     default <E> Flux<E> selectList(String statement, Object parameter) {
-        return selectList(statement,parameter,RowBounds.DEFAULT);
+        return selectList(statement, parameter, RowBounds.DEFAULT);
     }
 
     /**
-     * Retrieve a list of mapped objects from the statement key and parameter,
+     * Retrieve many mapped objects from the statement key and parameter,
      * within the specified row bounds.
-     * @param <E> the returned list element type
+     *
+     * @param <E>       the returned list element type
      * @param statement Unique identifier matching the statement to use.
      * @param parameter A parameter object to pass to the statement.
-     * @param rowBounds  Bounds to limit object retrieval
+     * @param rowBounds Bounds to limit object retrieval
      * @return List of mapped object
      */
     <E> Flux<E> selectList(String statement, Object parameter, RowBounds rowBounds);
 
     /**
      * Execute an insert statement.
+     *
      * @param statement Unique identifier matching the statement to execute.
      * @return int The number of rows affected by the insert.
      */
     default Mono<Integer> insert(String statement) {
-        return insert(statement,null);
+        return insert(statement, null);
     }
 
     /**
      * Execute an insert statement with the given parameter object. Any generated
      * autoincrement values or selectKey entries will modify the given parameter
      * object properties. Only the number of rows affected will be returned.
+     *
      * @param statement Unique identifier matching the statement to execute.
      * @param parameter A parameter object to pass to the statement.
      * @return int The number of rows affected by the insert.
@@ -106,15 +118,17 @@ public interface ReactiveSqlSession {
 
     /**
      * Execute an update statement. The number of rows affected will be returned.
+     *
      * @param statement Unique identifier matching the statement to execute.
      * @return int The number of rows affected by the update.
      */
     default Mono<Integer> update(String statement) {
-        return update(statement,null);
+        return update(statement, null);
     }
 
     /**
      * Execute an update statement. The number of rows affected will be returned.
+     *
      * @param statement Unique identifier matching the statement to execute.
      * @param parameter A parameter object to pass to the statement.
      * @return int The number of rows affected by the update.
@@ -123,15 +137,17 @@ public interface ReactiveSqlSession {
 
     /**
      * Execute a delete statement. The number of rows affected will be returned.
+     *
      * @param statement Unique identifier matching the statement to execute.
      * @return int The number of rows affected by the delete.
      */
     default Mono<Integer> delete(String statement) {
-        return delete(statement,null);
+        return delete(statement, null);
     }
 
     /**
      * Execute a delete statement. The number of rows affected will be returned.
+     *
      * @param statement Unique identifier matching the statement to execute.
      * @param parameter A parameter object to pass to the statement.
      * @return int The number of rows affected by the delete.
@@ -142,7 +158,8 @@ public interface ReactiveSqlSession {
      * Perform commits database connection.
      * Note that database connection will not be committed if no updates/deletes/inserts were called.
      * To force the commit call {@link ReactiveSqlSession#commit(boolean)}
-     * @return
+     *
+     * @return mono Void
      */
     default Mono<Void> commit() {
         return commit(false);
@@ -150,8 +167,9 @@ public interface ReactiveSqlSession {
 
     /**
      * Perform commits database connection.
+     *
      * @param force forces connection commit
-     * @return
+     * @return mono
      */
     Mono<Void> commit(boolean force);
 
@@ -159,7 +177,8 @@ public interface ReactiveSqlSession {
      * Perform rollback database connection .
      * Note that database connection will not be rolled back if no updates/deletes/inserts were called.
      * To force the rollback call {@link ReactiveSqlSession#rollback(boolean)}
-     * @return
+     *
+     * @return mono
      */
     default Mono<Void> rollback() {
         return rollback(false);
@@ -168,26 +187,30 @@ public interface ReactiveSqlSession {
     /**
      * Discards pending batch statements and rolls database connection back.
      * Note that database connection will not be rolled back if no updates/deletes/inserts were called.
+     *
      * @param force forces connection rollback
-     * @return
+     * @return mono
      */
     Mono<Void> rollback(boolean force);
 
     /**
      * close session
-     * @return
+     *
+     * @return mono
      */
     Mono<Void> close();
 
     /**
      * Retrieves current configuration.
-     * @return R2dbcMybatisConfiguration
+     *
+     * @return R2dbcMybatisConfiguration configuration
      */
     R2dbcMybatisConfiguration getConfiguration();
 
     /**
      * Retrieves a mapper.
-     * @param <T> the mapper type
+     *
+     * @param <T>  the mapper type
      * @param type Mapper interface class
      * @return a mapper bound to this SqlSession
      */

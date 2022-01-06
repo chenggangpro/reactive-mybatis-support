@@ -27,12 +27,24 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanc
 
 import java.lang.reflect.Constructor;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
- * @author: chenggang
- * @date 12/10/21.
+ * The type Default reactive result handler.
+ * <p>
+ * {@link org.apache.ibatis.executor.resultset.DefaultResultSetHandler}
+ *
+ * @author chenggang
+ * @version 1.0.0
+ * @date 12 /10/21.
  */
 public class DefaultReactiveResultHandler implements ReactiveResultHandler {
 
@@ -43,38 +55,24 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
     private final ObjectFactory objectFactory;
     private final ReflectorFactory reflectorFactory;
     private final TypeHandlerRegistry typeHandlerRegistry;
-    // temporary marking flag that indicate using constructor mapping (use field to reduce memory usage)
-    private boolean useConstructorMappings;
     private final Map<CacheKey, List<DefaultReactiveResultHandler.PendingRelation>> pendingRelations = new HashMap<>();
     // Cached Automappings
     private final Map<String, List<DefaultReactiveResultHandler.UnMappedColumnAutoMapping>> autoMappingsCache = new HashMap<>();
     // nested resultmaps
     private final Map<CacheKey, Object> nestedResultObjects = new HashMap<>();
     private final Map<String, Object> ancestorObjects = new HashMap<>();
-    private Object previousRowValue;
-
     private final TypeHandler delegatedTypeHandler;
     private final List<Object> resultHolder = new ArrayList<>();
+    // temporary marking flag that indicate using constructor mapping (use field to reduce memory usage)
+    private boolean useConstructorMappings;
+    private Object previousRowValue;
 
-    private static class PendingRelation {
-        public MetaObject metaObject;
-        public ResultMapping propertyMapping;
-    }
-
-    private static class UnMappedColumnAutoMapping {
-        private final String column;
-        private final String property;
-        private final TypeHandler<?> typeHandler;
-        private final boolean primitive;
-
-        public UnMappedColumnAutoMapping(String column, String property, TypeHandler<?> typeHandler, boolean primitive) {
-            this.column = column;
-            this.property = property;
-            this.typeHandler = typeHandler;
-            this.primitive = primitive;
-        }
-    }
-
+    /**
+     * Instantiates a new Default reactive result handler.
+     *
+     * @param r2DbcMybatisConfiguration the R2dbc mybatis configuration
+     * @param mappedStatement           the mapped statement
+     */
     public DefaultReactiveResultHandler(R2dbcMybatisConfiguration r2DbcMybatisConfiguration, MappedStatement mappedStatement) {
         this.mappedStatement = mappedStatement;
         this.r2DbcMybatisConfiguration = r2DbcMybatisConfiguration;
@@ -98,13 +96,13 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
                     + "'.  It's likely that neither a Result Type nor a Result Map was specified.");
         }
         ResultMap resultMap = resultMaps.get(0);
-        if(!resultMap.hasNestedResultMaps()){
-            try{
+        if (!resultMap.hasNestedResultMaps()) {
+            try {
                 ResultMap discriminatedResultMap = resolveDiscriminatedResultMap(rowResultWrapper, resultMap, null);
                 Object rowValue = getRowValueForSimpleResultMap(rowResultWrapper, discriminatedResultMap, null);
                 totalCount.increment();
                 return Collections.singletonList((T) rowValue);
-            }catch (SQLException e) {
+            } catch (SQLException e) {
                 throw new R2dbcResultException(e);
             }
         }
@@ -119,6 +117,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
 
     /**
      * get row value for simple result map
+     *
      * @param rowResultWrapper
      * @param resultMap
      * @param columnPrefix
@@ -141,6 +140,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
 
     /**
      * handle row values for nested resultMap
+     *
      * @param rowResultWrapper
      * @param resultMap
      * @throws SQLException
@@ -165,14 +165,14 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
                 storeObject(resultHandler, resultContext, rowValue, null, rowResultWrapper);
             }
         }
-        if (rowValue != null && mappedStatement.isResultOrdered() ) {
+        if (rowValue != null && mappedStatement.isResultOrdered()) {
             storeObject(resultHandler, resultContext, rowValue, null, rowResultWrapper);
             previousRowValue = null;
         } else if (rowValue != null) {
             previousRowValue = rowValue;
         }
         this.resultHolder.addAll(resultHandler.getResultList());
-        if(totalCount.intValue() != 0 && null == partialObject){
+        if (totalCount.intValue() != 0 && null == partialObject) {
             List<Object> holdResultList = new ArrayList<>(this.resultHolder);
             this.resultHolder.clear();
             return holdResultList;
@@ -283,14 +283,14 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         return foundValues;
     }
 
-    private Object getPropertyMappingValue(RowResultWrapper rowResultWrapper, MetaObject metaResultObject, ResultMapping propertyMapping,String columnPrefix)
+    private Object getPropertyMappingValue(RowResultWrapper rowResultWrapper, MetaObject metaResultObject, ResultMapping propertyMapping, String columnPrefix)
             throws SQLException {
         if (propertyMapping.getNestedQueryId() != null) {
             throw new UnsupportedOperationException("Not supported Nested query ");
         } else {
             final TypeHandler<?> typeHandler = propertyMapping.getTypeHandler();
             final String column = prependPrefix(propertyMapping.getColumn(), columnPrefix);
-            ((TypeHandleContext)this.delegatedTypeHandler).contextWith(typeHandler,rowResultWrapper);
+            ((TypeHandleContext) this.delegatedTypeHandler).contextWith(typeHandler, rowResultWrapper);
             return this.delegatedTypeHandler.getResult(null, column);
         }
     }
@@ -341,7 +341,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         if (!autoMapping.isEmpty()) {
             for (DefaultReactiveResultHandler.UnMappedColumnAutoMapping mapping : autoMapping) {
                 TypeHandler<?> typeHandler = mapping.typeHandler;
-                ((TypeHandleContext)this.delegatedTypeHandler).contextWith(typeHandler,rowResultWrapper);
+                ((TypeHandleContext) this.delegatedTypeHandler).contextWith(typeHandler, rowResultWrapper);
                 final Object value = this.delegatedTypeHandler.getResult(null, mapping.column);
                 if (value != null) {
                     foundValues = true;
@@ -396,7 +396,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
                     value = getRowValueForSimpleResultMap(rowResultWrapper, resultMap, getColumnPrefix(columnPrefix, constructorMapping));
                 } else {
                     final TypeHandler<?> typeHandler = constructorMapping.getTypeHandler();
-                    ((TypeHandleContext)this.delegatedTypeHandler).contextWith(typeHandler,rowResultWrapper);
+                    ((TypeHandleContext) this.delegatedTypeHandler).contextWith(typeHandler, rowResultWrapper);
                     value = this.delegatedTypeHandler.getResult(null, prependPrefix(column, columnPrefix));
                 }
             } catch (ResultMapException | SQLException e) {
@@ -430,7 +430,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
             Class<?> parameterType = constructor.getParameterTypes()[i];
             String columnName = rowResultWrapper.getColumnNames().get(i);
             TypeHandler<?> typeHandler = rowResultWrapper.getTypeHandler(parameterType, columnName);
-            ((TypeHandleContext)this.delegatedTypeHandler).contextWith(typeHandler,rowResultWrapper);
+            ((TypeHandleContext) this.delegatedTypeHandler).contextWith(typeHandler, rowResultWrapper);
             Object value = delegatedTypeHandler.getResult(null, columnName);
             constructorArgTypes.add(parameterType);
             constructorArgs.add(value);
@@ -464,6 +464,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
 
     /**
      * create Primitive ResultObject
+     *
      * @param rowResultWrapper
      * @param resultMap
      * @param columnPrefix
@@ -481,17 +482,18 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
             columnName = rowResultWrapper.getColumnNames().get(0);
         }
         final TypeHandler<?> typeHandler = rowResultWrapper.getTypeHandler(resultType, columnName);
-        ((TypeHandleContext)this.delegatedTypeHandler).contextWith(typeHandler,rowResultWrapper);
+        ((TypeHandleContext) this.delegatedTypeHandler).contextWith(typeHandler, rowResultWrapper);
         return delegatedTypeHandler.getResult(null, columnName);
     }
 
     /**
      * resolve Discriminated ResultMap
-     * @param rowResultWrapper
-     * @param resultMap
-     * @param columnPrefix
-     * @return
-     * @throws SQLException
+     *
+     * @param rowResultWrapper the row result wrapper
+     * @param resultMap        the result map
+     * @param columnPrefix     the column prefix
+     * @return result map
+     * @throws SQLException the sql exception
      */
     public ResultMap resolveDiscriminatedResultMap(RowResultWrapper rowResultWrapper, ResultMap resultMap, String columnPrefix) throws SQLException {
         Set<String> pastDiscriminators = new HashSet<>();
@@ -515,6 +517,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
 
     /**
      * get discriminator value
+     *
      * @param rowResultWrapper
      * @param discriminator
      * @param columnPrefix
@@ -524,12 +527,13 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
     private Object getDiscriminatorValue(RowResultWrapper rowResultWrapper, Discriminator discriminator, String columnPrefix) throws SQLException {
         final ResultMapping resultMapping = discriminator.getResultMapping();
         final TypeHandler<?> typeHandler = resultMapping.getTypeHandler();
-        ((TypeHandleContext)this.delegatedTypeHandler).contextWith(typeHandler,rowResultWrapper);
+        ((TypeHandleContext) this.delegatedTypeHandler).contextWith(typeHandler, rowResultWrapper);
         return delegatedTypeHandler.getResult(null, prependPrefix(resultMapping.getColumn(), columnPrefix));
     }
 
     /**
      * store object
+     *
      * @param resultHandler
      * @param resultContext
      * @param rowValue
@@ -689,7 +693,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
                 List<String> mappedColumnNames = rowResultWrapper.getMappedColumnNames(resultMap, columnPrefix);
                 // Issue #114
                 if (column != null && mappedColumnNames.contains(column.toUpperCase(Locale.ENGLISH))) {
-                    ((TypeHandleContext)this.delegatedTypeHandler).contextWith(typeHandler,rowResultWrapper);
+                    ((TypeHandleContext) this.delegatedTypeHandler).contextWith(typeHandler, rowResultWrapper);
                     final Object value = this.delegatedTypeHandler.getResult(null, column);
                     if (value != null || r2DbcMybatisConfiguration.isReturnInstanceForEmptyRow()) {
                         cacheKey.update(column);
@@ -714,7 +718,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
                 }
             }
             if (metaType.findProperty(property, r2DbcMybatisConfiguration.isMapUnderscoreToCamelCase()) != null) {
-                String value = rowResultWrapper.getRow().get(column,String.class);
+                String value = rowResultWrapper.getRow().get(column, String.class);
                 if (value != null) {
                     cacheKey.update(column);
                     cacheKey.update(value);
@@ -726,7 +730,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
     private void createRowKeyForMap(RowResultWrapper rowResultWrapper, CacheKey cacheKey) {
         List<String> columnNames = rowResultWrapper.getColumnNames();
         for (String columnName : columnNames) {
-            final String value = rowResultWrapper.getRow().get(columnName,String.class);
+            final String value = rowResultWrapper.getRow().get(columnName, String.class);
             if (value != null) {
                 cacheKey.update(columnName);
                 cacheKey.update(value);
@@ -769,9 +773,10 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
 
     /**
      * get delegate type handler
-     * @return
+     *
+     * @return TypeHandler
      */
-    private TypeHandler initDelegateTypeHandler(){
+    private TypeHandler initDelegateTypeHandler() {
         return ProxyInstanceFactory.newInstanceOfInterfaces(
                 TypeHandler.class,
                 () -> new DelegateR2DbcResultRowDataHandler(
@@ -780,5 +785,38 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
                 ),
                 TypeHandleContext.class
         );
+    }
+
+    private static class PendingRelation {
+        /**
+         * The Meta object.
+         */
+        public MetaObject metaObject;
+        /**
+         * The Property mapping.
+         */
+        public ResultMapping propertyMapping;
+    }
+
+    private static class UnMappedColumnAutoMapping {
+        private final String column;
+        private final String property;
+        private final TypeHandler<?> typeHandler;
+        private final boolean primitive;
+
+        /**
+         * Instantiates a new Un mapped column auto mapping.
+         *
+         * @param column      the column
+         * @param property    the property
+         * @param typeHandler the type handler
+         * @param primitive   the primitive
+         */
+        public UnMappedColumnAutoMapping(String column, String property, TypeHandler<?> typeHandler, boolean primitive) {
+            this.column = column;
+            this.property = property;
+            this.typeHandler = typeHandler;
+            this.primitive = primitive;
+        }
     }
 }

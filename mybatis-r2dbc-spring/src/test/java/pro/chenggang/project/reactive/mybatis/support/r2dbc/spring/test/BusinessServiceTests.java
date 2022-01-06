@@ -6,7 +6,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.s
 import reactor.test.StepVerifier;
 
 /**
- * @author: chenggang
+ * @author chenggang
  * @date 7/6/21.
  */
 public class BusinessServiceTests extends TestApplicationTests {

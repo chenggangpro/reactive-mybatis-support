@@ -20,7 +20,11 @@ import org.apache.ibatis.reflection.MetaClass;
 import org.apache.ibatis.reflection.ReflectorFactory;
 import org.apache.ibatis.reflection.factory.ObjectFactory;
 import org.apache.ibatis.reflection.wrapper.ObjectWrapperFactory;
-import org.apache.ibatis.session.*;
+import org.apache.ibatis.session.AutoMappingBehavior;
+import org.apache.ibatis.session.AutoMappingUnknownColumnBehavior;
+import org.apache.ibatis.session.Configuration;
+import org.apache.ibatis.session.ExecutorType;
+import org.apache.ibatis.session.LocalCacheScope;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.type.JdbcType;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
@@ -31,36 +35,74 @@ import java.io.Reader;
 import java.util.Properties;
 
 /**
+ * The type R2dbc xml config builder.
+ *
  * @author Clinton Begin
  * @author Kazuki Shimizu
  */
 public class R2dbcXMLConfigBuilder extends BaseBuilder {
 
-    private boolean parsed;
     private final XPathParser parser;
-    private String environment;
     private final ReflectorFactory localReflectorFactory = new DefaultReflectorFactory();
+    private boolean parsed;
+    private String environment;
 
+    /**
+     * Instantiates a new R2dbc xml config builder.
+     *
+     * @param reader the reader
+     */
     public R2dbcXMLConfigBuilder(Reader reader) {
         this(reader, null, null);
     }
 
+    /**
+     * Instantiates a new R2dbc xml config builder.
+     *
+     * @param reader      the reader
+     * @param environment the environment
+     */
     public R2dbcXMLConfigBuilder(Reader reader, String environment) {
         this(reader, environment, null);
     }
 
+    /**
+     * Instantiates a new R2dbc xml config builder.
+     *
+     * @param reader      the reader
+     * @param environment the environment
+     * @param props       the props
+     */
     public R2dbcXMLConfigBuilder(Reader reader, String environment, Properties props) {
         this(new XPathParser(reader, true, props, new XMLMapperEntityResolver()), environment, props);
     }
 
+    /**
+     * Instantiates a new R2dbc xml config builder.
+     *
+     * @param inputStream the input stream
+     */
     public R2dbcXMLConfigBuilder(InputStream inputStream) {
         this(inputStream, null, null);
     }
 
+    /**
+     * Instantiates a new R2dbc xml config builder.
+     *
+     * @param inputStream the input stream
+     * @param environment the environment
+     */
     public R2dbcXMLConfigBuilder(InputStream inputStream, String environment) {
         this(inputStream, environment, null);
     }
 
+    /**
+     * Instantiates a new R2dbc xml config builder.
+     *
+     * @param inputStream the input stream
+     * @param environment the environment
+     * @param props       the props
+     */
     public R2dbcXMLConfigBuilder(InputStream inputStream, String environment, Properties props) {
         this(new XPathParser(inputStream, true, props, new XMLMapperEntityResolver()), environment, props);
     }
@@ -74,6 +116,11 @@ public class R2dbcXMLConfigBuilder extends BaseBuilder {
         this.parser = parser;
     }
 
+    /**
+     * Parse R2dbc mybatis configuration.
+     *
+     * @return the R2dbc mybatis configuration
+     */
     public R2dbcMybatisConfiguration parse() {
         if (parsed) {
             throw new BuilderException("Each XMLConfigBuilder can only be used once.");
@@ -356,13 +403,13 @@ public class R2dbcXMLConfigBuilder extends BaseBuilder {
                     String mapperClass = child.getStringAttribute("class");
                     if (resource != null && url == null && mapperClass == null) {
                         ErrorContext.instance().resource(resource);
-                        try(InputStream inputStream = Resources.getResourceAsStream(resource)) {
+                        try (InputStream inputStream = Resources.getResourceAsStream(resource)) {
                             XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, resource, configuration.getSqlFragments());
                             mapperParser.parse();
                         }
                     } else if (resource == null && url != null && mapperClass == null) {
                         ErrorContext.instance().resource(url);
-                        try(InputStream inputStream = Resources.getUrlAsStream(url)){
+                        try (InputStream inputStream = Resources.getUrlAsStream(url)) {
                             XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, url, configuration.getSqlFragments());
                             mapperParser.parse();
                         }

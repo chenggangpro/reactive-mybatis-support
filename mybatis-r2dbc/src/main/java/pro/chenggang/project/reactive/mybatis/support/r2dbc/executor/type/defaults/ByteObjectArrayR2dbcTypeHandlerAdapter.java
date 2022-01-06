@@ -9,8 +9,11 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcT
 import java.nio.ByteBuffer;
 
 /**
- * @author: chenggang
- * @date 12/9/21.
+ * The type Byte object array r2dbc type handler adapter.
+ *
+ * @author chenggang
+ * @version 1.0.0
+ * @date 12 /9/21.
  */
 public class ByteObjectArrayR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerAdapter<Byte[]> {
 
@@ -22,13 +25,13 @@ public class ByteObjectArrayR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerA
     @Override
     public void setParameter(Statement statement, ParameterHandlerContext parameterHandlerContext, Byte[] parameter) {
         ByteBuffer byteBuffer = ByteBuffer.wrap(this.toPrimitives(parameter));
-        statement.bind(parameterHandlerContext.getIndex(),byteBuffer);
+        statement.bind(parameterHandlerContext.getIndex(), byteBuffer);
     }
 
     @Override
     public Byte[] getResult(Row row, RowMetadata rowMetadata, String columnName) {
         ByteBuffer byteBuffer = row.get(columnName, ByteBuffer.class);
-        if(null == byteBuffer){
+        if (null == byteBuffer) {
             return null;
         }
         return this.toByteObjects(byteBuffer.array());
@@ -37,7 +40,7 @@ public class ByteObjectArrayR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerA
     @Override
     public Byte[] getResult(Row row, RowMetadata rowMetadata, int columnIndex) {
         ByteBuffer byteBuffer = row.get(columnIndex, ByteBuffer.class);
-        if(null == byteBuffer){
+        if (null == byteBuffer) {
             return null;
         }
         return this.toByteObjects(byteBuffer.array());
@@ -45,12 +48,13 @@ public class ByteObjectArrayR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerA
 
     /**
      * Byte[] -> byte[]
+     *
      * @param oBytes
      * @return
      */
     private byte[] toPrimitives(Byte[] oBytes) {
         byte[] bytes = new byte[oBytes.length];
-        for(int i = 0; i < oBytes.length; i++) {
+        for (int i = 0; i < oBytes.length; i++) {
             bytes[i] = oBytes[i];
         }
         return bytes;
@@ -58,12 +62,13 @@ public class ByteObjectArrayR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerA
 
     /**
      * byte[] -> Byte[]
+     *
      * @param oBytes
      * @return
      */
     private Byte[] toByteObjects(byte[] oBytes) {
         Byte[] bytes = new Byte[oBytes.length];
-        for(int i = 0; i < oBytes.length; i++) {
+        for (int i = 0; i < oBytes.length; i++) {
             bytes[i] = oBytes[i];
         }
         return bytes;

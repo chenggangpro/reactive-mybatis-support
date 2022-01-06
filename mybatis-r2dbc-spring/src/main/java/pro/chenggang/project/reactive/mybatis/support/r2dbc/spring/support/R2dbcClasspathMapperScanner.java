@@ -20,7 +20,9 @@ import java.util.Set;
 
 /**
  * R2dbcClasspathMapperScanner
- * @author evans
+ *
+ * @author chenggang
+ * @version 1.0.0
  */
 public class R2dbcClasspathMapperScanner extends ClassPathBeanDefinitionScanner {
 
@@ -34,26 +36,54 @@ public class R2dbcClasspathMapperScanner extends ClassPathBeanDefinitionScanner 
 
     private R2dbcMapperFactoryBean<?> mapperFactoryBean = new R2dbcMapperFactoryBean<>();
 
+    /**
+     * Instantiates a new R 2 dbc classpath mapper scanner.
+     *
+     * @param registry the registry
+     */
     public R2dbcClasspathMapperScanner(BeanDefinitionRegistry registry) {
         super(registry, false);
     }
 
+    /**
+     * Sets annotation class.
+     *
+     * @param annotationClass the annotation class
+     */
     public void setAnnotationClass(Class<? extends Annotation> annotationClass) {
         this.annotationClass = annotationClass;
     }
 
+    /**
+     * Sets sql session factory.
+     *
+     * @param sqlSessionFactory the sql session factory
+     */
     public void setSqlSessionFactory(ReactiveSqlSessionFactory sqlSessionFactory) {
         this.sqlSessionFactory = sqlSessionFactory;
     }
 
+    /**
+     * Sets sql session factory bean name.
+     *
+     * @param sqlSessionFactoryBeanName the sql session factory bean name
+     */
     public void setSqlSessionFactoryBeanName(String sqlSessionFactoryBeanName) {
         this.sqlSessionFactoryBeanName = sqlSessionFactoryBeanName;
     }
 
+    /**
+     * Sets mapper factory bean.
+     *
+     * @param mapperFactoryBean the mapper factory bean
+     */
     public void setMapperFactoryBean(R2dbcMapperFactoryBean<?> mapperFactoryBean) {
         this.mapperFactoryBean = mapperFactoryBean;
     }
 
+    /**
+     * Register filters.
+     */
     public void registerFilters() {
         boolean acceptAllInterfaces = true;
         // if specified, use the given annotation and / or marker interface

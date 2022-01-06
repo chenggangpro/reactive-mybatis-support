@@ -17,12 +17,22 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanc
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
- * @author: chenggang
- * @date 12/12/21.
+ * The type Default r2dbc key generator.
+ * <p>
+ * {@link org.apache.ibatis.executor.keygen.Jdbc3KeyGenerator}
+ *
+ * @author chenggang
+ * @date 12 /12/21.
  */
 public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
 
@@ -35,9 +45,30 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
     private final MappedStatement mappedStatement;
     private final R2dbcMybatisConfiguration r2DbcMybatisConfiguration;
 
+    /**
+     * Instantiates a new Default R2dbc key generator.
+     *
+     * @param mappedStatement           the mapped statement
+     * @param r2DbcMybatisConfiguration the R2dbc mybatis configuration
+     */
     public DefaultR2dbcKeyGenerator(MappedStatement mappedStatement, R2dbcMybatisConfiguration r2DbcMybatisConfiguration) {
         this.mappedStatement = mappedStatement;
         this.r2DbcMybatisConfiguration = r2DbcMybatisConfiguration;
+    }
+
+    private static String nameOfSingleParam(Map<String, ?> paramMap) {
+        // There is virtually one parameter, so any key works.
+        return paramMap.keySet().iterator().next();
+    }
+
+    private static List<?> collectionize(Object param) {
+        if (param instanceof Collection) {
+            return new ArrayList<Object>((Collection) param);
+        } else if (param instanceof Object[]) {
+            return Arrays.asList((Object[]) param);
+        } else {
+            return Arrays.asList(param);
+        }
     }
 
     @Override
@@ -47,7 +78,7 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
 
     @Override
     public Integer handleKeyResult(RowResultWrapper rowResultWrapper, Object parameter) {
-        this.assignKeys(r2DbcMybatisConfiguration,rowResultWrapper,mappedStatement.getKeyProperties(),parameter);
+        this.assignKeys(r2DbcMybatisConfiguration, rowResultWrapper, mappedStatement.getKeyProperties(), parameter);
         this.resultRowCounter.increment();
         return 1;
     }
@@ -66,7 +97,7 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
             assignKeysToParamMapList(configuration, rowResultWrapper, keyProperties, (ArrayList<ParamMap<?>>) parameter);
         } else {
             // Single param without @Param
-            assignKeysToParam(configuration,rowResultWrapper, keyProperties, parameter);
+            assignKeysToParam(configuration, rowResultWrapper, keyProperties, parameter);
         }
     }
 
@@ -77,24 +108,24 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
             return;
         }
         int i = resultRowCounter.intValue();
-        if(params.size() <= i ){
+        if (params.size() <= i) {
             throw new ExecutorException(String.format(MSG_TOO_MANY_KEYS, params.size()));
         }
         KeyAssigner keyAssigner = new KeyAssigner(configuration, i + 1, null, keyProperties[i]);
-        keyAssigner.assign(rowResultWrapper,params.get(i));
+        keyAssigner.assign(rowResultWrapper, params.get(i));
     }
 
     private void assignKeysToParamMapList(R2dbcMybatisConfiguration configuration, RowResultWrapper rowResultWrapper,
                                           String[] keyProperties, ArrayList<ParamMap<?>> paramMapList) {
         int i = resultRowCounter.intValue();
-        if(paramMapList.size() <= i ){
+        if (paramMapList.size() <= i) {
             throw new ExecutorException(String.format(MSG_TOO_MANY_KEYS, paramMapList.size()));
         }
         List<KeyAssigner> assignerList = new ArrayList<>();
         ParamMap<?> paramMap = paramMapList.get(i);
         for (int j = 0; j < keyProperties.length; j++) {
             assignerList.add(getAssignerForParamMap(configuration, j + 1, paramMap, keyProperties[j], keyProperties, false)
-                            .getValue());
+                    .getValue());
         }
         assignerList.forEach(x -> x.assign(rowResultWrapper, paramMap));
     }
@@ -116,8 +147,8 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
         }
         int i = resultRowCounter.intValue();
         for (Map.Entry<List<?>, List<KeyAssigner>> pair : assignerMap.values()) {
-            if(pair.getKey().size() <= i ){
-                throw new ExecutorException(String.format(MSG_TOO_MANY_KEYS,paramMap.size()));
+            if (pair.getKey().size() <= i) {
+                throw new ExecutorException(String.format(MSG_TOO_MANY_KEYS, paramMap.size()));
             }
             Object param = pair.getKey().get(i);
             pair.getValue().forEach(x -> x.assign(rowResultWrapper, param));
@@ -167,21 +198,6 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
         return MapUtil.entry(singleParamName, new KeyAssigner(r2DbcMybatisConfiguration, columnPosition, argParamName, keyProperty));
     }
 
-    private static String nameOfSingleParam(Map<String, ?> paramMap) {
-        // There is virtually one parameter, so any key works.
-        return paramMap.keySet().iterator().next();
-    }
-
-    private static List<?> collectionize(Object param) {
-        if (param instanceof Collection) {
-            return new ArrayList<Object>((Collection) param);
-        } else if (param instanceof Object[]) {
-            return Arrays.asList((Object[]) param);
-        } else {
-            return Arrays.asList(param);
-        }
-    }
-
     private class KeyAssigner {
 
         private final R2dbcMybatisConfiguration r2DbcMybatisConfiguration;
@@ -189,9 +205,17 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
         private final int columnPosition;
         private final String paramName;
         private final String propertyName;
-        private TypeHandler<?> typeHandler;
         private final TypeHandler delegatedTypeHandler;
+        private TypeHandler<?> typeHandler;
 
+        /**
+         * Instantiates a new Key assigner.
+         *
+         * @param r2DbcMybatisConfiguration the R2dbc mybatis configuration
+         * @param columnPosition            the column position
+         * @param paramName                 the param name
+         * @param propertyName              the property name
+         */
         protected KeyAssigner(R2dbcMybatisConfiguration r2DbcMybatisConfiguration,
                               int columnPosition,
                               String paramName,
@@ -207,9 +231,10 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
 
         /**
          * get delegate type handler
-         * @return
+         *
+         * @return TypeHandler
          */
-        private TypeHandler initDelegateTypeHandler(){
+        private TypeHandler initDelegateTypeHandler() {
             return ProxyInstanceFactory.newInstanceOfInterfaces(
                     TypeHandler.class,
                     () -> new DelegateR2DbcResultRowDataHandler(
@@ -220,6 +245,12 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
             );
         }
 
+        /**
+         * Assign.
+         *
+         * @param rowResultWrapper the row result wrapper
+         * @param param            the param
+         */
         protected void assign(RowResultWrapper rowResultWrapper, Object param) {
             if (paramName != null) {
                 // If paramName is set, param is ParamMap
@@ -239,7 +270,7 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
                 if (typeHandler == null) {
                     // Error?
                 } else {
-                    ((TypeHandleContext)this.delegatedTypeHandler).contextWith(typeHandler,rowResultWrapper);
+                    ((TypeHandleContext) this.delegatedTypeHandler).contextWith(typeHandler, rowResultWrapper);
                     ResultSet resultSet = null;
                     Object value = delegatedTypeHandler.getResult(resultSet, columnPosition);
                     metaParam.setValue(propertyName, value);

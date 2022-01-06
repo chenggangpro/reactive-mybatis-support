@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 import static org.springframework.util.StringUtils.tokenizeToStringArray;
 
 /**
- * @author: chenggang
+ * @author chenggang
  * @date 12/15/21.
  */
 @TestInstance(PER_CLASS)

@@ -36,24 +36,25 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
 
 /**
  * R2dbc Mybatis Auto Configuration
- * @author evans
+ *
+ * @author chenggang
  */
 @Slf4j
 @Configuration
 @AutoConfigureBefore(DataSourceAutoConfiguration.class)
-@Import({ R2dbcAutoConfiguredMapperScannerRegistrar.class,R2dbcMapperScannerRegistrar.class})
+@Import({R2dbcAutoConfiguredMapperScannerRegistrar.class, R2dbcMapperScannerRegistrar.class})
 @ConditionalOnClass(ConnectionFactory.class)
 public class R2dbcMybatisAutoConfiguration {
 
     @ConfigurationProperties(R2dbcMybatisProperties.PREFIX)
     @Bean
-    public R2dbcMybatisProperties r2dbcMybatisProperties(){
+    public R2dbcMybatisProperties r2dbcMybatisProperties() {
         return new R2dbcMybatisProperties();
     }
 
     @ConfigurationProperties(R2dbcConnectionFactoryProperties.PREFIX)
     @Bean
-    public R2dbcConnectionFactoryProperties r2dbcConnectionFactoryProperties(){
+    public R2dbcConnectionFactoryProperties r2dbcConnectionFactoryProperties() {
         return new R2dbcConnectionFactoryProperties();
     }
 
@@ -71,7 +72,7 @@ public class R2dbcMybatisAutoConfiguration {
             log.info("Type Alias Package Is Empty");
         }
         Resource[] mapperLocations = properties.resolveMapperLocations();
-        if(mapperLocations != null && mapperLocations.length > 0) {
+        if (mapperLocations != null && mapperLocations.length > 0) {
             for (Resource mapperLocation : mapperLocations) {
                 if (mapperLocation == null) {
                     continue;
@@ -94,7 +95,7 @@ public class R2dbcMybatisAutoConfiguration {
 
     @ConditionalOnMissingBean(ConnectionFactory.class)
     @Bean(destroyMethod = "dispose")
-    public ConnectionPool connectionFactory(R2dbcConnectionFactoryProperties r2dbcConnectionFactoryProperties){
+    public ConnectionPool connectionFactory(R2dbcConnectionFactoryProperties r2dbcConnectionFactoryProperties) {
         ConnectionFactory connectionFactory = ConnectionFactories.get(r2dbcConnectionFactoryProperties.determineConnectionFactoryUrl());
         if (connectionFactory instanceof ConnectionPool) {
             return (ConnectionPool) connectionFactory;
@@ -111,9 +112,9 @@ public class R2dbcMybatisAutoConfiguration {
                 .maxCreateConnectionTime(pool.getMaxCreateConnectionTime())
                 .maxLifeTime(pool.getMaxLifeTime())
                 .validationDepth(pool.getValidationDepth());
-        if(hasText(pool.getValidationQuery())){
+        if (hasText(pool.getValidationQuery())) {
             builder.validationQuery(pool.getValidationQuery());
-        }else{
+        } else {
             builder.validationDepth(ValidationDepth.LOCAL);
         }
         ConnectionPool connectionPool = new ConnectionPool(builder.build());

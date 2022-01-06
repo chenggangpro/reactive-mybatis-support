@@ -4,56 +4,65 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * @author: chenggang
+ * The interface Reactive sql session operator.
+ *
+ * @author chenggang
+ * @version 1.0.0
  * @date 12/16/21.
  */
 public interface ReactiveSqlSessionOperator {
 
     /**
      * execute with Mono
-     * @param monoExecution
-     * @param <T>
-     * @return
+     *
+     * @param <T>           the type parameter
+     * @param monoExecution the mono execution
+     * @return mono
      */
     <T> Mono<T> execute(Mono<T> monoExecution);
 
     /**
      * execute with Mono then commit
-     * @param monoExecution
-     * @param <T>
-     * @return
+     *
+     * @param <T>           the type parameter
+     * @param monoExecution the mono execution
+     * @return mono
      */
     <T> Mono<T> executeAndCommit(Mono<T> monoExecution);
 
     /**
      * execute with Mono then rollback
-     * @param monoExecution
-     * @param <T>
-     * @return
+     *
+     * @param <T>           the type parameter
+     * @param monoExecution the mono execution
+     * @return mono
      */
     <T> Mono<T> executeAndRollback(Mono<T> monoExecution);
 
     /**
      * execute with Mono then commit
-     * @param fluxExecution
-     * @param <T>
-     * @return
+     *
+     * @param <T>           the type parameter
+     * @param fluxExecution the flux execution
+     * @return flux
      */
     <T> Flux<T> executeMany(Flux<T> fluxExecution);
 
     /**
      * execute with Flux
-     * @param fluxExecution
-     * @param <T>
-     * @return
+     *
+     * @param <T>           the type parameter
+     * @param fluxExecution the flux execution
+     * @return flux
      */
     <T> Flux<T> executeManyAndCommit(Flux<T> fluxExecution);
 
     /**
      * execute with Flux then rollback
-     * @param fluxExecution
-     * @param <T>
-     * @return
+     *
+     * @param <T>           the type parameter
+     * @param fluxExecution the flux execution
+     * @return flux
      */
     <T> Flux<T> executeManyAndRollback(Flux<T> fluxExecution);
 

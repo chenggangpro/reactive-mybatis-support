@@ -10,8 +10,11 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 /**
- * @author: chenggang
- * @date 12/9/21.
+ * The type Offset date time r2dbc type handler adapter.
+ *
+ * @author chenggang
+ * @version 1.0.0
+ * @date 12 /9/21.
  */
 public class OffsetDateTimeR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerAdapter<OffsetDateTime> {
 
@@ -22,13 +25,13 @@ public class OffsetDateTimeR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerAd
 
     @Override
     public void setParameter(Statement statement, ParameterHandlerContext parameterHandlerContext, OffsetDateTime parameter) {
-        statement.bind(parameterHandlerContext.getIndex(),parameter.toLocalDateTime());
+        statement.bind(parameterHandlerContext.getIndex(), parameter.toLocalDateTime());
     }
 
     @Override
     public OffsetDateTime getResult(Row row, RowMetadata rowMetadata, String columnName) {
         LocalDateTime localDateTime = row.get(columnName, LocalDateTime.class);
-        if(null == localDateTime){
+        if (null == localDateTime) {
             return null;
         }
         return OffsetDateTime.from(localDateTime);
@@ -37,7 +40,7 @@ public class OffsetDateTimeR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerAd
     @Override
     public OffsetDateTime getResult(Row row, RowMetadata rowMetadata, int columnIndex) {
         LocalDateTime localDateTime = row.get(columnIndex, LocalDateTime.class);
-        if(null == localDateTime){
+        if (null == localDateTime) {
             return null;
         }
         return OffsetDateTime.from(localDateTime);

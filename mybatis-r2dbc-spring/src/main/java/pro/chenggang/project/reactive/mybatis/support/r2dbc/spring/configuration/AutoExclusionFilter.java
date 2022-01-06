@@ -10,8 +10,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * exclude DataSourceAutoConfiguration
+ * exclude DataSourceAutoConfiguration in case of Datasource Configuration auto loaded
  * @author evans
+ * @version 1.0.0
  */
 @Configuration
 @ConditionalOnClass(ConnectionFactory.class)

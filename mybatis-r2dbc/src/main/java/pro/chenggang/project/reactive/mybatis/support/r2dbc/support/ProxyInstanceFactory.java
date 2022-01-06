@@ -11,31 +11,32 @@ import java.util.List;
 import java.util.function.Supplier;
 
 /**
- * @author: chenggang
- * @date 12/12/21.
+ * The type Proxy instance factory.
+ *
+ * @author chenggang
+ * @version 1.0.0
+ * @date 12 /12/21.
  */
 @SuppressWarnings("unchecked")
 public class ProxyInstanceFactory {
 
     /**
-     * new instance of
-     * @param interfaceType
-     * @param invocationHandlerSupplier
-     * @param otherInterfaces
-     * @param <T>
-     * @return
-     * @throws NoSuchMethodException
-     * @throws IllegalAccessException
-     * @throws InvocationTargetException
-     * @throws InstantiationException
+     * new instance of target class
+     *
+     * @param <T>                       the type parameter
+     * @param interfaceType             the interface type
+     * @param invocationHandlerSupplier the invocation handler supplier
+     * @param otherInterfaces           the other interfaces
+     * @return t
+     * @throws IllegalStateException when unable create target interface Proxy Class
      */
-    public static <T> T newInstanceOfInterfaces(Class<T> interfaceType, Supplier<InvocationHandler> invocationHandlerSupplier, Class ... otherInterfaces) {
-        List<Class> targetInterfaces = new ArrayList<>();
+    public static <T> T newInstanceOfInterfaces(Class<T> interfaceType, Supplier<InvocationHandler> invocationHandlerSupplier, Class<?>... otherInterfaces) {
+        List<Class<?>> targetInterfaces = new ArrayList<>();
         targetInterfaces.add(interfaceType);
-        if(null != otherInterfaces && otherInterfaces.length != 0){
+        if (null != otherInterfaces && otherInterfaces.length != 0) {
             targetInterfaces.addAll(Arrays.asList(otherInterfaces));
         }
-        try{
+        try {
             return (T) new ByteBuddy()
                     .subclass(Object.class)
                     .implement(targetInterfaces)
@@ -45,8 +46,8 @@ public class ProxyInstanceFactory {
                     .getLoaded()
                     .getDeclaredConstructor()
                     .newInstance();
-        }catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
-            throw new IllegalStateException("Unable create target interface Proxy Class",e);
+        } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
+            throw new IllegalStateException("Unable create target interface Proxy Class", e);
         }
     }
 

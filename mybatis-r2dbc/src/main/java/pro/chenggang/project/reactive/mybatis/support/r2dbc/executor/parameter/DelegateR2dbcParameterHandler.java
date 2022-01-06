@@ -22,14 +22,21 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * @author: chenggang
- * @date 12/9/21.
+ * The type Delegate R2dbc parameter handler.
+ *
+ * @author chenggang
+ * @version 1.0.0
+ * @date 12 /9/21.
  */
 public class DelegateR2dbcParameterHandler implements InvocationHandler {
 
@@ -42,6 +49,14 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
     private final AtomicReference<ParameterHandlerContext> parameterHandlerContextReference = new AtomicReference<>();
     private final StatementLogHelper statementLogHelper;
 
+    /**
+     * Instantiates a new Delegate R2dbc parameter handler.
+     *
+     * @param r2DbcMybatisConfiguration the R2dbc mybatis configuration
+     * @param parameterHandler          the parameter handler
+     * @param statement                 the statement
+     * @param statementLogHelper        the statement log helper
+     */
     public DelegateR2dbcParameterHandler(R2dbcMybatisConfiguration r2DbcMybatisConfiguration,
                                          ParameterHandler parameterHandler,
                                          Statement statement,
@@ -63,7 +78,8 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
 
     /**
      * init delegated prepared statement
-     * @return
+     *
+     * @return PreparedStatement
      */
     private PreparedStatement initDelegatedPreparedStatement() {
         return ProxyInstanceFactory.newInstanceOfInterfaces(
@@ -79,8 +95,8 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         String methodName = method.getName();
-        if(!Objects.equals("setParameters",methodName)){
-            return method.invoke(parameterHandler,args);
+        if (!Objects.equals("setParameters", methodName)) {
+            return method.invoke(parameterHandler, args);
         }
         this.setParameters(this.delegatedPreparedStatement);
         return null;
@@ -88,12 +104,13 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
 
     /**
      * get field
+     *
      * @param parameterHandler
      * @param fieldType
      * @param <T>
      * @return
      */
-    private <T> T getField(ParameterHandler parameterHandler,Class<T> fieldType){
+    private <T> T getField(ParameterHandler parameterHandler, Class<T> fieldType) {
         Field field = this.parameterHandlerFieldMap.get(fieldType);
         try {
             return (T) field.get(parameterHandler);
@@ -105,11 +122,12 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
 
     /**
      * delegate set parameters
-     * @param ps
+     *
+     * @param ps the ps
      */
     public void setParameters(PreparedStatement ps) {
-        BoundSql boundSql = this.getField(this.parameterHandler,BoundSql.class);
-        TypeHandlerRegistry typeHandlerRegistry = this.getField(this.parameterHandler,TypeHandlerRegistry.class);
+        BoundSql boundSql = this.getField(this.parameterHandler, BoundSql.class);
+        TypeHandlerRegistry typeHandlerRegistry = this.getField(this.parameterHandler, TypeHandlerRegistry.class);
         Object parameterObject = parameterHandler.getParameterObject();
         List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
         ParameterHandlerContext parameterHandlerContext = new ParameterHandlerContext();
@@ -138,10 +156,10 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
                         jdbcType = configuration.getJdbcTypeForNull();
                     }
                     try {
-                        if(value == null && jdbcType != null){
-                            this.delegateStatement.bindNull(i,parameterMapping.getJavaType());
+                        if (value == null && jdbcType != null) {
+                            this.delegateStatement.bindNull(i, parameterMapping.getJavaType());
                             columnValues.add(null);
-                        }else {
+                        } else {
                             parameterHandlerContext.setIndex(i);
                             parameterHandlerContext.setJavaType(parameterMapping.getJavaType());
                             parameterHandlerContext.setJdbcType(jdbcType);
@@ -164,10 +182,17 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
     private class DelegateR2dbcStatement implements InvocationHandler {
 
         private final Statement statement;
-        private final Map<Class, R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapters;
-        private final Set<Class> notSupportedDataTypes;
+        private final Map<Class<?>, R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapters;
+        private final Set<Class<?>> notSupportedDataTypes;
 
-        DelegateR2dbcStatement(Statement statement, Map<Class, R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapters, Set<Class> notSupportedDataTypes) {
+        /**
+         * Instantiates a new Delegate R2dbc statement.
+         *
+         * @param statement                the statement
+         * @param r2dbcTypeHandlerAdapters the R2dbc type handler adapters
+         * @param notSupportedDataTypes    the not supported data types
+         */
+        DelegateR2dbcStatement(Statement statement, Map<Class<?>, R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapters, Set<Class<?>> notSupportedDataTypes) {
             this.statement = statement;
             this.r2dbcTypeHandlerAdapters = r2dbcTypeHandlerAdapters;
             this.notSupportedDataTypes = notSupportedDataTypes;
@@ -176,7 +201,7 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             String methodName = method.getName();
-            if(!methodName.startsWith("set")){
+            if (!methodName.startsWith("set")) {
                 //not handle no set method
                 return null;
             }
@@ -184,15 +209,15 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
             Object parameter = args[1];
             Class<?> parameterClass = parameter.getClass();
             //not supported types
-            if(notSupportedDataTypes.contains(parameterClass)){
+            if (notSupportedDataTypes.contains(parameterClass)) {
                 throw new IllegalArgumentException("Unsupported Parameter type : " + parameterClass);
             }
             // using adapter
-            if(r2dbcTypeHandlerAdapters.containsKey(parameterClass)){
+            if (r2dbcTypeHandlerAdapters.containsKey(parameterClass)) {
                 log.debug("Found r2dbc type handler adapter for type : " + parameterClass);
                 R2dbcTypeHandlerAdapter r2dbcTypeHandlerAdapter = r2dbcTypeHandlerAdapters.get(parameterClass);
                 ParameterHandlerContext parameterHandlerContext = DelegateR2dbcParameterHandler.this.parameterHandlerContextReference.get();
-                r2dbcTypeHandlerAdapter.setParameter(statement,parameterHandlerContext,parameter);
+                r2dbcTypeHandlerAdapter.setParameter(statement, parameterHandlerContext, parameter);
                 return null;
             }
             //default set

@@ -5,8 +5,11 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowR
 import java.util.List;
 
 /**
- * @author: chenggang
- * @date 12/10/21.
+ * The interface Reactive result handler.
+ *
+ * @author chenggang
+ * @version 1.0.0
+ * @date 12 /10/21.
  */
 public interface ReactiveResultHandler {
 
@@ -17,15 +20,17 @@ public interface ReactiveResultHandler {
 
     /**
      * get result row total count
-     * @return
+     *
+     * @return result row total count
      */
     Integer getResultRowTotalCount();
 
     /**
      * handle result
-     * @param rowResultWrapper
-     * @param <T>
-     * @return
+     *
+     * @param <T>              the type parameter
+     * @param rowResultWrapper the row result wrapper
+     * @return list
      */
     <T> List<T> handleResult(RowResultWrapper rowResultWrapper);
 }

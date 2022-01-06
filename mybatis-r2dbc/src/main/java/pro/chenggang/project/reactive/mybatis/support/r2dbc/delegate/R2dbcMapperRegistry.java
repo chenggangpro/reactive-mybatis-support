@@ -12,19 +12,35 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author: chenggang
- * @date 12/8/21.
+ * The type R2dbc mapper registry.
+ *
+ * @author chenggang
+ * @version 1.0.0
+ * @date 12 /8/21.
  */
 public class R2dbcMapperRegistry extends MapperRegistry {
 
     private final Map<Class<?>, MapperProxyFactory<?>> knownMappers = new HashMap<>();
     private final R2dbcMybatisConfiguration configuration;
 
+    /**
+     * Instantiates a new R2dbc mapper registry.
+     *
+     * @param config the config
+     */
     public R2dbcMapperRegistry(R2dbcMybatisConfiguration config) {
         super(config);
         this.configuration = config;
     }
 
+    /**
+     * Gets mapper.
+     *
+     * @param <T>        the type parameter
+     * @param type       the type
+     * @param sqlSession the sql session
+     * @return the mapper
+     */
     @SuppressWarnings("unchecked")
     public <T> T getMapper(Class<T> type, ReactiveSqlSession sqlSession) {
         final MapperProxyFactory<T> mapperProxyFactory = (MapperProxyFactory<T>) knownMappers.get(type);

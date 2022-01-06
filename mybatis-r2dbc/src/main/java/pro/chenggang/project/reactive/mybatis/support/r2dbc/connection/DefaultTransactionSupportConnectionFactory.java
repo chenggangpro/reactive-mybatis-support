@@ -18,7 +18,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
- * @author evans
+ * The type Default transaction support connection factory. without spring
+ *
+ * @author chenggang
+ * @version 1.0.0
  */
 public class DefaultTransactionSupportConnectionFactory implements ConnectionFactory, Wrapped<ConnectionFactory>, Closeable {
 
@@ -26,6 +29,11 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
 
     private final ConnectionFactory targetConnectionFactory;
 
+    /**
+     * Instantiates a new Default transaction support connection factory.
+     *
+     * @param targetConnectionFactory the target connection factory
+     */
     public DefaultTransactionSupportConnectionFactory(ConnectionFactory targetConnectionFactory) {
         this.targetConnectionFactory = targetConnectionFactory;
     }
@@ -49,8 +57,8 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
      * close connection factory
      */
     @Override
-    public void close(){
-        if(this.targetConnectionFactory instanceof ConnectionPool){
+    public void close() {
+        if (this.targetConnectionFactory instanceof ConnectionPool) {
             ConnectionPool connectionPool = ((ConnectionPool) this.targetConnectionFactory);
             if (!connectionPool.isDisposed()) {
                 connectionPool.dispose();
@@ -60,7 +68,8 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
 
     /**
      * get optional transaction aware connection based on ReactiveExecutorContext's isUsingTransaction()
-     * @param targetConnectionFactory
+     *
+     * @param targetConnectionFactory original ConnectionFactory
      * @return
      */
     private Mono<Connection> getOptionalTransactionAwareConnectionProxy(ConnectionFactory targetConnectionFactory) {
@@ -69,7 +78,7 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
                         .switchIfEmpty(Mono.from(targetConnectionFactory.create())
                                 .map(newConnection -> {
                                     log.debug("[Get connection]Old connection not exist ,Create connection : " + newConnection);
-                                    return this.getConnectionProxy(newConnection,reactiveExecutorContext.isWithTransaction());
+                                    return this.createConnectionProxy(newConnection, reactiveExecutorContext.isWithTransaction());
                                 })
                         )
                         .doOnNext(transactionConnection -> {
@@ -88,7 +97,7 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
                                 })
                                 .switchIfEmpty(Mono.from(newConnection.setAutoCommit(reactiveExecutorContext.isAutoCommit())))
                                 .then(Mono.defer(() -> {
-                                    if(reactiveExecutorContext.setActiveTransaction()){
+                                    if (reactiveExecutorContext.setActiveTransaction()) {
                                         return Mono.from(newConnection.beginTransaction())
                                                 .then(Mono.defer(() -> Mono.just(newConnection)));
                                     }
@@ -97,26 +106,37 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
                 );
     }
 
-    private Connection getConnectionProxy(Connection connection,boolean suspendClose){
+    /**
+     * create connection proxy
+     *
+     * @param connection
+     * @param suspendClose
+     * @return
+     */
+    private Connection createConnectionProxy(Connection connection, boolean suspendClose) {
         return ProxyInstanceFactory.newInstanceOfInterfaces(
                 Connection.class,
-                () -> new TransactionAwareConnection(connection,suspendClose),
+                () -> new TransactionAwareConnection(connection, suspendClose),
                 Wrapped.class
         );
     }
 
 
     /**
-     * Invocation handler that delegates close calls on R2DBC Connections to
+     * Invocation handler that delegates close calls on R2dbc Connections to
      */
     private static class TransactionAwareConnection implements InvocationHandler {
 
         private final Connection connection;
-
+        private final boolean suspendClose;
         private boolean closed = false;
 
-        private final boolean suspendClose;
-
+        /**
+         * Instantiates a new Transaction aware connection.
+         *
+         * @param connection   the connection
+         * @param suspendClose suspend close
+         */
         TransactionAwareConnection(Connection connection, boolean suspendClose) {
             this.connection = connection;
             this.suspendClose = suspendClose;
@@ -134,62 +154,29 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
                 case "unwrap":
                     return this.connection;
                 case "close":
-                    if(this.closed){
+                    if (this.closed) {
                         return Mono.empty();
                     }
                     return MybatisReactiveContextHelper.currentContext()
                             .flatMap(reactiveExecutorContext -> {
-                                if(reactiveExecutorContext.isForceRollback()){
-                                    return Mono.just(reactiveExecutorContext.isRequireClosed())
-                                            .filter(requireClose -> requireClose)
-                                            .flatMap(requireClose -> {
-                                                log.debug("[Close connection]rollback and close connection");
-                                                return Mono.from(this.connection.rollbackTransaction())
-                                                        .then(Mono.defer(
-                                                                () -> {
-                                                                    reactiveExecutorContext.setForceRollback(false);
-                                                                    return this.executeCloseConnection(reactiveExecutorContext);
-                                                                }
-                                                        ));
-                                            })
-                                            .switchIfEmpty(Mono.defer(
-                                                    () -> {
-                                                        log.debug("[Close connection]just rollback,not close connection");
-                                                        reactiveExecutorContext.setForceRollback(false);
-                                                        return Mono.from(this.connection.rollbackTransaction())
-                                                                .onErrorResume(Exception.class, this::onErrorOperation);
-                                                    }
-                                            ));
+                                //process rollback
+                                if (reactiveExecutorContext.isForceRollback()) {
+                                    return this.handleRollback(reactiveExecutorContext);
                                 }
-                                if(reactiveExecutorContext.isForceCommit()){
-                                    return Mono.just(reactiveExecutorContext.isRequireClosed())
-                                            .filter(requireClose -> requireClose)
-                                            .flatMap(requireClose -> {
-                                                log.debug("[Close connection]commit and close connection");
-                                                return Mono.from(this.connection.commitTransaction())
-                                                        .then(Mono.defer(
-                                                                () -> {
-                                                                    reactiveExecutorContext.setForceCommit(false);
-                                                                    return this.executeCloseConnection(reactiveExecutorContext);
-                                                                }
-                                                        ));
-                                            })
-                                            .switchIfEmpty(Mono.defer(
-                                                    () -> {
-                                                        log.debug("[Close connection]just commit,not close connection");
-                                                        reactiveExecutorContext.setForceCommit(false);
-                                                        return Mono.from(this.connection.commitTransaction())
-                                                                .onErrorResume(Exception.class, this::onErrorOperation);
-                                                    }
-                                            ));
+                                //process commit
+                                if (reactiveExecutorContext.isForceCommit()) {
+                                    return this.handleCommit(reactiveExecutorContext);
                                 }
-                                if(reactiveExecutorContext.isRequireClosed()){
+                                //process close connection
+                                if (reactiveExecutorContext.isRequireClosed()) {
                                     log.debug("[Close connection]close connection");
                                     return this.executeCloseConnection(reactiveExecutorContext);
                                 }
-                                if(!suspendClose){
+                                //if not suspend close connection then process close connection
+                                if (!suspendClose) {
                                     return this.executeCloseConnection(reactiveExecutorContext);
                                 }
+                                //otherwise, nothing to do ,wait for close connection after all transaction
                                 log.trace("[Close connection]neither rollback or commit,nothing to do");
                                 return Mono.empty();
                             });
@@ -204,18 +191,76 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
             // Invoke method on target Connection.
             try {
                 return method.invoke(this.connection, args);
-            }
-            catch (InvocationTargetException ex) {
+            } catch (InvocationTargetException ex) {
                 throw ex.getTargetException();
             }
         }
 
         /**
+         * handle rollback
+         *
+         * @param reactiveExecutorContext ReactiveExecutorContext
+         * @return void
+         */
+        private Mono<Void> handleRollback(ReactiveExecutorContext reactiveExecutorContext) {
+            return Mono.just(reactiveExecutorContext.isRequireClosed())
+                    .filter(requireClose -> requireClose)
+                    .flatMap(requireClose -> {
+                        log.debug("[Close connection]rollback and close connection");
+                        return Mono.from(this.connection.rollbackTransaction())
+                                .then(Mono.defer(
+                                        () -> {
+                                            reactiveExecutorContext.setForceRollback(false);
+                                            return this.executeCloseConnection(reactiveExecutorContext);
+                                        }
+                                ));
+                    })
+                    .switchIfEmpty(Mono.defer(
+                            () -> {
+                                log.debug("[Close connection]just rollback,not close connection");
+                                reactiveExecutorContext.setForceRollback(false);
+                                return Mono.from(this.connection.rollbackTransaction())
+                                        .onErrorResume(Exception.class, this::onErrorOperation);
+                            }
+                    ));
+        }
+
+        /**
+         * handle commit
+         *
+         * @param reactiveExecutorContext ReactiveExecutorContext
+         * @return void
+         */
+        private Mono<Void> handleCommit(ReactiveExecutorContext reactiveExecutorContext) {
+            return Mono.just(reactiveExecutorContext.isRequireClosed())
+                    .filter(requireClose -> requireClose)
+                    .flatMap(requireClose -> {
+                        log.debug("[Close connection]commit and close connection");
+                        return Mono.from(this.connection.commitTransaction())
+                                .then(Mono.defer(
+                                        () -> {
+                                            reactiveExecutorContext.setForceCommit(false);
+                                            return this.executeCloseConnection(reactiveExecutorContext);
+                                        }
+                                ));
+                    })
+                    .switchIfEmpty(Mono.defer(
+                            () -> {
+                                log.debug("[Close connection]just commit,not close connection");
+                                reactiveExecutorContext.setForceCommit(false);
+                                return Mono.from(this.connection.commitTransaction())
+                                        .onErrorResume(Exception.class, this::onErrorOperation);
+                            }
+                    ));
+        }
+
+        /**
          * execute close connection
-         * @param reactiveExecutorContext
+         *
+         * @param reactiveExecutorContext ReactiveExecutorContext
          * @return
          */
-        private Mono<Void> executeCloseConnection(ReactiveExecutorContext reactiveExecutorContext){
+        private Mono<Void> executeCloseConnection(ReactiveExecutorContext reactiveExecutorContext) {
             log.debug("[Close Connection]Connection : " + this.connection);
             return Mono.from(this.connection.close())
                     .doOnSubscribe(s -> this.closed = true)
@@ -233,17 +278,24 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
 
         /**
          * on error operation
-         * @param e
+         *
+         * @param e exception
          * @return
          */
-        private Mono<Void> onErrorOperation(Exception e){
+        private Mono<Void> onErrorOperation(Exception e) {
             return Mono.from(this.connection.close())
                     .doOnSubscribe(v -> this.closed = true)
                     .then(Mono.error(e));
         }
 
+        /**
+         * proxy to String
+         *
+         * @param proxy
+         * @return
+         */
         private String proxyToString(Object proxy) {
-            return "Transaction-support proxy for target Connection [" + this.connection.toString() + "],Original Proxy ["+proxy+"]";
+            return "Transaction-support proxy for target Connection [" + this.connection.toString() + "],Original Proxy [" + proxy + "]";
         }
 
     }

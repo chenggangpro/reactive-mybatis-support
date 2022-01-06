@@ -15,7 +15,7 @@ import static org.mybatis.dynamic.sql.SqlBuilder.isEqualTo;
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.dynamic.DeptDynamicSqlSupport.deptNo;
 
 /**
- * @author: chenggang
+ * @author chenggang
  * @date 7/5/21.
  */
 @Slf4j
