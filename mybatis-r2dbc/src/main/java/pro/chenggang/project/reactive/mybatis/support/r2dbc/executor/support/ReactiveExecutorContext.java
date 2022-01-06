@@ -1,4 +1,4 @@
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support;
 
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.IsolationLevel;
@@ -25,7 +25,7 @@ public class ReactiveExecutorContext {
     private final AtomicBoolean withTransaction = new AtomicBoolean(false);
     private final boolean autoCommit;
     private final IsolationLevel isolationLevel;
-    private StatementLogHelper statementLogHelper;
+    private R2dbcStatementLog r2dbcStatementLog;
 
     /**
      * Instantiates a new Reactive executor context.
@@ -170,17 +170,17 @@ public class ReactiveExecutorContext {
      *
      * @return the statement log helper
      */
-    public StatementLogHelper getStatementLogHelper() {
-        return statementLogHelper;
+    public R2dbcStatementLog getStatementLogHelper() {
+        return r2dbcStatementLog;
     }
 
     /**
      * Sets statement log helper.
      *
-     * @param statementLogHelper the statement log helper
+     * @param r2dbcStatementLog the statement log helper
      */
-    public void setStatementLogHelper(StatementLogHelper statementLogHelper) {
-        this.statementLogHelper = statementLogHelper;
+    public void setStatementLogHelper(R2dbcStatementLog r2dbcStatementLog) {
+        this.r2dbcStatementLog = r2dbcStatementLog;
     }
 
     /**
@@ -218,7 +218,7 @@ public class ReactiveExecutorContext {
                 ", forceCommit=" + forceCommit +
                 ", forceRollback=" + forceRollback +
                 ", requireClosed=" + requireClosed +
-                ", statementLogHelper=" + statementLogHelper +
+                ", statementLogHelper=" + r2dbcStatementLog +
                 " ]";
     }
 }

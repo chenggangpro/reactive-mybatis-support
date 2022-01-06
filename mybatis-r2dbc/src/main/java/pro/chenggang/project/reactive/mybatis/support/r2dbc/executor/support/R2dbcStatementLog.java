@@ -1,4 +1,4 @@
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support;
 
 import org.apache.ibatis.builder.SqlSourceBuilder;
 import org.apache.ibatis.logging.Log;
@@ -19,7 +19,7 @@ import java.util.List;
  * @version 1.0.0
  * @date 12/7/21.
  */
-public class StatementLogHelper {
+public class R2dbcStatementLog {
 
     private final Log statementLog;
 
@@ -28,7 +28,7 @@ public class StatementLogHelper {
      *
      * @param statementLog the statement log
      */
-    public StatementLogHelper(Log statementLog) {
+    public R2dbcStatementLog(Log statementLog) {
         this.statementLog = statementLog;
     }
 
