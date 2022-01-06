@@ -1,3 +1,4 @@
+[![Java CI with Maven](https://github.com/chenggangpro/reactive-mybatis-support/actions/workflows/maven.yml/badge.svg?branch=main)](https://github.com/chenggangpro/reactive-mybatis-support/actions/workflows/maven.yml)
 # Reactive-Mybatis-Support
 
 This project has met the general business usage scenarios, including:
