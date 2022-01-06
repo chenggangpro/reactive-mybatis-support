@@ -8,7 +8,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.suite.setup.MybatisR
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * @author evans
+ * @author chenggang
  * @date 2022/1/6.
  * @since 1.0.0
  */
