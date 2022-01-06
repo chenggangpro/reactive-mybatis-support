@@ -10,9 +10,9 @@ import org.apache.ibatis.session.RowBounds;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextHelper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveExecutorContext;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveMybatisExecutor;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.StatementLogHelper;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.R2dbcStatementLog;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
@@ -89,7 +89,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
     public <E> Flux<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
         MappedStatement mappedStatement = configuration.getMappedStatement(statement);
         return reactiveMybatisExecutor.<E>query(mappedStatement, wrapCollection(parameter), rowBounds)
-                .contextWrite(context -> initReactiveExecutorContext(context, new StatementLogHelper(mappedStatement.getStatementLog())));
+                .contextWrite(context -> initReactiveExecutorContext(context, this.configuration.getR2dbcStatementLog(mappedStatement)));
     }
 
     @Override
@@ -101,7 +101,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
     public Mono<Integer> update(String statement, Object parameter) {
         MappedStatement mappedStatement = configuration.getMappedStatement(statement);
         return reactiveMybatisExecutor.update(mappedStatement, wrapCollection(parameter))
-                .contextWrite(context -> initReactiveExecutorContext(context, new StatementLogHelper(mappedStatement.getStatementLog())));
+                .contextWrite(context -> initReactiveExecutorContext(context, this.configuration.getR2dbcStatementLog(mappedStatement)));
     }
 
     @Override
@@ -142,7 +142,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
     }
 
     @Override
-    public Context initReactiveExecutorContext(Context context, StatementLogHelper statementLogHelper) {
+    public Context initReactiveExecutorContext(Context context, R2dbcStatementLog r2dbcStatementLog) {
         Optional<ReactiveExecutorContext> optionalContext = context.getOrEmpty(ReactiveExecutorContext.class)
                 .map(ReactiveExecutorContext.class::cast);
         if (optionalContext.isPresent()) {
@@ -150,11 +150,11 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
             if (this.withTransaction) {
                 reactiveExecutorContext.setWithTransaction();
             }
-            reactiveExecutorContext.setStatementLogHelper(statementLogHelper);
+            reactiveExecutorContext.setStatementLogHelper(r2dbcStatementLog);
             return context;
         }
         ReactiveExecutorContext newContext = new ReactiveExecutorContext(autoCommit, isolationLevel);
-        newContext.setStatementLogHelper(statementLogHelper);
+        newContext.setStatementLogHelper(r2dbcStatementLog);
         if (this.withTransaction) {
             newContext.setWithTransaction();
         }

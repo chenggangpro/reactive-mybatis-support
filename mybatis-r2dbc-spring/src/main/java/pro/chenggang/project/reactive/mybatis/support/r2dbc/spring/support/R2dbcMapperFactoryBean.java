@@ -25,14 +25,14 @@ public class R2dbcMapperFactoryBean<T> implements FactoryBean<T>, InitializingBe
     private ReactiveSqlSessionFactory reactiveSqlSessionFactory;
 
     /**
-     * Instantiates a new R 2 dbc mapper factory bean.
+     * Instantiates a new r2dbc mapper factory bean.
      */
     public R2dbcMapperFactoryBean() {
 
     }
 
     /**
-     * Instantiates a new R 2 dbc mapper factory bean.
+     * Instantiates a new r2dbc mapper factory bean.
      *
      * @param clazz the clazz
      */

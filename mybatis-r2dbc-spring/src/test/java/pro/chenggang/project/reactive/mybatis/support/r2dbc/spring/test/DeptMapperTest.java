@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * @author evans
+ * @author chenggang
  */
 public class DeptMapperTest extends TestApplicationTests {
 
