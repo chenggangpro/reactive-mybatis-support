@@ -10,7 +10,8 @@ orbs:
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  maven_build:
+  maven_test:
     jobs:
-      - maven/build:
+      - maven/test:
           command: 'clean package -DskipTests'
+          verify_dependencies: false
