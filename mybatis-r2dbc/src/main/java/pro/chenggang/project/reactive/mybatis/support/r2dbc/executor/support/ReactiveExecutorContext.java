@@ -166,20 +166,20 @@ public class ReactiveExecutorContext {
     }
 
     /**
-     * Gets statement log helper.
+     * Gets r2dbc statement log.
      *
      * @return the statement log helper
      */
-    public R2dbcStatementLog getStatementLogHelper() {
+    public R2dbcStatementLog getR2dbcStatementLog() {
         return r2dbcStatementLog;
     }
 
     /**
-     * Sets statement log helper.
+     * Sets r2dbc statement log.
      *
      * @param r2dbcStatementLog the statement log helper
      */
-    public void setStatementLogHelper(R2dbcStatementLog r2dbcStatementLog) {
+    public void setR2dbcStatementLog(R2dbcStatementLog r2dbcStatementLog) {
         this.r2dbcStatementLog = r2dbcStatementLog;
     }
 
@@ -218,7 +218,7 @@ public class ReactiveExecutorContext {
                 ", forceCommit=" + forceCommit +
                 ", forceRollback=" + forceRollback +
                 ", requireClosed=" + requireClosed +
-                ", statementLogHelper=" + r2dbcStatementLog +
+                ", r2dbcStatementLog=" + r2dbcStatementLog +
                 " ]";
     }
 }

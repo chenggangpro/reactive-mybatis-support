@@ -52,7 +52,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
     @Override
     protected Mono<Integer> doUpdateWithConnection(Connection connection, MappedStatement mappedStatement, Object parameter) {
         return MybatisReactiveContextHelper.currentContext()
-                .map(ReactiveExecutorContext::getStatementLogHelper)
+                .map(ReactiveExecutorContext::getR2dbcStatementLog)
                 .flatMap(statementLogHelper -> {
                     String boundSql = mappedStatement.getBoundSql(parameter).getSql();
                     Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameter, RowBounds.DEFAULT, statementLogHelper);
@@ -86,7 +86,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
     @Override
     protected <E> Flux<E> doQueryWithConnection(Connection connection, MappedStatement mappedStatement, Object parameter, RowBounds rowBounds) {
         return MybatisReactiveContextHelper.currentContext()
-                .map(ReactiveExecutorContext::getStatementLogHelper)
+                .map(ReactiveExecutorContext::getR2dbcStatementLog)
                 .flatMapMany(statementLogHelper -> {
                     String boundSql = mappedStatement.getBoundSql(parameter).getSql();
                     Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameter, rowBounds, statementLogHelper);
