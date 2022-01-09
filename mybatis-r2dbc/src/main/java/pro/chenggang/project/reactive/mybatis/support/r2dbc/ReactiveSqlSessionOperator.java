@@ -6,7 +6,7 @@ import reactor.core.publisher.Mono;
 /**
  * The interface Reactive sql session operator.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  * @date 12/16/21.
  */

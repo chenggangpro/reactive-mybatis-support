@@ -7,7 +7,7 @@ import io.r2dbc.spi.ConnectionFactoryMetadata;
 import io.r2dbc.spi.Wrapped;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextHelper;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextManager;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
 import reactor.core.publisher.Mono;
@@ -20,7 +20,7 @@ import java.lang.reflect.Method;
 /**
  * The type Default transaction support connection factory. without spring
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  */
 public class DefaultTransactionSupportConnectionFactory implements ConnectionFactory, Wrapped<ConnectionFactory>, Closeable {
@@ -73,7 +73,7 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
      * @return
      */
     private Mono<Connection> getOptionalTransactionAwareConnectionProxy(ConnectionFactory targetConnectionFactory) {
-        return MybatisReactiveContextHelper.currentContext()
+        return MybatisReactiveContextManager.currentContext()
                 .flatMap(reactiveExecutorContext -> Mono.justOrEmpty(reactiveExecutorContext.getConnection())
                         .switchIfEmpty(Mono.from(targetConnectionFactory.create())
                                 .map(newConnection -> {
@@ -157,7 +157,7 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
                     if (this.closed) {
                         return Mono.empty();
                     }
-                    return MybatisReactiveContextHelper.currentContext()
+                    return MybatisReactiveContextManager.currentContext()
                             .flatMap(reactiveExecutorContext -> {
                                 //process rollback
                                 if (reactiveExecutorContext.isForceRollback()) {

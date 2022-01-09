@@ -13,7 +13,7 @@ import static org.mybatis.generator.internal.util.messages.Messages.getString;
 
 /**
  * The type Rename java mapper plugin.
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  */
 @NoArgsConstructor

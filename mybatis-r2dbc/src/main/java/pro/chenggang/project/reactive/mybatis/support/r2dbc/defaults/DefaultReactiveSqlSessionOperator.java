@@ -1,6 +1,6 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults;
 
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextHelper;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextManager;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionOperator;
@@ -10,13 +10,14 @@ import reactor.core.publisher.Mono;
 /**
  * The type Default reactive sql session operator.
  *
- * @author chenggang
+ * @author Gang Cheng
+ * @version 1.0.0
  * @date 12 /16/21.
  */
 public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOperator {
 
     private final ReactiveSqlSession reactiveSqlSession;
-    private final MybatisReactiveContextHelper mybatisReactiveContextHelper;
+    private final MybatisReactiveContextManager mybatisReactiveContextManager;
 
     /**
      * Instantiates a new Default reactive sql session operator.
@@ -35,12 +36,12 @@ public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOper
      */
     public DefaultReactiveSqlSessionOperator(ReactiveSqlSessionFactory reactiveSqlSessionFactory, boolean enableTransaction) {
         this.reactiveSqlSession = reactiveSqlSessionFactory.openSession().usingTransaction(enableTransaction);
-        this.mybatisReactiveContextHelper = (MybatisReactiveContextHelper) this.reactiveSqlSession;
+        this.mybatisReactiveContextManager = (MybatisReactiveContextManager) this.reactiveSqlSession;
     }
 
     @Override
     public <T> Mono<T> execute(Mono<T> monoExecution) {
-        return MybatisReactiveContextHelper.currentContext()
+        return MybatisReactiveContextManager.currentContext()
                 .flatMap(reactiveExecutorContext -> Mono.usingWhen(
                         Mono.just(reactiveSqlSession),
                         session -> monoExecution,
@@ -50,12 +51,12 @@ public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOper
                 ).onErrorResume(ex -> this.reactiveSqlSession.close()
                         .then(Mono.defer(() -> Mono.error(ex)))
                 ))
-                .contextWrite(mybatisReactiveContextHelper::initReactiveExecutorContext);
+                .contextWrite(mybatisReactiveContextManager::initReactiveExecutorContext);
     }
 
     @Override
     public <T> Mono<T> executeAndCommit(Mono<T> monoExecution) {
-        return MybatisReactiveContextHelper.currentContext()
+        return MybatisReactiveContextManager.currentContext()
                 .flatMap(reactiveExecutorContext -> Mono.usingWhen(
                         Mono.just(reactiveSqlSession),
                         session -> monoExecution,
@@ -68,12 +69,12 @@ public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOper
                         .then(Mono.defer(this.reactiveSqlSession::close))
                         .then(Mono.defer(() -> Mono.error(ex)))
                 ))
-                .contextWrite(mybatisReactiveContextHelper::initReactiveExecutorContext);
+                .contextWrite(mybatisReactiveContextManager::initReactiveExecutorContext);
     }
 
     @Override
     public <T> Mono<T> executeAndRollback(Mono<T> monoExecution) {
-        return MybatisReactiveContextHelper.currentContext()
+        return MybatisReactiveContextManager.currentContext()
                 .flatMap(reactiveExecutorContext -> Mono.usingWhen(
                         Mono.just(reactiveSqlSession),
                         session -> monoExecution,
@@ -86,12 +87,12 @@ public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOper
                         .then(Mono.defer(this.reactiveSqlSession::close))
                         .then(Mono.defer(() -> Mono.error(ex)))
                 ))
-                .contextWrite(mybatisReactiveContextHelper::initReactiveExecutorContext);
+                .contextWrite(mybatisReactiveContextManager::initReactiveExecutorContext);
     }
 
     @Override
     public <T> Flux<T> executeMany(Flux<T> fluxExecution) {
-        return MybatisReactiveContextHelper.currentContext()
+        return MybatisReactiveContextManager.currentContext()
                 .flatMapMany(reactiveExecutorContext -> Flux.usingWhen(
                         Mono.just(reactiveSqlSession),
                         session -> fluxExecution,
@@ -101,12 +102,12 @@ public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOper
                 ).onErrorResume(ex -> this.reactiveSqlSession.close()
                         .then(Mono.defer(() -> Mono.error(ex)))
                 ))
-                .contextWrite(mybatisReactiveContextHelper::initReactiveExecutorContext);
+                .contextWrite(mybatisReactiveContextManager::initReactiveExecutorContext);
     }
 
     @Override
     public <T> Flux<T> executeManyAndCommit(Flux<T> fluxExecution) {
-        return MybatisReactiveContextHelper.currentContext()
+        return MybatisReactiveContextManager.currentContext()
                 .flatMapMany(reactiveExecutorContext -> Flux.usingWhen(
                         Mono.just(reactiveSqlSession),
                         session -> fluxExecution,
@@ -119,12 +120,12 @@ public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOper
                         .then(Mono.defer(this.reactiveSqlSession::close))
                         .then(Mono.defer(() -> Mono.error(ex)))
                 ))
-                .contextWrite(mybatisReactiveContextHelper::initReactiveExecutorContext);
+                .contextWrite(mybatisReactiveContextManager::initReactiveExecutorContext);
     }
 
     @Override
     public <T> Flux<T> executeManyAndRollback(Flux<T> fluxExecution) {
-        return MybatisReactiveContextHelper.currentContext()
+        return MybatisReactiveContextManager.currentContext()
                 .flatMapMany(reactiveExecutorContext -> Flux.usingWhen(
                         Mono.just(reactiveSqlSession),
                         session -> fluxExecution,
@@ -137,6 +138,6 @@ public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOper
                         .then(Mono.defer(this.reactiveSqlSession::close))
                         .then(Mono.defer(() -> Mono.error(ex)))
                 ))
-                .contextWrite(mybatisReactiveContextHelper::initReactiveExecutorContext);
+                .contextWrite(mybatisReactiveContextManager::initReactiveExecutorContext);
     }
 }

@@ -13,7 +13,7 @@ import static org.springframework.util.Assert.notNull;
  * R2dbcMapperFactoryBean
  *
  * @param <T> the type parameter
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  */
 public class R2dbcMapperFactoryBean<T> implements FactoryBean<T>, InitializingBean {

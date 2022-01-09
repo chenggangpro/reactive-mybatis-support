@@ -15,7 +15,7 @@ import java.util.Objects;
 /**
  * The type Mybatis dynamic code generator.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  */
 public class MybatisDynamicCodeGenerator {

@@ -7,7 +7,7 @@ import pro.chenggang.project.reactive.mybatis.support.generator.properties.Gener
 /**
  * The interface Context generator.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  */
 public interface ContextGenerator {

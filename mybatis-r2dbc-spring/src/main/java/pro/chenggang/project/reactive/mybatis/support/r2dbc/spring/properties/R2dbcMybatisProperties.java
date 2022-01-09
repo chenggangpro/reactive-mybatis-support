@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * r2dbc mybatis properties
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  */
 @Getter

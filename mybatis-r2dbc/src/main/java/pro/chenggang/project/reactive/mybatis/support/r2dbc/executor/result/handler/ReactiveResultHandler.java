@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * The interface Reactive result handler.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  * @date 12 /10/21.
  */

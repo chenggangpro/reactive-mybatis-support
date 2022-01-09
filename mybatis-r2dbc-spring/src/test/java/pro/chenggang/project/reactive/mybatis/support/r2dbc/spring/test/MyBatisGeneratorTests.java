@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import pro.chenggang.project.reactive.mybatis.support.generator.core.MybatisDynamicCodeGenerator;
 
 /**
- * @author chenggang
+ * @author Gang Cheng
  * @date 2020-03-22.
  */
 public class MyBatisGeneratorTests {

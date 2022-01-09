@@ -13,7 +13,7 @@ import java.util.Optional;
 /**
  * The type Generator configuration factory.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  */
 public class GeneratorConfigurationFactory {

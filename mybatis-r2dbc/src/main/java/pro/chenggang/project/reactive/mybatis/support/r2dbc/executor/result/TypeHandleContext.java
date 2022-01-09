@@ -5,7 +5,7 @@ import org.apache.ibatis.type.TypeHandler;
 /**
  * The interface Type handle context.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  * @date 12 /11/21.
  */

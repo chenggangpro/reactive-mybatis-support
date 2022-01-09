@@ -8,7 +8,7 @@ import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.RowBounds;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextHelper;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextManager;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.exception.R2dbcParameterException;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.DefaultR2dbcKeyGenerator;
@@ -32,7 +32,7 @@ import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.resu
 /**
  * The type Default reactive mybatis executor.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  * @date 12/9/21.
  */
@@ -51,11 +51,16 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
 
     @Override
     protected Mono<Integer> doUpdateWithConnection(Connection connection, MappedStatement mappedStatement, Object parameter) {
-        return MybatisReactiveContextHelper.currentContext()
+        return MybatisReactiveContextManager.currentContext()
+                .doOnNext(reactiveExecutorContext -> {
+                    if(log.isTraceEnabled()){
+                        log.trace("Do update with connection from context : " + reactiveExecutorContext);
+                    }
+                })
                 .map(ReactiveExecutorContext::getR2dbcStatementLog)
-                .flatMap(statementLogHelper -> {
+                .flatMap(r2dbcStatementLog -> {
                     String boundSql = mappedStatement.getBoundSql(parameter).getSql();
-                    Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameter, RowBounds.DEFAULT, statementLogHelper);
+                    Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameter, RowBounds.DEFAULT, r2dbcStatementLog);
                     return Mono.just(this.isUseGeneratedKeys(mappedStatement))
                             .filter(useGeneratedKeys -> useGeneratedKeys)
                             .map(useGeneratedKeys -> new DefaultR2dbcKeyGenerator(mappedStatement, super.configuration))
@@ -72,24 +77,27 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                     })
                             )
                             .switchIfEmpty(Flux
-                                    .defer(() -> Flux
                                             .from(statement.execute())
                                             .checkpoint("SQL: \"" + boundSql + "\" [DefaultReactiveExecutor]")
                                             .flatMap(result -> Mono.from(result.getRowsUpdated()))
-                                    )
                             )
                             .collect(Collectors.summingInt(Integer::intValue))
-                            .doOnNext(statementLogHelper::logUpdates);
+                            .doOnNext(r2dbcStatementLog::logUpdates);
                 });
     }
 
     @Override
     protected <E> Flux<E> doQueryWithConnection(Connection connection, MappedStatement mappedStatement, Object parameter, RowBounds rowBounds) {
-        return MybatisReactiveContextHelper.currentContext()
+        return MybatisReactiveContextManager.currentContext()
+                .doOnNext(reactiveExecutorContext -> {
+                    if(log.isTraceEnabled()){
+                        log.trace("Do query with connection from context : " + reactiveExecutorContext);
+                    }
+                })
                 .map(ReactiveExecutorContext::getR2dbcStatementLog)
-                .flatMapMany(statementLogHelper -> {
+                .flatMapMany(r2dbcStatementLog -> {
                     String boundSql = mappedStatement.getBoundSql(parameter).getSql();
-                    Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameter, rowBounds, statementLogHelper);
+                    Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameter, rowBounds, r2dbcStatementLog);
                     ReactiveResultHandler reactiveResultHandler = new DefaultReactiveResultHandler(configuration, mappedStatement);
                     return Flux.from(statement.execute())
                             .checkpoint("SQL: \"" + boundSql + "\" [DefaultReactiveExecutor]")
@@ -101,7 +109,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                             }))
                             .concatMap(Flux::fromIterable)
                             .filter(data -> !Objects.equals(data, DEFERRED))
-                            .doOnComplete(() -> statementLogHelper.logTotal(reactiveResultHandler.getResultRowTotalCount()));
+                            .doOnComplete(() -> r2dbcStatementLog.logTotal(reactiveResultHandler.getResultRowTotalCount()));
                 });
 
     }
@@ -109,11 +117,11 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
     /**
      * create statement internal
      *
-     * @param connection
-     * @param mappedStatement
-     * @param parameter
-     * @param rowBounds
-     * @return
+     * @param connection the connection
+     * @param mappedStatement the mappedStatement
+     * @param parameter the parameter
+     * @param rowBounds the rowBounds
+     * @return R2dbc's Statement
      */
     private Statement createStatementInternal(Connection connection,
                                               String boundSql,

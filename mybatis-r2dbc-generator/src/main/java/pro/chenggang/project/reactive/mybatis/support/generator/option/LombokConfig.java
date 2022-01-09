@@ -3,7 +3,7 @@ package pro.chenggang.project.reactive.mybatis.support.generator.option;
 /**
  * The enum Lombok config.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  */
 public enum LombokConfig {

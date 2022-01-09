@@ -3,7 +3,7 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.suite.setup;
 import java.time.Duration;
 
 /**
- * @author chenggang
+ * @author Gang Cheng
  * @date 12/15/21.
  */
 public class R2dbcTestConfig {

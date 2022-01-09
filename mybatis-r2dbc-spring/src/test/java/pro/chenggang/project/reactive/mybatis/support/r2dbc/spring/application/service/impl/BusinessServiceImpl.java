@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.entity.extend.DeptWithEmp;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.entity.model.Dept;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.DeptMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.service.BusinessService;
@@ -15,7 +16,7 @@ import static org.mybatis.dynamic.sql.SqlBuilder.isEqualTo;
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.dynamic.DeptDynamicSqlSupport.deptNo;
 
 /**
- * @author chenggang
+ * @author Gang Cheng
  * @date 7/5/21.
  */
 @Slf4j
@@ -41,6 +42,17 @@ public class BusinessServiceImpl implements BusinessService {
                     }
                     return Mono.empty();
                 }));
+    }
+
+    @Override
+    public Mono<DeptWithEmp> doWithoutTransaction() {
+        return deptMapper.count()
+                .filter(count -> count > 0)
+                .flatMap(count -> deptMapper.selectDeptWithEmpList()
+                        .take(1,true)
+                        .singleOrEmpty()
+                );
+
     }
 
     private Mono<Dept> doBusinessInternal(){

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 /**
  * The type Timestamp r2dbc type handler adapter.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  * @date 12 /9/21.
  */

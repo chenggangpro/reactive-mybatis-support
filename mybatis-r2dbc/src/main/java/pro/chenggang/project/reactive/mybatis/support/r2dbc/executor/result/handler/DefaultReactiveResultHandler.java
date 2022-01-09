@@ -42,7 +42,7 @@ import java.util.concurrent.atomic.LongAdder;
  * <p>
  * {@link org.apache.ibatis.executor.resultset.DefaultResultSetHandler}
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  * @date 12 /10/21.
  */

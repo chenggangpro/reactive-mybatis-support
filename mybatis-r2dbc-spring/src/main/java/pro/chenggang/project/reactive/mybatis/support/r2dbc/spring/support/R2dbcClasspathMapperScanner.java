@@ -21,7 +21,7 @@ import java.util.Set;
 /**
  * R2dbcClasspathMapperScanner
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  */
 public class R2dbcClasspathMapperScanner extends ClassPathBeanDefinitionScanner {

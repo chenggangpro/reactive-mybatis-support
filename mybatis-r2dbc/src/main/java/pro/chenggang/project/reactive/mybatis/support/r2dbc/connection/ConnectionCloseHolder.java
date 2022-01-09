@@ -12,7 +12,7 @@ import java.util.function.Function;
 /**
  * Holder for a connection that makes sure the close action is invoked atomically only once.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  */
 public class ConnectionCloseHolder {
@@ -51,8 +51,7 @@ public class ConnectionCloseHolder {
     public Mono<Void> close() {
         return Mono.defer(() -> {
             if (this.isClosed.compareAndSet(false, true)) {
-                return Mono.from(this.closeFunction.apply(this.connection))
-                        .doOnNext(aVoid -> log.debug("Release Connection [" + connection + "] "));
+                return Mono.from(this.closeFunction.apply(this.connection));
             }
             return Mono.empty();
         });

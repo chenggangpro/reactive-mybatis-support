@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * R2dbcAutoConfiguredMapperScannerRegistrar
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  */
 public class R2dbcAutoConfiguredMapperScannerRegistrar implements BeanFactoryAware, ImportBeanDefinitionRegistrar, ResourceLoaderAware {

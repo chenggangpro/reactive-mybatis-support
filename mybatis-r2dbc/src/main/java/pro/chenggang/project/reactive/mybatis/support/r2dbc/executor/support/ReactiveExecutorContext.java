@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * The type Reactive executor context.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  * @date 12 /9/21.
  */

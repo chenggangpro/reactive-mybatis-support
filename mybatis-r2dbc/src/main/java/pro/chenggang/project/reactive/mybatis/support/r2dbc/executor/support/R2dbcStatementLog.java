@@ -15,7 +15,7 @@ import java.util.List;
  * <p>
  * {@link org.apache.ibatis.logging.jdbc.ConnectionLogger}
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  * @date 12/7/21.
  */

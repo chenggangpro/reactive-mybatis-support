@@ -25,8 +25,8 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFa
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.executor.SpringReactiveMybatisExecutor;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcConnectionFactoryProperties;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcConnectionFactoryProperties.Pool;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcMybatisConnectionFactoryProperties;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcMybatisConnectionFactoryProperties.Pool;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcMybatisProperties;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.R2dbcAutoConfiguredMapperScannerRegistrar;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.R2dbcMapperScannerRegistrar;
@@ -37,7 +37,7 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
 /**
  * R2dbc Mybatis Auto Configuration
  *
- * @author chenggang
+ * @author Gang Cheng
  */
 @Slf4j
 @Configuration
@@ -52,10 +52,10 @@ public class R2dbcMybatisAutoConfiguration {
         return new R2dbcMybatisProperties();
     }
 
-    @ConfigurationProperties(R2dbcConnectionFactoryProperties.PREFIX)
+    @ConfigurationProperties(R2dbcMybatisConnectionFactoryProperties.PREFIX)
     @Bean
-    public R2dbcConnectionFactoryProperties r2dbcConnectionFactoryProperties() {
-        return new R2dbcConnectionFactoryProperties();
+    public R2dbcMybatisConnectionFactoryProperties r2dbcConnectionFactoryProperties() {
+        return new R2dbcMybatisConnectionFactoryProperties();
     }
 
     @Bean
@@ -95,14 +95,14 @@ public class R2dbcMybatisAutoConfiguration {
 
     @ConditionalOnMissingBean(ConnectionFactory.class)
     @Bean(destroyMethod = "dispose")
-    public ConnectionPool connectionFactory(R2dbcConnectionFactoryProperties r2dbcConnectionFactoryProperties) {
-        ConnectionFactory connectionFactory = ConnectionFactories.get(r2dbcConnectionFactoryProperties.determineConnectionFactoryUrl());
+    public ConnectionPool connectionFactory(R2dbcMybatisConnectionFactoryProperties r2DbcMybatisConnectionFactoryProperties) {
+        ConnectionFactory connectionFactory = ConnectionFactories.get(r2DbcMybatisConnectionFactoryProperties.determineConnectionFactoryUrl());
         if (connectionFactory instanceof ConnectionPool) {
             return (ConnectionPool) connectionFactory;
         }
-        Pool pool = r2dbcConnectionFactoryProperties.getPool();
+        Pool pool = r2DbcMybatisConnectionFactoryProperties.getPool();
         ConnectionPoolConfiguration.Builder builder = ConnectionPoolConfiguration.builder(connectionFactory)
-                .name(r2dbcConnectionFactoryProperties.determineConnectionFactoryName())
+                .name(r2DbcMybatisConnectionFactoryProperties.determineConnectionFactoryName())
                 .maxSize(pool.getMaxSize())
                 .initialSize(pool.getInitialSize())
                 .maxIdleTime(pool.getMaxIdleTime())
@@ -131,7 +131,11 @@ public class R2dbcMybatisAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(ReactiveSqlSessionFactory.class)
     public ReactiveSqlSessionFactory reactiveSqlSessionFactoryWithTransaction(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory) {
-        configuration.setConnectionFactory(new TransactionAwareConnectionFactoryProxy(connectionFactory));
+        if(!TransactionAwareConnectionFactoryProxy.class.isAssignableFrom(connectionFactory.getClass())){
+            configuration.setConnectionFactory(new TransactionAwareConnectionFactoryProxy(connectionFactory));
+        }else {
+            configuration.setConnectionFactory(connectionFactory);
+        }
         SpringReactiveMybatisExecutor springReactiveMybatisExecutor = new SpringReactiveMybatisExecutor(configuration);
         return DefaultReactiveSqlSessionFactory.newBuilder()
                 .withR2dbcMybatisConfiguration(configuration)

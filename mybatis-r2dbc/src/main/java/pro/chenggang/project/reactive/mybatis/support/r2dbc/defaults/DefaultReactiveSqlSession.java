@@ -7,7 +7,7 @@ import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.reflection.ParamNameResolver;
 import org.apache.ibatis.session.RowBounds;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextHelper;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextManager;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContext;
@@ -22,11 +22,11 @@ import java.util.Optional;
 /**
  * The type Default reactive sql session.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  * @date 12/8/21.
  */
-public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisReactiveContextHelper {
+public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisReactiveContextManager {
 
     private static final Log log = LogFactory.getLog(DefaultReactiveSqlSession.class);
 
@@ -88,7 +88,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
     @Override
     public <E> Flux<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
         MappedStatement mappedStatement = configuration.getMappedStatement(statement);
-        return reactiveMybatisExecutor.<E>query(mappedStatement, wrapCollection(parameter), rowBounds)
+        return reactiveMybatisExecutor.<E>query(mappedStatement, this.wrapCollection(parameter), rowBounds)
                 .contextWrite(context -> initReactiveExecutorContext(context, this.configuration.getR2dbcStatementLog(mappedStatement)));
     }
 
@@ -100,7 +100,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
     @Override
     public Mono<Integer> update(String statement, Object parameter) {
         MappedStatement mappedStatement = configuration.getMappedStatement(statement);
-        return reactiveMybatisExecutor.update(mappedStatement, wrapCollection(parameter))
+        return reactiveMybatisExecutor.update(mappedStatement, this.wrapCollection(parameter))
                 .contextWrite(context -> initReactiveExecutorContext(context, this.configuration.getR2dbcStatementLog(mappedStatement)));
     }
 
@@ -111,7 +111,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
 
     @Override
     public Mono<Void> commit(boolean force) {
-        return reactiveMybatisExecutor.commit((force))
+        return reactiveMybatisExecutor.commit(force)
                 .contextWrite(this::initReactiveExecutorContext);
     }
 

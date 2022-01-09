@@ -39,6 +39,7 @@ import java.util.Properties;
  *
  * @author Clinton Begin
  * @author Kazuki Shimizu
+ * @author Gang Cheng
  */
 public class R2dbcXMLConfigBuilder extends BaseBuilder {
 

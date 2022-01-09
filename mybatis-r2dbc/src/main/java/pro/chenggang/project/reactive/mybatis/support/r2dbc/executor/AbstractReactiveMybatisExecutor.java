@@ -6,7 +6,7 @@ import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.RowBounds;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextHelper;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextManager;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.connection.ConnectionCloseHolder;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import reactor.core.publisher.Flux;
@@ -19,7 +19,7 @@ import java.util.function.Function;
  * <p>
  * Concentrate on operation with connection
  *
- * @author chenggang
+ * @author Gang Cheng
  * @date 12 /8/21.
  * @since 1.0.0
  */
@@ -49,7 +49,7 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
 
     @Override
     public Mono<Integer> update(MappedStatement mappedStatement, Object parameter) {
-        return MybatisReactiveContextHelper.currentContext()
+        return MybatisReactiveContextManager.currentContext()
                 .flatMap(reactiveExecutorContext -> {
                     reactiveExecutorContext.setDirty();
                     return this.inConnection(
@@ -69,7 +69,7 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
 
     @Override
     public Mono<Void> commit(boolean required) {
-        return MybatisReactiveContextHelper.currentContext()
+        return MybatisReactiveContextManager.currentContext()
                 .flatMap(reactiveExecutorContext -> {
                     reactiveExecutorContext.setForceCommit(reactiveExecutorContext.isDirty() || required);
                     return Mono.justOrEmpty(reactiveExecutorContext.getConnection())
@@ -83,7 +83,7 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
 
     @Override
     public Mono<Void> rollback(boolean required) {
-        return MybatisReactiveContextHelper.currentContext()
+        return MybatisReactiveContextManager.currentContext()
                 .flatMap(reactiveExecutorContext -> {
                     reactiveExecutorContext.setForceRollback(reactiveExecutorContext.isDirty() || required);
                     return Mono.justOrEmpty(reactiveExecutorContext.getConnection())
@@ -97,14 +97,12 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
 
     @Override
     public Mono<Void> close(boolean forceRollback) {
-        return MybatisReactiveContextHelper.currentContext()
+        return MybatisReactiveContextManager.currentContext()
                 .flatMap(reactiveExecutorContext -> {
                     reactiveExecutorContext.setForceRollback(forceRollback);
                     reactiveExecutorContext.setRequireClosed(true);
                     return Mono.justOrEmpty(reactiveExecutorContext.getConnection())
-                            .flatMap(connection -> {
-                                return Mono.from(connection.close());
-                            })
+                            .flatMap(connection -> Mono.from(connection.close()))
                             .then(Mono.defer(() -> {
                                 reactiveExecutorContext.resetDirty();
                                 return Mono.empty();
@@ -143,12 +141,10 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
      * @return mono
      */
     protected <T> Mono<T> inConnection(ConnectionFactory connectionFactory, Function<Connection, Mono<T>> action) {
-        Mono<ConnectionCloseHolder> connectionMono = MybatisReactiveContextHelper.currentContext()
+        Mono<ConnectionCloseHolder> connectionMono = MybatisReactiveContextManager.currentContext()
                 .flatMap(reactiveExecutorContext -> Mono
                         .from(connectionFactory.create())
-                        .doOnNext(connection -> {
-                            log.debug("Execute Statement With Mono,Get Connection [" + connection + "] From Connection Factory ");
-                        })
+                        .doOnNext(connection -> log.debug("Execute Statement With Mono,Get Connection [" + connection + "] From Connection Factory "))
                 )
                 .map(connection -> new ConnectionCloseHolder(connection, this::closeConnection));
         // ensure close method only execute once with Mono.usingWhen() operator
@@ -168,12 +164,10 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
      * @return flux
      */
     protected <T> Flux<T> inConnectionMany(ConnectionFactory connectionFactory, Function<Connection, Flux<T>> action) {
-        Mono<ConnectionCloseHolder> connectionMono = MybatisReactiveContextHelper.currentContext()
+        Mono<ConnectionCloseHolder> connectionMono = MybatisReactiveContextManager.currentContext()
                 .flatMap(reactiveExecutorContext -> Mono
                         .from(connectionFactory.create())
-                        .doOnNext(connection -> {
-                            log.debug("Execute Statement With Flux,Get Connection [" + connection + "] From Connection Factory ");
-                        })
+                        .doOnNext(connection -> log.debug("Execute Statement With Flux,Get Connection [" + connection + "] From Connection Factory "))
                 )
                 .map(connection -> new ConnectionCloseHolder(connection, this::closeConnection));
         // ensure close method only execute once with Mono.usingWhen() operator

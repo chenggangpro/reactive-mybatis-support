@@ -11,7 +11,7 @@ import java.util.Set;
 
 /**
  * exclude DataSourceAutoConfiguration in case of Datasource Configuration auto loaded
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  */
 @Configuration

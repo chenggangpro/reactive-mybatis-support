@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @param <T> the type parameter
  * @author Lasse Voss
+ * @author Gang Cheng
  */
 public class MapperProxyFactory<T> {
 

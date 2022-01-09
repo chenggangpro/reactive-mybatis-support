@@ -20,7 +20,7 @@ import java.util.Set;
 /**
  * The type R2dbc mybatis configuration.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  * @date 12 /8/21.
  */

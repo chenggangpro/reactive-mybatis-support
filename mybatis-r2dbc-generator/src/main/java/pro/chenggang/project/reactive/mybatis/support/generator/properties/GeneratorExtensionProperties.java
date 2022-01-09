@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 /**
  * The type Generator extension properties.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @date 2020 -01-21.
  */
 @Getter

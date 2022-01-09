@@ -12,7 +12,7 @@ import static org.mybatis.generator.internal.util.messages.Messages.getString;
 
 /**
  * The type Trim table name plugin.
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  */
 @NoArgsConstructor

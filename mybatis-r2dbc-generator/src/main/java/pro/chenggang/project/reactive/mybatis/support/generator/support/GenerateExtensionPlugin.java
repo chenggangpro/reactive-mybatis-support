@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 /**
  * The type Generate extension plugin.
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  */
 public class GenerateExtensionPlugin extends PluginAdapter {

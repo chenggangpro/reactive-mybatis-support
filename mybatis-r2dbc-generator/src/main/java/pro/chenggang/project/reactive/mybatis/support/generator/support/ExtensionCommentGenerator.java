@@ -20,7 +20,7 @@ import java.util.Set;
 
 /**
  * The type Extension comment generator.
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  */
 public class ExtensionCommentGenerator implements CommentGenerator {

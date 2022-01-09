@@ -21,6 +21,7 @@ import java.util.Map;
  * @param <T> the type parameter
  * @author Clinton Begin
  * @author Eduardo Macarron
+ * @author Gang Cheng
  */
 public class MapperProxy<T> implements InvocationHandler, Serializable {
 
@@ -56,7 +57,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
         lookupConstructor = lookup;
     }
 
-    private final ReactiveSqlSession sqlSession;
+    private final ReactiveSqlSession reactiveSqlSession;
     private final Class<T> mapperInterface;
     private final Map<Method, MapperMethodInvoker> methodCache;
 
@@ -68,7 +69,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
      * @param methodCache        the method cache
      */
     public MapperProxy(ReactiveSqlSession reactiveSqlSession, Class<T> mapperInterface, Map<Method, MapperMethodInvoker> methodCache) {
-        this.sqlSession = reactiveSqlSession;
+        this.reactiveSqlSession = reactiveSqlSession;
         this.mapperInterface = mapperInterface;
         this.methodCache = methodCache;
     }
@@ -79,7 +80,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
             if (Object.class.equals(method.getDeclaringClass())) {
                 return method.invoke(this, args);
             } else {
-                return cachedInvoker(method).invoke(proxy, method, args, sqlSession);
+                return cachedInvoker(method).invoke(proxy, method, args, reactiveSqlSession);
             }
         } catch (Throwable t) {
             throw ExceptionUtil.unwrapThrowable(t);
@@ -101,7 +102,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
                         throw new RuntimeException(e);
                     }
                 } else {
-                    return new PlainMethodInvoker(new MapperMethod(mapperInterface, method, sqlSession.getConfiguration()));
+                    return new PlainMethodInvoker(new MapperMethod(mapperInterface, method, reactiveSqlSession.getConfiguration()));
                 }
             });
         } catch (RuntimeException re) {
