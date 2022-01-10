@@ -43,10 +43,6 @@
         <appender-ref ref ="Roll"/>
     </appender>
 
-    <logger name="de.codecentric" level="INFO"/>
-    <logger name="org.apache.http" level="INFO"/>
-    <logger name="org.springframework" level="INFO"/>
-
     <!-- 日志输出级别 -->
     <root level="INFO">
         <appender-ref ref="STDOUT" />

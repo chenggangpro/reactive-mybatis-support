@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
  * The type R2dbc mapper method resolver.
  *
  * @author Eduardo Macarron
+ * @author Gang Cheng
  */
 public class R2dbcMapperMethodResolver extends MethodResolver {
 

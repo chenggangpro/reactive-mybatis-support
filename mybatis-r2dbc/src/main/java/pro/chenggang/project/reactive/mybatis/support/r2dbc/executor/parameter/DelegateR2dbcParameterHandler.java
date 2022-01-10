@@ -34,7 +34,7 @@ import java.util.stream.Stream;
 /**
  * The type Delegate R2dbc parameter handler.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  * @date 12 /9/21.
  */

@@ -18,14 +18,14 @@ import static org.springframework.util.StringUtils.hasText;
 /**
  * The type R2dbc connection factory properties.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  * @date 6 /25/21.
  */
 @Getter
 @Setter
 @ToString
-public class R2dbcConnectionFactoryProperties {
+public class R2dbcMybatisConnectionFactoryProperties {
 
     /**
      * The configuration properties prefix.

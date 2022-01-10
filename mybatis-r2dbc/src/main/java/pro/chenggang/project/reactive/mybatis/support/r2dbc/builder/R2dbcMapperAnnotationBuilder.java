@@ -83,6 +83,7 @@ import java.util.stream.Stream;
  *
  * @author Clinton Begin
  * @author Kazuki Shimizu
+ * @author Gang Cheng
  */
 public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
 

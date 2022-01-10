@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * The type R2dbc mapper registry.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  * @date 12 /8/21.
  */
@@ -26,11 +26,11 @@ public class R2dbcMapperRegistry extends MapperRegistry {
     /**
      * Instantiates a new R2dbc mapper registry.
      *
-     * @param config the config
+     * @param r2dbcMybatisConfiguration the r2dbcMybatisConfiguration
      */
-    public R2dbcMapperRegistry(R2dbcMybatisConfiguration config) {
-        super(config);
-        this.configuration = config;
+    public R2dbcMapperRegistry(R2dbcMybatisConfiguration r2dbcMybatisConfiguration) {
+        super(r2dbcMybatisConfiguration);
+        this.configuration = r2dbcMybatisConfiguration;
     }
 
     /**
@@ -38,17 +38,17 @@ public class R2dbcMapperRegistry extends MapperRegistry {
      *
      * @param <T>        the type parameter
      * @param type       the type
-     * @param sqlSession the sql session
+     * @param reactiveSqlSession the reactive sql session
      * @return the mapper
      */
     @SuppressWarnings("unchecked")
-    public <T> T getMapper(Class<T> type, ReactiveSqlSession sqlSession) {
+    public <T> T getMapper(Class<T> type, ReactiveSqlSession reactiveSqlSession) {
         final MapperProxyFactory<T> mapperProxyFactory = (MapperProxyFactory<T>) knownMappers.get(type);
         if (mapperProxyFactory == null) {
             throw new BindingException("Type " + type + " is not known to the MapperRegistry.");
         }
         try {
-            return mapperProxyFactory.newInstance(sqlSession);
+            return mapperProxyFactory.newInstance(reactiveSqlSession);
         } catch (Exception e) {
             throw new BindingException("Error getting mapper instance. Cause: " + e, e);
         }

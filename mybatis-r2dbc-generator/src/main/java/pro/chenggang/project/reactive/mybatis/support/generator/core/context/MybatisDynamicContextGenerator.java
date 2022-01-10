@@ -18,7 +18,7 @@ import pro.chenggang.project.reactive.mybatis.support.generator.properties.Gener
 /**
  * The type Mybatis dynamic context generator.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  */
 public class MybatisDynamicContextGenerator implements ContextGenerator {

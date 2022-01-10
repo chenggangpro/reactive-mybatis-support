@@ -11,7 +11,7 @@ import java.util.Objects;
 /**
  * The type R2dbc statement log factory.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @date 2022/1/6.
  * @since 1.0.0
  */
@@ -53,13 +53,12 @@ public class R2dbcStatementLogFactory {
         if (configuration.getLogPrefix() != null) {
             logId = configuration.getLogPrefix() + mappedStatement.getId();
         }
-        String finalLogId = logId;
         R2dbcStatementLog r2dbcStatementLog = r2dbcStatementLogContainer.get(logId);
         if(Objects.nonNull(r2dbcStatementLog)){
             return r2dbcStatementLog;
         }
         r2dbcStatementLog = new R2dbcStatementLog(mappedStatement.getStatementLog());
-        this.r2dbcStatementLogContainer.put(finalLogId,r2dbcStatementLog);
+        this.r2dbcStatementLogContainer.put(logId,r2dbcStatementLog);
         return r2dbcStatementLog;
     }
 

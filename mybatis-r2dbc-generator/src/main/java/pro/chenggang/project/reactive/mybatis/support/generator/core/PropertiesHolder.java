@@ -12,7 +12,7 @@ import java.util.Objects;
 /**
  * The type Properties holder.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  */
 @Accessors

@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 /**
  * The type Byte array r2dbc type handler adapter.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  * @date 12/9/21.
  */

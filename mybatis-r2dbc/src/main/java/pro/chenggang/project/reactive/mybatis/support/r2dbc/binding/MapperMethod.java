@@ -27,6 +27,7 @@ import static org.apache.ibatis.mapping.SqlCommandType.FLUSH;
  * @author Eduardo Macarron
  * @author Lasse Voss
  * @author Kazuki Shimizu
+ * @author Gang Cheng
  */
 public class MapperMethod {
 
@@ -295,10 +296,10 @@ public class MapperMethod {
         private void checkReactorType() {
             if (Mono.class.equals(this.returnType)
                     && Collection.class.isAssignableFrom(this.returnInferredType)) {
-                throw new UnsupportedOperationException("Return type assignable from Mono<Collection> should be changed to Flux<Object>");
+                throw new UnsupportedOperationException("Return type assignable from Mono<Collection<T>> should be changed to Flux<T>");
             }
             if (void.class.equals(this.returnType)) {
-                throw new UnsupportedOperationException("Return type is void should be changed to Mono<Void>");
+                throw new UnsupportedOperationException("Return type is void should be changed to Mono<Void> or Flux<Void>");
             }
             if (!Mono.class.equals(this.returnType) && !Flux.class.equals(this.returnType)) {
                 throw new UnsupportedOperationException("Return type should by either Mono or Flux");

@@ -8,14 +8,14 @@ import reactor.util.context.Context;
 /**
  * The interface Mybatis reactive context helper.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  * @date 12 /16/21.
  */
-public interface MybatisReactiveContextHelper {
+public interface MybatisReactiveContextManager {
 
     /**
-     * current context
+     * read current context
      *
      * @return mono
      */
@@ -28,7 +28,7 @@ public interface MybatisReactiveContextHelper {
     }
 
     /**
-     * init reactive executor context with StatementLogHelper
+     * init reactive executor context with R2dbcStatementLog
      *
      * @param context            the context
      * @param r2dbcStatementLog the statement log helper

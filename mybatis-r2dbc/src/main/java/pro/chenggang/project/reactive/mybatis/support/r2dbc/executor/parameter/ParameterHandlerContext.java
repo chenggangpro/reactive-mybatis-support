@@ -5,7 +5,7 @@ import org.apache.ibatis.type.JdbcType;
 /**
  * The type Parameter handler context.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  * @date 12 /9/21.
  */

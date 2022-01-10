@@ -5,7 +5,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.e
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.entity.model.Emp;
 
 /**
- * @author chenggang
+ * @author Gang Cheng
  * @date 12/15/21.
  */
 @ToString(callSuper = true)

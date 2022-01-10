@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 /**
  * The interface Required.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  */
 @Retention(RetentionPolicy.RUNTIME)

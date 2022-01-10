@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 /**
  * The type Proxy instance factory.
  *
- * @author chenggang
+ * @author Gang Cheng
  * @version 1.0.0
  * @date 12 /12/21.
  */

@@ -15,14 +15,14 @@ spring:
       pool:
         max-idle-time: PT3M
         validation-query: SELECT 1 FROM DUAL
-        initial-size: 100
-        max-size: 100
+        initial-size: 1
+        max-size: 3
         acquire-retry: 3
         validation-depth: REMOTE
         max-create-connection-time: PT30S
 logging:
   level:
     pro.chenggang: DEBUG
-    org.springframework: INFO
+    org.springframework.r2dbc: DEBUG
   file:
     path: ./logs
