@@ -10,6 +10,7 @@
     <packaging>pom</packaging>
 
     <name>reactive-mybatis-support</name>
+    <description>Reactive Mybatis Support With R2dbc</description>
     <url>https://github.com/chenggangpro/reactive-mybatis-support</url>
 
     <modules>
