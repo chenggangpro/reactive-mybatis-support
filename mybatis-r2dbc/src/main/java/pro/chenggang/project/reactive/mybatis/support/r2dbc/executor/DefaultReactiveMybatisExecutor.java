@@ -16,8 +16,8 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.parameter.D
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowResultWrapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.DefaultReactiveResultHandler;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.ReactiveResultHandler;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.R2dbcStatementLog;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -53,7 +53,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
     protected Mono<Integer> doUpdateWithConnection(Connection connection, MappedStatement mappedStatement, Object parameter) {
         return MybatisReactiveContextManager.currentContext()
                 .doOnNext(reactiveExecutorContext -> {
-                    if(log.isTraceEnabled()){
+                    if (log.isTraceEnabled()) {
                         log.trace("Do update with connection from context : " + reactiveExecutorContext);
                     }
                 })
@@ -66,20 +66,16 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                             .map(useGeneratedKeys -> new DefaultR2dbcKeyGenerator(mappedStatement, super.configuration))
                             .flatMapMany(r2dbcKeyGenerator -> Flux.from(statement.execute())
                                     .checkpoint("SQL: \"" + boundSql + "\" [DefaultReactiveExecutor]")
-                                    .flatMap(result -> {
-                                        int keyPropertiesLength = mappedStatement.getKeyProperties().length;
-                                        return Flux.just(result)
-                                                .take(keyPropertiesLength, true)
-                                                .flatMap(targetResult -> targetResult.map((row, rowMetadata) -> {
-                                                    RowResultWrapper rowResultWrapper = new RowResultWrapper(row, rowMetadata, configuration);
-                                                    return r2dbcKeyGenerator.handleKeyResult(rowResultWrapper, parameter);
-                                                }));
-                                    })
+                                    .take(mappedStatement.getKeyProperties().length, true)
+                                    .flatMap(result -> result.map((row, rowMetadata) -> {
+                                        RowResultWrapper rowResultWrapper = new RowResultWrapper(row, rowMetadata, configuration);
+                                        return r2dbcKeyGenerator.handleKeyResult(rowResultWrapper, parameter);
+                                    }))
                             )
                             .switchIfEmpty(Flux
-                                            .from(statement.execute())
-                                            .checkpoint("SQL: \"" + boundSql + "\" [DefaultReactiveExecutor]")
-                                            .flatMap(result -> Mono.from(result.getRowsUpdated()))
+                                    .from(statement.execute())
+                                    .checkpoint("SQL: \"" + boundSql + "\" [DefaultReactiveExecutor]")
+                                    .flatMap(result -> Mono.from(result.getRowsUpdated()))
                             )
                             .collect(Collectors.summingInt(Integer::intValue))
                             .doOnNext(r2dbcStatementLog::logUpdates);
@@ -90,7 +86,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
     protected <E> Flux<E> doQueryWithConnection(Connection connection, MappedStatement mappedStatement, Object parameter, RowBounds rowBounds) {
         return MybatisReactiveContextManager.currentContext()
                 .doOnNext(reactiveExecutorContext -> {
-                    if(log.isTraceEnabled()){
+                    if (log.isTraceEnabled()) {
                         log.trace("Do query with connection from context : " + reactiveExecutorContext);
                     }
                 })
@@ -117,10 +113,10 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
     /**
      * create statement internal
      *
-     * @param connection the connection
+     * @param connection      the connection
      * @param mappedStatement the mappedStatement
-     * @param parameter the parameter
-     * @param rowBounds the rowBounds
+     * @param parameter       the parameter
+     * @param rowBounds       the rowBounds
      * @return R2dbc's Statement
      */
     private Statement createStatementInternal(Connection connection,
