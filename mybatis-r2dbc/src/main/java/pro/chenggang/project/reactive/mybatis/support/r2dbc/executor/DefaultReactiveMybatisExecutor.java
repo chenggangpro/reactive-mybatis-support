@@ -78,6 +78,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                     .flatMap(result -> Mono.from(result.getRowsUpdated()))
                             )
                             .collect(Collectors.summingInt(Integer::intValue))
+                            .defaultIfEmpty(0)
                             .doOnNext(r2dbcStatementLog::logUpdates);
                 });
     }
