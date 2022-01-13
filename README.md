@@ -41,6 +41,42 @@ This project has met the general business usage scenarios, including:
   * possible link [r2dbc-postgresql/pull/468](https://github.com/pgjdbc/r2dbc-postgresql/pull/468)
   * this might be fix in next driver release
 
+#### Maven Central
+
+* parent bom
+
+```xml
+<dependencyManagement>
+    <dependency>
+      <groupId>pro.chenggang</groupId>
+      <artifactId>reactive-mybatis-support</artifactId>
+      <version>${latest.version}</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+</dependencyManagement>
+```
+
+* module dependency
+
+```xml
+<dependencies>
+    <dependency>
+      <groupId>pro.chenggang</groupId>
+      <artifactId>mybatis-r2dbc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>pro.chenggang</groupId>
+      <artifactId>mybatis-r2dbc-generator</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>pro.chenggang</groupId>
+      <artifactId>mybatis-r2dbc-spring</artifactId>
+    </dependency>
+</dependencies>
+
+```
+
 #### Examples
 
 ##### Using mybatis-dynamic-sql
@@ -70,7 +106,7 @@ This project has met the general business usage scenarios, including:
       </dependency>
       <dependency>
           <groupId>pro.chenggang</groupId>
-          <artifactId>mybatis-reactive-generator</artifactId>
+          <artifactId>mybatis-r2dbc-generator</artifactId>
           <version>${version}</version>
           <scope>test</scope>
       </dependency>
