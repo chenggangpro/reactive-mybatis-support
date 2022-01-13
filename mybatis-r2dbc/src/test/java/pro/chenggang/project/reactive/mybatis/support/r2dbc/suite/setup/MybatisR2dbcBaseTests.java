@@ -67,7 +67,7 @@ public class MybatisR2dbcBaseTests extends R2dbcTestConfig {
         R2dbcConnectionFactoryProperties r2dbcConnectionFactoryProperties = new R2dbcConnectionFactoryProperties();
         r2dbcConnectionFactoryProperties.setEnableMetrics(true);
         r2dbcConnectionFactoryProperties.setName("test-mybatis-r2dbc");
-        r2dbcConnectionFactoryProperties.setJdbcUrl("r2dbc:mysql://"+super.databaseIp+":"+super.databasePort+"/"+super.databaseName);
+        r2dbcConnectionFactoryProperties.setR2dbcUrl("r2dbc:mysql://"+super.databaseIp+":"+super.databasePort+"/"+super.databaseName);
         r2dbcConnectionFactoryProperties.setUsername(super.databaseUsername);
         r2dbcConnectionFactoryProperties.setPassword(super.databasePassword);
         R2dbcConnectionFactoryProperties.Pool pool = new R2dbcConnectionFactoryProperties.Pool();
