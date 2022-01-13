@@ -6,7 +6,7 @@
 
     <groupId>pro.chenggang</groupId>
     <artifactId>reactive-mybatis-support</artifactId>
-    <version>1.0.0.RELEASE</version>
+    <version>1.0.1.RELEASE</version>
     <packaging>pom</packaging>
 
     <name>reactive-mybatis-support</name>
