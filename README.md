@@ -23,10 +23,23 @@ This project has met the general business usage scenarios, including:
     * ❌ 4 . generated key by nested query
     * ❌ 5 . blocking java type (aka: InputStream .eg)
     * ⚠️ 6 . Mapper Method only support `Flux<T>`/`Mono<T>`/`Mono<Void>`/`Flux<Void>`, and not supported `void`
-* ⚠️ Haven't test the concurrency performance
 * Using Reactor's Context to implement Transaction
 * More detail, please see source code and test suits, tests use MySQL database with `test-prepare.sql` schema setup
 * It has been piloted in a small scale within the company, and any bugs found will be updated at any time
+
+#### ⚠️ Known issues
+
+* ⚠️ `r2dbc-mysql` driver
+  * when calling `Row#<T> T get(int index, Class<T> type)`,with jdbcType is `BIGINT` and javaType is `Long.class`
+  * the driver will occur an exception, because  the driver depth binding is `BitInteger.class`,and can't cast to `Long.class`
+  * the MySQL-JDBC driver and `r2dbc-mariadb` driver don't have this issue 
+  * possible link  [r2dbc-mysql/issues/177](https://github.com/mirromutth/r2dbc-mysql/issues/177)
+  * this might be fix in next driver release
+* ⚠️ `r2dbc-postgresql` driver
+  * when calling `Statement.bind(int index, Object value)`,the driver not recognized the `?` parameter placeholder, only recognized `$` parameter placeholder 
+  * the POSTGRESQL-JDBC driver does not have this problem.
+  * possible link [r2dbc-postgresql/pull/468](https://github.com/pgjdbc/r2dbc-postgresql/pull/468)
+  * this might be fix in next driver release
 
 #### Examples
 
