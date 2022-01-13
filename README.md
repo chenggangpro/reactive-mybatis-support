@@ -43,7 +43,7 @@ This project has met the general business usage scenarios, including:
 
 #### Maven Central
 
-* parent bom
+* dependency bom
 
 ```xml
 <dependencyManagement>
