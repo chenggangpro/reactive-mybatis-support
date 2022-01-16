@@ -45,37 +45,24 @@ This project has met the general business usage scenarios, including:
 
 #### Maven Central
 
-* dependency bom
-
-```xml
-<dependencyManagement>
-  <dependencies>
-      <dependency>
-          <groupId>pro.chenggang</groupId>
-          <artifactId>reactive-mybatis-support</artifactId>
-          <version>${latest.version}</version>
-          <type>pom</type>
-          <scope>import</scope>
-      </dependency>
-  </dependencies>
-</dependencyManagement>
-```
-
-* module dependency
+* dependency
 
 ```xml
 <dependencies>
     <dependency>
       <groupId>pro.chenggang</groupId>
       <artifactId>mybatis-r2dbc</artifactId>
+      <version>${latest.version}</version>
     </dependency>
     <dependency>
       <groupId>pro.chenggang</groupId>
       <artifactId>mybatis-r2dbc-generator</artifactId>
+      <version>${latest.version}</version>
     </dependency>
     <dependency>
       <groupId>pro.chenggang</groupId>
       <artifactId>mybatis-r2dbc-spring</artifactId>
+      <version>${latest.version}</version>
     </dependency>
 </dependencies>
 
@@ -111,7 +98,7 @@ This project has met the general business usage scenarios, including:
       <dependency>
           <groupId>pro.chenggang</groupId>
           <artifactId>mybatis-r2dbc-generator</artifactId>
-          <version>${version}</version>
+          <version>${latest.version}</version>
           <scope>test</scope>
       </dependency>
 </dependencies>
@@ -151,11 +138,13 @@ public class MyBatisGeneratorAction {
         <dependency>
             <groupId>org.mybatis.dynamic-sql</groupId>
             <artifactId>mybatis-dynamic-sql</artifactId>
+            <version>${latest.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>pro.chenggang</groupId>
             <artifactId>mybatis-r2dbc-spring</artifactId>
-            <version>${version}</version>
+            <version>${latest.version}</version>
         </dependency>
     </dependencies>
     
@@ -184,7 +173,7 @@ public class MyBatisGeneratorAction {
         <dependency>
             <groupId>pro.chenggang</groupId>
             <artifactId>mybatis-r2dbc-spring</artifactId>
-            <version>${version}</version>
+            <version>${latest.version}</version>
         </dependency>
     </dependencies>
     
