@@ -49,13 +49,15 @@ This project has met the general business usage scenarios, including:
 
 ```xml
 <dependencyManagement>
-    <dependency>
-      <groupId>pro.chenggang</groupId>
-      <artifactId>reactive-mybatis-support</artifactId>
-      <version>${latest.version}</version>
-      <type>pom</type>
-      <scope>import</scope>
-    </dependency>
+  <dependencies>
+      <dependency>
+          <groupId>pro.chenggang</groupId>
+          <artifactId>reactive-mybatis-support</artifactId>
+          <version>${latest.version}</version>
+          <type>pom</type>
+          <scope>import</scope>
+      </dependency>
+  </dependencies>
 </dependencyManagement>
 ```
 
