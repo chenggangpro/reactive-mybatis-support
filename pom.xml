@@ -185,6 +185,9 @@
                                 </goals>
                             </execution>
                         </executions>
+                        <configuration>
+                            <keyname>${gpg.keyname}</keyname>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
