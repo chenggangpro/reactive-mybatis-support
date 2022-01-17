@@ -70,15 +70,18 @@ public class DynamicGenerateExtensionPlugin extends PluginAdapter {
         Optional<IntrospectedColumn> authIncrementColumn = introspectedTable.getPrimaryKeyColumns().stream()
                 .filter(IntrospectedColumn::isAutoIncrement)
                 .findFirst();
-        authIncrementColumn.ifPresent(introspectedColumn -> {
-            FullyQualifiedJavaType importOptionType = new FullyQualifiedJavaType("org.apache.ibatis.annotations.Options");
-            if (!interfaze.getImportedTypes().contains(importOptionType)) {
-                interfaze.addImportedType(importOptionType);
-            }
-            //@Options(useGeneratedKeys = true,keyProperty = "record.id")
-            String optionsAnnotation = "@Options(useGeneratedKeys = true,keyProperty = \"record." + introspectedColumn.getJavaProperty() + "\")";
-            method.addAnnotation(optionsAnnotation);
-        });
+        GeneratorExtensionProperties extensionProperties = PropertiesHolder.getInstance().getProperties();
+        if(extensionProperties.isGenerateReturnedKey()){
+            authIncrementColumn.ifPresent(introspectedColumn -> {
+                FullyQualifiedJavaType importOptionType = new FullyQualifiedJavaType("org.apache.ibatis.annotations.Options");
+                if (!interfaze.getImportedTypes().contains(importOptionType)) {
+                    interfaze.addImportedType(importOptionType);
+                }
+                //@Options(useGeneratedKeys = true,keyProperty = "record.id",keyColumn = "column_name")
+                String optionsAnnotation = "@Options(useGeneratedKeys = true,keyProperty = \"record." + introspectedColumn.getJavaProperty() + "\",keyColumn = \""+ introspectedColumn.getActualColumnName()+"\")";
+                method.addAnnotation(optionsAnnotation);
+            });
+        }
         method.setReturnType(new FullyQualifiedJavaType("reactor.core.publisher.Mono<java.lang.Integer>"));
         return true;
     }

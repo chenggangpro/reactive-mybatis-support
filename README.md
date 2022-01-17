@@ -8,8 +8,9 @@ This project has met the general business usage scenarios, including:
 * 2 . One-to-many associative relationships for result mapping
 * 3 . Result mapping for one-to-one relationships
 * 4 . Returning a generated key
-* 5 . Manual transaction operation
-* 6 . SpringBoot transaction Integration
+* 5 . generated key by nested query (`@SelectKey`/`<selectKey>`)
+* 6 . Manual transaction operation
+* 7 . SpringBoot transaction Integration
 
 #### Instruction
 
@@ -22,9 +23,8 @@ This project has met the general business usage scenarios, including:
     * ❌ 1 . mybatis-plugin
     * ❌ 2 . multi resultSet and `resultOrdered = true` in mapper.XML
     * ❌ 3 . nested query with multi SQL
-    * ❌ 4 . generated key by nested query
-    * ❌ 5 . blocking java type (aka: InputStream .eg)
-    * ⚠️ 6 . Mapper Method only support `Flux<T>`/`Mono<T>`/`Mono<Void>`/`Flux<Void>`, and not supported `void`
+    * ⚠️ 4 . blocking java type (aka: InputStream .eg)
+    * ⚠️ 5 . Mapper Method only support `Flux<T>`/`Mono<T>`/`Mono<Void>`/`Flux<Void>`, and not supported `void`
 * Using Reactor's Context to implement Transaction
 * More detail, please see source code and test suits, tests use MySQL database with `test-prepare.sql` schema setup
 * It has been piloted in a small scale within the company, and any bugs found will be updated at any time

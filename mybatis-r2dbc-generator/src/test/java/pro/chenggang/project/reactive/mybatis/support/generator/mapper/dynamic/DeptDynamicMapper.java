@@ -40,7 +40,7 @@ public interface DeptDynamicMapper extends CommonSelectMapper {
     Mono<Integer> delete(DeleteStatementProvider deleteStatement);
 
     @InsertProvider(type=SqlProviderAdapter.class, method="insert")
-    @Options(useGeneratedKeys = true,keyProperty = "record.deptNo")
+    @Options(useGeneratedKeys = true,keyProperty = "record.deptNo",keyColumn = "dept_no")
     Mono<Integer> insert(InsertStatementProvider<Dept> insertStatement);
 
     @InsertProvider(type=SqlProviderAdapter.class, method="insertMultiple")

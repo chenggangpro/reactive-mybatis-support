@@ -14,6 +14,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowR
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.TypeHandleContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.DelegateR2DbcResultRowDataHandler;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
+import reactor.core.publisher.Mono;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,6 +34,8 @@ import java.util.concurrent.atomic.LongAdder;
  *
  * @author Gang Cheng
  * @date 12 /12/21.
+ * @since 1.0.0
+ * @version 1.0.2
  */
 public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
 
@@ -43,17 +46,17 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
 
     private final LongAdder resultRowCounter = new LongAdder();
     private final MappedStatement mappedStatement;
-    private final R2dbcMybatisConfiguration r2DbcMybatisConfiguration;
+    private final R2dbcMybatisConfiguration r2dbcMybatisConfiguration;
 
     /**
      * Instantiates a new Default R2dbc key generator.
      *
      * @param mappedStatement           the mapped statement
-     * @param r2DbcMybatisConfiguration the R2dbc mybatis configuration
+     * @param r2dbcMybatisConfiguration the R2dbc mybatis configuration
      */
-    public DefaultR2dbcKeyGenerator(MappedStatement mappedStatement, R2dbcMybatisConfiguration r2DbcMybatisConfiguration) {
+    public DefaultR2dbcKeyGenerator(MappedStatement mappedStatement, R2dbcMybatisConfiguration r2dbcMybatisConfiguration) {
         this.mappedStatement = mappedStatement;
-        this.r2DbcMybatisConfiguration = r2DbcMybatisConfiguration;
+        this.r2dbcMybatisConfiguration = r2dbcMybatisConfiguration;
     }
 
     private static String nameOfSingleParam(Map<String, ?> paramMap) {
@@ -72,15 +75,20 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
     }
 
     @Override
-    public Integer getResultRowCount() {
-        return this.resultRowCounter.intValue();
+    public KeyGeneratorType keyGeneratorType() {
+        return KeyGeneratorType.SIMPLE_RETURN;
     }
 
     @Override
-    public Integer handleKeyResult(RowResultWrapper rowResultWrapper, Object parameter) {
-        this.assignKeys(r2DbcMybatisConfiguration, rowResultWrapper, mappedStatement.getKeyProperties(), parameter);
+    public Mono<Boolean> processSelectKey(KeyGeneratorType keyGeneratorType, MappedStatement ms, Object parameter) {
+        return Mono.just(false);
+    }
+
+    @Override
+    public Integer processGeneratedKeyResult(RowResultWrapper rowResultWrapper, Object parameter) {
+        this.assignKeys(r2dbcMybatisConfiguration, rowResultWrapper, mappedStatement.getKeyProperties(), parameter);
         this.resultRowCounter.increment();
-        return 1;
+        return this.resultRowCounter.intValue();
     }
 
     @SuppressWarnings("unchecked")

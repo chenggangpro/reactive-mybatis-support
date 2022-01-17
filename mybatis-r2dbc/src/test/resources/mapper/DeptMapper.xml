@@ -25,6 +25,12 @@
           keyProperty="deptNo">
     INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})
   </insert>
+  <insert id="insertUseSelectKey" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.entity.model.Dept">
+    <selectKey resultType="long" order="AFTER" keyProperty="deptNo">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})
+  </insert>
   <update id="updateByDeptNo" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.entity.model.Dept">
     UPDATE dept
     SET dept_name = #{deptName}
