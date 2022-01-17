@@ -4,6 +4,7 @@ import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.Statement;
 import org.apache.ibatis.executor.keygen.Jdbc3KeyGenerator;
 import org.apache.ibatis.executor.keygen.KeyGenerator;
+import org.apache.ibatis.executor.keygen.SelectKeyGenerator;
 import org.apache.ibatis.executor.parameter.ParameterHandler;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.logging.Log;
@@ -14,6 +15,9 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveConte
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.exception.R2dbcParameterException;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.DefaultR2dbcKeyGenerator;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.NoKeyR2dbcKeyGenerator;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.R2dbcKeyGenerator;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.SelectR2dbcKeyGenerator;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.parameter.DelegateR2dbcParameterHandler;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowResultWrapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.DefaultReactiveResultHandler;
@@ -29,6 +33,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SELECT_KEY_AFTER;
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SELECT_KEY_BEFORE;
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SIMPLE_RETURN;
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.ReactiveResultHandler.DEFERRED;
 
 /**
@@ -61,27 +68,34 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                 })
                 .map(ReactiveExecutorContext::getR2dbcStatementLog)
                 .flatMap(r2dbcStatementLog -> {
-                    String boundSql = mappedStatement.getBoundSql(parameter).getSql();
-                    Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameter, RowBounds.DEFAULT, r2dbcStatementLog);
-                    return Mono.just(this.isUseGeneratedKeys(mappedStatement))
-                            .filter(useGeneratedKeys -> useGeneratedKeys)
-                            .map(useGeneratedKeys -> new DefaultR2dbcKeyGenerator(mappedStatement, super.configuration))
-                            .flatMapMany(r2dbcKeyGenerator -> Flux.from(statement.execute())
-                                    .checkpoint("SQL: \"" + boundSql + "\" [DefaultReactiveExecutor]")
-                                    .take(mappedStatement.getKeyProperties().length, true)
-                                    .flatMap(result -> result.map((row, rowMetadata) -> {
-                                        RowResultWrapper rowResultWrapper = new RowResultWrapper(row, rowMetadata, configuration);
-                                        return r2dbcKeyGenerator.handleKeyResult(rowResultWrapper, parameter);
-                                    }))
-                            )
-                            .switchIfEmpty(Flux
-                                    .from(statement.execute())
-                                    .checkpoint("SQL: \"" + boundSql + "\" [DefaultReactiveExecutor]")
-                                    .flatMap(result -> Mono.from(result.getRowsUpdated()))
-                            )
-                            .collect(Collectors.summingInt(Integer::intValue))
-                            .defaultIfEmpty(0)
-                            .doOnNext(r2dbcStatementLog::logUpdates);
+                    R2dbcKeyGenerator r2dbcKeyGenerator = this.getR2dbcKeyGenerator(mappedStatement);
+                    return r2dbcKeyGenerator.processSelectKey(SELECT_KEY_BEFORE,mappedStatement, parameter)
+                            .flatMap(ignoreResult -> {
+                                String boundSql = mappedStatement.getBoundSql(parameter).getSql();
+                                boolean isReturnedGeneratedKeys = SIMPLE_RETURN.equals(r2dbcKeyGenerator.keyGeneratorType());
+                                Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameter, RowBounds.DEFAULT, isReturnedGeneratedKeys, r2dbcStatementLog);
+                                return Mono.just(isReturnedGeneratedKeys)
+                                        .filter(condition -> condition)
+                                        .flatMapMany(condition -> Flux.from(statement.execute())
+                                                .checkpoint("SQL: \"" + boundSql + "\" [DefaultReactiveExecutor]")
+                                                .take(mappedStatement.getKeyProperties().length, true)
+                                                .flatMap(result -> result.map((row, rowMetadata) -> {
+                                                    RowResultWrapper rowResultWrapper = new RowResultWrapper(row, rowMetadata, configuration);
+                                                    return r2dbcKeyGenerator.processGeneratedKeyResult(rowResultWrapper, parameter);
+                                                }))
+                                        )
+                                        .switchIfEmpty(Flux
+                                                .from(statement.execute())
+                                                .checkpoint("SQL: \"" + boundSql + "\" [DefaultReactiveExecutor]")
+                                                .flatMap(result -> Mono.from(result.getRowsUpdated()))
+                                        )
+                                        .collect(Collectors.summingInt(Integer::intValue))
+                                        .defaultIfEmpty(0)
+                                        .doOnNext(r2dbcStatementLog::logUpdates)
+                                        .flatMap(totalUpdateRowCount -> r2dbcKeyGenerator.processSelectKey(SELECT_KEY_AFTER,mappedStatement, parameter)
+                                                .flatMap(ignore -> Mono.just(totalUpdateRowCount))
+                                        );
+                            });
                 });
     }
 
@@ -96,7 +110,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                 .map(ReactiveExecutorContext::getR2dbcStatementLog)
                 .flatMapMany(r2dbcStatementLog -> {
                     String boundSql = mappedStatement.getBoundSql(parameter).getSql();
-                    Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameter, rowBounds, r2dbcStatementLog);
+                    Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameter, rowBounds, false, r2dbcStatementLog);
                     ReactiveResultHandler reactiveResultHandler = new DefaultReactiveResultHandler(configuration, mappedStatement);
                     return Flux.from(statement.execute())
                             .checkpoint("SQL: \"" + boundSql + "\" [DefaultReactiveExecutor]")
@@ -127,15 +141,13 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                               MappedStatement mappedStatement,
                                               Object parameter,
                                               RowBounds rowBounds,
+                                              boolean returnedGeneratedKeys,
                                               R2dbcStatementLog r2dbcStatementLog) {
         r2dbcStatementLog.logSql(boundSql);
         StatementHandler handler = configuration.newStatementHandler(null, mappedStatement, parameter, rowBounds, null, null);
         ParameterHandler parameterHandler = handler.getParameterHandler();
         Statement statement = connection.createStatement(boundSql);
-        //only support generated keys by key properties
-        //not support generated keys by select key
-        final boolean useGeneratedKeys = this.isUseGeneratedKeys(mappedStatement);
-        if (useGeneratedKeys) {
+        if (returnedGeneratedKeys) {
             statement.returnGeneratedValues(mappedStatement.getKeyColumns());
         }
         ParameterHandler delegateParameterHandler = ProxyInstanceFactory.newInstanceOfInterfaces(
@@ -155,16 +167,23 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
     }
 
     /**
-     * is use generated keys or not
+     * get r2dbc key generator
      *
      * @param mappedStatement MappedStatement
-     * @return true when using generated keys
+     * @return R2dbcKeyGenerator
      */
-    private boolean isUseGeneratedKeys(MappedStatement mappedStatement) {
+    private R2dbcKeyGenerator getR2dbcKeyGenerator(MappedStatement mappedStatement) {
         String[] keyColumns = mappedStatement.getKeyColumns();
         boolean hasKeyColumns = keyColumns != null && keyColumns.length != 0;
         KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
-        return keyGenerator instanceof Jdbc3KeyGenerator && hasKeyColumns;
+        boolean useJdbc3KeyGenerator = keyGenerator instanceof Jdbc3KeyGenerator && hasKeyColumns;
+        if (useJdbc3KeyGenerator) {
+            return new DefaultR2dbcKeyGenerator(mappedStatement, super.configuration);
+        }
+        if (keyGenerator instanceof SelectKeyGenerator) {
+            return new SelectR2dbcKeyGenerator((SelectKeyGenerator) keyGenerator, super.configuration, this);
+        }
+        return NoKeyR2dbcKeyGenerator.getInstance();
     }
 
 }

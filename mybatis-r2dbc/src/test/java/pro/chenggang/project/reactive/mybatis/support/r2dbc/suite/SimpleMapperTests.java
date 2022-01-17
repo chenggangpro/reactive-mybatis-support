@@ -100,6 +100,19 @@ public class SimpleMapperTests extends MybatisR2dbcBaseTests {
     }
 
     @Test
+    public void testInsertBySelectKeyAndReturnGenerateKey() throws Exception{
+        Dept dept = new Dept();
+        dept.setDeptName("Test_dept_name");
+        dept.setCreateTime(LocalDateTime.now());
+        dept.setLocation("Test_location");
+        reactiveSqlSessionOperator.executeAndRollback(this.deptMapper.insertUseSelectKey(dept))
+                .as(StepVerifier::create)
+                .expectNextMatches(effectRowCount -> effectRowCount == 1)
+                .verifyComplete();
+        assertThat(dept.getDeptNo()).isNotNull();
+    }
+
+    @Test
     public void testDeleteByDeptNo() throws Exception {
         Dept dept = new Dept();
         dept.setDeptName("Test_dept_name");

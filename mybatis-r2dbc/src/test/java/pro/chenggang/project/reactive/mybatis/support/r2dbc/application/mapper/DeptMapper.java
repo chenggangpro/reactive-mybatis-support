@@ -30,4 +30,6 @@ public interface DeptMapper {
     Mono<Integer> updateByDeptNo(Dept dept);
 
     Flux<DeptWithEmp> selectDeptWithEmpList();
+
+    Mono<Integer> insertUseSelectKey(Dept dept);
 }
