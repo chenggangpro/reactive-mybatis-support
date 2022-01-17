@@ -34,14 +34,14 @@ This project has met the general business usage scenarios, including:
 * ⚠️ `r2dbc-mysql` driver
   * when calling `Row#<T> T get(int index, Class<T> type)`,with jdbcType is `BIGINT` and javaType is `Long.class`
   * the driver will occur an exception, because  the driver depth binding is `BitInteger.class`,and can't cast to `Long.class`
-  * the MySQL-JDBC driver and `r2dbc-mariadb` driver don't have this issue 
+  * MySQL-JDBC driver and `r2dbc-mariadb` driver don't have this issue 
   * possible link  [r2dbc-mysql/issues/177](https://github.com/mirromutth/r2dbc-mysql/issues/177)
-  * this might be fix in next driver release
+  * This might be fixed in the next release of the driver
 * ⚠️ `r2dbc-postgresql` driver
   * when calling `Statement.bind(int index, Object value)`,the driver not recognized the `?` parameter placeholder, only recognized `$` parameter placeholder 
-  * the POSTGRESQL-JDBC driver does not have this problem.
+  * POSTGRESQL-JDBC driver does not have this problem.
   * possible link [r2dbc-postgresql/pull/468](https://github.com/pgjdbc/r2dbc-postgresql/pull/468)
-  * this might be fix in next driver release
+  * This might be fixed in the next release of the driver
 
 #### Maven Central
 
