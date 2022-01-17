@@ -5,11 +5,12 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowR
 import reactor.core.publisher.Mono;
 
 /**
- * The interface R 2 dbc key generator.
+ * The interface R2dbc key generator.
  *
  * @author evans
  * @date 2022 /1/17.
- * @since 1.0.0
+ * @since 1.0.2
+ * @version 1.0.2
  */
 public interface R2dbcKeyGenerator {
 

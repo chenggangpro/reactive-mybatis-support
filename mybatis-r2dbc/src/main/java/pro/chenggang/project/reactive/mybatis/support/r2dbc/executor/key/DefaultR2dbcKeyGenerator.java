@@ -34,6 +34,8 @@ import java.util.concurrent.atomic.LongAdder;
  *
  * @author Gang Cheng
  * @date 12 /12/21.
+ * @since 1.0.0
+ * @version 1.0.2
  */
 public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
 

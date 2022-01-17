@@ -20,6 +20,8 @@ import java.lang.reflect.Type;
  *
  * @author Gang Cheng
  * @date 12 /12/21.
+ * @since 1.0.2
+ * @version 1.0.2
  */
 public class SelectR2dbcKeyGenerator implements R2dbcKeyGenerator {
 
