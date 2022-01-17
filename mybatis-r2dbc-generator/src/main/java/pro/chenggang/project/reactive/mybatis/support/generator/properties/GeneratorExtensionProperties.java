@@ -117,6 +117,11 @@ public class GeneratorExtensionProperties {
     private boolean overwrite = true;
 
     /**
+     * whether generated returned key
+     */
+    private boolean generateReturnedKey = true;
+
+    /**
      * Validate by default.
      */
     public void validateByDefault(){

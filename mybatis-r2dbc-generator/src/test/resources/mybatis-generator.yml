@@ -24,6 +24,7 @@ username: root
 password: 123456
 extendDynamicMapper: true
 overwrite: true
+generateReturnedKey: true
 #lombok
 lombok:
   - ToString

@@ -2,6 +2,8 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor;
 
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.Statement;
+import org.apache.ibatis.executor.keygen.Jdbc3KeyGenerator;
+import org.apache.ibatis.executor.keygen.KeyGenerator;
 import org.apache.ibatis.executor.parameter.ParameterHandler;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.logging.Log;
@@ -159,8 +161,10 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
      * @return true when using generated keys
      */
     private boolean isUseGeneratedKeys(MappedStatement mappedStatement) {
-        boolean hasKeyProperties = mappedStatement.getKeyProperties() != null && mappedStatement.getKeyProperties().length != 0;
-        return mappedStatement.getKeyGenerator() != null && hasKeyProperties;
+        String[] keyColumns = mappedStatement.getKeyColumns();
+        boolean hasKeyColumns = keyColumns != null && keyColumns.length != 0;
+        KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
+        return keyGenerator instanceof Jdbc3KeyGenerator && hasKeyColumns;
     }
 
 }

@@ -57,7 +57,7 @@ public interface EmpDynamicMapper extends CommonSelectMapper {
     Mono<Integer> delete(DeleteStatementProvider deleteStatement);
 
     @InsertProvider(type=SqlProviderAdapter.class, method="insert")
-    @Options(useGeneratedKeys = true,keyProperty = "record.empNo")
+    @Options(useGeneratedKeys = true,keyProperty = "record.empNo",keyColumn = "emp_no")
     Mono<Integer> insert(InsertStatementProvider<Emp> insertStatement);
 
     @InsertProvider(type=SqlProviderAdapter.class, method="insertMultiple")
