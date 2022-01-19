@@ -1,4 +1,6 @@
 [![Java CI with Maven](https://github.com/chenggangpro/reactive-mybatis-support/actions/workflows/maven.yml/badge.svg?branch=main)](https://github.com/chenggangpro/reactive-mybatis-support/actions/workflows/maven.yml)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Pom Maven Central](https://maven-badges.herokuapp.com/maven-central/pro.chenggang/reactive-mybatis-support/badge.svg)](https://maven-badges.herokuapp.com/maven-central/pro.chenggang/reactive-mybatis-support)
 # Reactive-Mybatis-Support
 
 This project has met the general business usage scenarios, including:
@@ -32,52 +34,43 @@ This project has met the general business usage scenarios, including:
 * ⚠️ `r2dbc-mysql` driver
   * when calling `Row#<T> T get(int index, Class<T> type)`,with jdbcType is `BIGINT` and javaType is `Long.class`
   * the driver will occur an exception, because  the driver depth binding is `BitInteger.class`,and can't cast to `Long.class`
-  * the MySQL-JDBC driver and `r2dbc-mariadb` driver don't have this issue 
+  * MySQL-JDBC driver and `r2dbc-mariadb` driver don't have this issue 
   * possible link  [r2dbc-mysql/issues/177](https://github.com/mirromutth/r2dbc-mysql/issues/177)
-  * this might be fix in next driver release
+  * This might be fixed in the next release of the driver
 * ⚠️ `r2dbc-postgresql` driver
   * when calling `Statement.bind(int index, Object value)`,the driver not recognized the `?` parameter placeholder, only recognized `$` parameter placeholder 
-  * the POSTGRESQL-JDBC driver does not have this problem.
+  * POSTGRESQL-JDBC driver does not have this problem.
   * possible link [r2dbc-postgresql/pull/468](https://github.com/pgjdbc/r2dbc-postgresql/pull/468)
-  * this might be fix in next driver release
+  * This might be fixed in the next release of the driver
 
 #### Maven Central
 
-* dependency bom
-
-```xml
-<dependencyManagement>
-    <dependency>
-      <groupId>pro.chenggang</groupId>
-      <artifactId>reactive-mybatis-support</artifactId>
-      <version>${latest.version}</version>
-      <type>pom</type>
-      <scope>import</scope>
-    </dependency>
-</dependencyManagement>
-```
-
-* module dependency
+* dependency
 
 ```xml
 <dependencies>
     <dependency>
       <groupId>pro.chenggang</groupId>
       <artifactId>mybatis-r2dbc</artifactId>
+      <version>${latest.version}</version>
     </dependency>
     <dependency>
       <groupId>pro.chenggang</groupId>
       <artifactId>mybatis-r2dbc-generator</artifactId>
+      <version>${latest.version}</version>
     </dependency>
     <dependency>
       <groupId>pro.chenggang</groupId>
       <artifactId>mybatis-r2dbc-spring</artifactId>
+      <version>${latest.version}</version>
     </dependency>
 </dependencies>
 
 ```
 
 #### Examples
+
+> [reactive-mybatis-support-examples](https://github.com/chenggangpro/reactive-mybatis-support-examples)
 
 ##### Using mybatis-dynamic-sql
 
@@ -107,7 +100,7 @@ This project has met the general business usage scenarios, including:
       <dependency>
           <groupId>pro.chenggang</groupId>
           <artifactId>mybatis-r2dbc-generator</artifactId>
-          <version>${version}</version>
+          <version>${latest.version}</version>
           <scope>test</scope>
       </dependency>
 </dependencies>
@@ -147,11 +140,13 @@ public class MyBatisGeneratorAction {
         <dependency>
             <groupId>org.mybatis.dynamic-sql</groupId>
             <artifactId>mybatis-dynamic-sql</artifactId>
+            <version>${latest.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>pro.chenggang</groupId>
             <artifactId>mybatis-r2dbc-spring</artifactId>
-            <version>${version}</version>
+            <version>${latest.version}</version>
         </dependency>
     </dependencies>
     
@@ -180,7 +175,7 @@ public class MyBatisGeneratorAction {
         <dependency>
             <groupId>pro.chenggang</groupId>
             <artifactId>mybatis-r2dbc-spring</artifactId>
-            <version>${version}</version>
+            <version>${latest.version}</version>
         </dependency>
     </dependencies>
     

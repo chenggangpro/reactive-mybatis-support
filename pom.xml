@@ -6,7 +6,7 @@
 
     <groupId>pro.chenggang</groupId>
     <artifactId>reactive-mybatis-support</artifactId>
-    <version>1.0.2-SNAPSHOT</version>
+    <version>1.0.2.RELEASE</version>
     <packaging>pom</packaging>
 
     <name>reactive-mybatis-support</name>
@@ -185,6 +185,9 @@
                                 </goals>
                             </execution>
                         </executions>
+                        <configuration>
+                            <keyname>${gpg.keyname}</keyname>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
