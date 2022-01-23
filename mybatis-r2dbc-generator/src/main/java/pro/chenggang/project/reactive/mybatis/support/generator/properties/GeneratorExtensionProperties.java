@@ -93,7 +93,7 @@ public class GeneratorExtensionProperties {
     /**
      * table trim pattern
      */
-    private String tableTrimPattern = "";
+    private String tableTrimPattern;
     /**
      * lombok config
      */
