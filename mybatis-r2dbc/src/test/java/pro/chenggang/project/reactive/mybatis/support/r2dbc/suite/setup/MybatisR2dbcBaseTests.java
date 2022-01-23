@@ -26,7 +26,6 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
 
 /**
  * @author Gang Cheng
- * @date 12/15/21.
  */
 @TestInstance(PER_CLASS)
 public class MybatisR2dbcBaseTests extends R2dbcTestConfig {
@@ -38,14 +37,14 @@ public class MybatisR2dbcBaseTests extends R2dbcTestConfig {
     protected ReactiveSqlSessionFactory reactiveSqlSessionFactory;
 
     @BeforeAll
-    public void setUp() throws Exception{
+    public void setUp() throws Exception {
         Hooks.onOperatorDebug();
         Hooks.enableContextLossTracking();
         this.r2dbcMybatisProperties = this.r2dbcMybatisProperties();
         this.r2dbcConnectionFactoryProperties = this.r2dbcConnectionFactoryProperties();
         this.r2dbcMybatisConfiguration = this.configuration(this.r2dbcMybatisProperties);
         this.connectionFactory = this.connectionFactory(this.r2dbcConnectionFactoryProperties);
-        this.reactiveSqlSessionFactory = this.reactiveSqlSessionFactory(this.r2dbcMybatisConfiguration,this.connectionFactory);
+        this.reactiveSqlSessionFactory = this.reactiveSqlSessionFactory(this.r2dbcMybatisConfiguration, this.connectionFactory);
     }
 
     @Test
@@ -55,7 +54,7 @@ public class MybatisR2dbcBaseTests extends R2dbcTestConfig {
         assertThat(this.reactiveSqlSessionFactory, notNullValue());
     }
 
-    public R2dbcMybatisProperties r2dbcMybatisProperties(){
+    public R2dbcMybatisProperties r2dbcMybatisProperties() {
         R2dbcMybatisProperties r2dbcMybatisProperties = new R2dbcMybatisProperties();
         r2dbcMybatisProperties.setMapperLocations(new String[]{"classpath:mapper/*.xml"});
         r2dbcMybatisProperties.setMapUnderscoreToCamelCase(true);
@@ -63,11 +62,11 @@ public class MybatisR2dbcBaseTests extends R2dbcTestConfig {
         return r2dbcMybatisProperties;
     }
 
-    public R2dbcConnectionFactoryProperties r2dbcConnectionFactoryProperties(){
+    public R2dbcConnectionFactoryProperties r2dbcConnectionFactoryProperties() {
         R2dbcConnectionFactoryProperties r2dbcConnectionFactoryProperties = new R2dbcConnectionFactoryProperties();
         r2dbcConnectionFactoryProperties.setEnableMetrics(true);
         r2dbcConnectionFactoryProperties.setName("test-mybatis-r2dbc");
-        r2dbcConnectionFactoryProperties.setR2dbcUrl("r2dbc:mysql://"+super.databaseIp+":"+super.databasePort+"/"+super.databaseName);
+        r2dbcConnectionFactoryProperties.setR2dbcUrl("r2dbc:mysql://" + super.databaseIp + ":" + super.databasePort + "/" + super.databaseName);
         r2dbcConnectionFactoryProperties.setUsername(super.databaseUsername);
         r2dbcConnectionFactoryProperties.setPassword(super.databasePassword);
         R2dbcConnectionFactoryProperties.Pool pool = new R2dbcConnectionFactoryProperties.Pool();
@@ -91,7 +90,7 @@ public class MybatisR2dbcBaseTests extends R2dbcTestConfig {
             }
         }
         Resource[] mapperLocations = properties.resolveMapperLocations();
-        if(mapperLocations != null && mapperLocations.length > 0) {
+        if (mapperLocations != null && mapperLocations.length > 0) {
             for (Resource mapperLocation : mapperLocations) {
                 if (mapperLocation == null) {
                     continue;
@@ -112,7 +111,7 @@ public class MybatisR2dbcBaseTests extends R2dbcTestConfig {
         return configuration;
     }
 
-    public ConnectionPool connectionFactory(R2dbcConnectionFactoryProperties r2dbcConnectionFactoryProperties){
+    public ConnectionPool connectionFactory(R2dbcConnectionFactoryProperties r2dbcConnectionFactoryProperties) {
         ConnectionFactory connectionFactory = ConnectionFactories.get(r2dbcConnectionFactoryProperties.determineConnectionFactoryUrl());
         if (connectionFactory instanceof ConnectionPool) {
             return (ConnectionPool) connectionFactory;
@@ -129,9 +128,9 @@ public class MybatisR2dbcBaseTests extends R2dbcTestConfig {
                 .maxCreateConnectionTime(pool.getMaxCreateConnectionTime())
                 .maxLifeTime(pool.getMaxLifeTime())
                 .validationDepth(pool.getValidationDepth());
-        if(pool.getValidationQuery() != null){
+        if (pool.getValidationQuery() != null) {
             builder.validationQuery(pool.getValidationQuery());
-        }else{
+        } else {
             builder.validationDepth(ValidationDepth.LOCAL);
         }
         ConnectionPool connectionPool = new ConnectionPool(builder.build());

@@ -44,7 +44,6 @@ import java.util.concurrent.atomic.LongAdder;
  *
  * @author Gang Cheng
  * @version 1.0.0
- * @date 12 /10/21.
  */
 public class DefaultReactiveResultHandler implements ReactiveResultHandler {
 

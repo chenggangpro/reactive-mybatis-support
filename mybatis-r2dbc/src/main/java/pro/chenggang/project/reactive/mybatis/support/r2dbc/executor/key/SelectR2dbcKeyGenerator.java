@@ -19,9 +19,8 @@ import java.lang.reflect.Type;
  * {@link org.apache.ibatis.executor.keygen.SelectKeyGenerator}
  *
  * @author Gang Cheng
- * @date 12 /12/21.
+ * @version 1.0.3
  * @since 1.0.2
- * @version 1.0.2
  */
 public class SelectR2dbcKeyGenerator implements R2dbcKeyGenerator {
 
@@ -38,30 +37,8 @@ public class SelectR2dbcKeyGenerator implements R2dbcKeyGenerator {
      * @param reactiveMybatisExecutor   the reactive mybatis executor
      */
     public SelectR2dbcKeyGenerator(SelectKeyGenerator selectKeyGenerator, R2dbcMybatisConfiguration r2dbcMybatisConfiguration, ReactiveMybatisExecutor reactiveMybatisExecutor) {
-        Field[] declaredFields = SelectKeyGenerator.class.getDeclaredFields();
-        boolean originalExecuteBefore = false;
-        MappedStatement originalKeyStatement = null;
-        int reduceCount = 0;
-        try {
-            for (Field declaredField : declaredFields) {
-                if (reduceCount > 2) {
-                    break;
-                }
-                declaredField.setAccessible(true);
-                Type genericType = declaredField.getGenericType();
-                if ("boolean".equals(genericType.toString())) {
-                    originalExecuteBefore = (boolean) declaredField.get(selectKeyGenerator);
-                    reduceCount++;
-                } else if (declaredField.getType().isAssignableFrom(MappedStatement.class)) {
-                    originalKeyStatement = (MappedStatement) declaredField.get(selectKeyGenerator);
-                    reduceCount++;
-                }
-            }
-        } catch (IllegalArgumentException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-        this.executeBefore = originalExecuteBefore;
-        this.keyStatement = originalKeyStatement;
+        this.executeBefore = SelectKeyGeneratorFieldContainer.getOriginalExecuteBefore(selectKeyGenerator);
+        this.keyStatement = SelectKeyGeneratorFieldContainer.getOriginalKeyStatement(selectKeyGenerator);
         this.r2dbcMybatisConfiguration = r2dbcMybatisConfiguration;
         this.reactiveMybatisExecutor = reactiveMybatisExecutor;
     }
@@ -72,8 +49,8 @@ public class SelectR2dbcKeyGenerator implements R2dbcKeyGenerator {
     }
 
     @Override
-    public Mono<Boolean> processSelectKey(KeyGeneratorType keyGeneratorType,MappedStatement ms, Object parameter) {
-        if(!this.keyGeneratorType().equals(keyGeneratorType)){
+    public Mono<Boolean> processSelectKey(KeyGeneratorType keyGeneratorType, MappedStatement ms, Object parameter) {
+        if (!this.keyGeneratorType().equals(keyGeneratorType)) {
             return Mono.just(false);
         }
         try {
@@ -145,4 +122,57 @@ public class SelectR2dbcKeyGenerator implements R2dbcKeyGenerator {
         }
     }
 
+    /**
+     * SelectKeyGenerator original field container ,only initialize once
+     * @version 1.0.3
+     * @since 1.0.3
+     */
+    private static class SelectKeyGeneratorFieldContainer {
+
+        private static final Field executeBeforeField;
+        private static final Field keyStatementField;
+
+        static {
+            Field[] declaredFields = SelectKeyGenerator.class.getDeclaredFields();
+            Field originalExecuteBeforeField = null;
+            Field originalKeyStatementField = null;
+            int reduceCount = 0;
+            try {
+                for (Field declaredField : declaredFields) {
+                    if (reduceCount > 2) {
+                        break;
+                    }
+                    declaredField.setAccessible(true);
+                    Type genericType = declaredField.getGenericType();
+                    if ("boolean".equals(genericType.toString())) {
+                        originalExecuteBeforeField = declaredField;
+                        reduceCount++;
+                    } else if (declaredField.getType().isAssignableFrom(MappedStatement.class)) {
+                        originalKeyStatementField = declaredField;
+                        reduceCount++;
+                    }
+                }
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException(e);
+            }
+            executeBeforeField = originalExecuteBeforeField;
+            keyStatementField = originalKeyStatementField;
+        }
+
+        public static boolean getOriginalExecuteBefore(SelectKeyGenerator selectKeyGenerator) {
+            try {
+                return (boolean) executeBeforeField.get(selectKeyGenerator);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public static MappedStatement getOriginalKeyStatement(SelectKeyGenerator selectKeyGenerator) {
+            try {
+                return (MappedStatement) keyStatementField.get(selectKeyGenerator);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 }

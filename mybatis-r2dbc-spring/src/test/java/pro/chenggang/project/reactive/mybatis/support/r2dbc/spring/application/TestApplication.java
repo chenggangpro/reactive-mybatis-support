@@ -5,7 +5,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * @author Gang Cheng
- * @date 6/25/21.
  */
 @SpringBootApplication
 public class TestApplication {

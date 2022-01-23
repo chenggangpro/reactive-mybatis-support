@@ -17,7 +17,6 @@ import static org.springframework.util.StringUtils.hasText;
 
 /**
  * @author Gang Cheng
- * @date 6/25/21.
  */
 @Getter
 @Setter
@@ -61,6 +60,7 @@ public class R2dbcConnectionFactoryProperties {
 
     /**
      * r2dbc connection factory name based on configuration
+     *
      * @return the connection factory name to use or {@code null}
      */
     public String determineConnectionFactoryName() {
@@ -72,9 +72,10 @@ public class R2dbcConnectionFactoryProperties {
 
     /**
      * r2dbc connection url
+     *
      * @return
      */
-    public String determineConnectionFactoryUrl(){
+    public String determineConnectionFactoryUrl() {
         if (!hasText(this.r2dbcUrl)) {
             return null;
         }

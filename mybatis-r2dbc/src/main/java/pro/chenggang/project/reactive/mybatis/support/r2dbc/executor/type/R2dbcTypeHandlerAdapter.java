@@ -11,7 +11,6 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.parameter.P
  * @param <T> the type parameter
  * @author Gang Cheng
  * @version 1.0.0
- * @date 12/9/21.
  */
 public interface R2dbcTypeHandlerAdapter<T> {
 

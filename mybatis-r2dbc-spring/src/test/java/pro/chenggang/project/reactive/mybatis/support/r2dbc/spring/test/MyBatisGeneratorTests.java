@@ -5,12 +5,11 @@ import pro.chenggang.project.reactive.mybatis.support.generator.core.MybatisDyna
 
 /**
  * @author Gang Cheng
- * @date 2020-03-22.
  */
 public class MyBatisGeneratorTests {
 
     @Test
-    public void testGenerate(){
+    public void testGenerate() {
         MybatisDynamicCodeGenerator.getInstance().generate("pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application");
     }
 

@@ -20,7 +20,6 @@ import java.util.function.Function;
  * Concentrate on operation with connection
  *
  * @author Gang Cheng
- * @date 12 /8/21.
  * @since 1.0.0
  */
 public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatisExecutor {

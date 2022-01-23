@@ -1,12 +1,16 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.entity.extend;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.entity.model.Dept;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.entity.model.Emp;
 
 /**
  * @author Gang Cheng
- * @date 12/15/21.
  */
 @ToString(callSuper = true)
 @Getter

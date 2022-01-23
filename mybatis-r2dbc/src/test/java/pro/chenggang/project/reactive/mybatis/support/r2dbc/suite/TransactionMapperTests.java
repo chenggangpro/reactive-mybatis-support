@@ -18,7 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Gang Cheng
- * @date 12/15/21.
  */
 public class TransactionMapperTests extends MybatisR2dbcBaseTests {
 
@@ -28,7 +27,7 @@ public class TransactionMapperTests extends MybatisR2dbcBaseTests {
     private ReactiveSqlSessionOperator reactiveSqlSessionOperator;
 
     @BeforeAll
-    public void initSqlSession () throws Exception {
+    public void initSqlSession() throws Exception {
         this.reactiveSqlSession = super.reactiveSqlSessionFactory.openSession().usingTransaction(true);
         this.deptMapper = this.reactiveSqlSession.getMapper(DeptMapper.class);
         this.empMapper = this.reactiveSqlSession.getMapper(EmpMapper.class);

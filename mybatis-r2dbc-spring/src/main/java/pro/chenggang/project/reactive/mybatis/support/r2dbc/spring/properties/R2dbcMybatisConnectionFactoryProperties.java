@@ -20,7 +20,6 @@ import static org.springframework.util.StringUtils.hasText;
  *
  * @author Gang Cheng
  * @version 1.0.0
- * @date 6 /25/21.
  */
 @Getter
 @Setter
@@ -88,6 +87,7 @@ public class R2dbcMybatisConnectionFactoryProperties {
         if (!hasText(this.r2dbcUrl)) {
             return null;
         }
+        String r2dbcUrl = this.r2dbcUrl;
         String encodedUsername;
         try {
             encodedUsername = URLEncoder.encode(username, StandardCharsets.UTF_8.name());
@@ -105,11 +105,11 @@ public class R2dbcMybatisConnectionFactoryProperties {
         String credential = encodedUsername + (password == null || password.isEmpty() ? "" : ":" + encodedPassword);
         //only replace 'r2dbc:mysql:' with 'r2dbc:mariadb' when using 'MariadbConnectionFactory'
         boolean isMariadbConnectionfactoryPresent = ClassUtils.isPresent("org.mariadb.r2dbc.MariadbConnectionFactory", this.getClass().getClassLoader());
-        if (isMariadbConnectionfactoryPresent && this.r2dbcUrl.startsWith("r2dbc:mysql:")) {
-            this.r2dbcUrl = this.r2dbcUrl.replace("r2dbc:mysql:", "r2dbc:mariadb:");
+        if (isMariadbConnectionfactoryPresent && r2dbcUrl.startsWith("r2dbc:mysql:")) {
+            r2dbcUrl = r2dbcUrl.replace("r2dbc:mysql:", "r2dbc:mariadb:");
         }
-        this.r2dbcUrl = r2dbcUrl.replace("//", "//" + credential + "@");
-        return this.r2dbcUrl;
+        r2dbcUrl = r2dbcUrl.replace("//", "//" + credential + "@");
+        return r2dbcUrl;
     }
 
     /**

@@ -16,7 +16,6 @@ import java.util.Map;
  *
  * @author Gang Cheng
  * @version 1.0.0
- * @date 12 /8/21.
  */
 public class R2dbcMapperRegistry extends MapperRegistry {
 
@@ -36,8 +35,8 @@ public class R2dbcMapperRegistry extends MapperRegistry {
     /**
      * Gets mapper.
      *
-     * @param <T>        the type parameter
-     * @param type       the type
+     * @param <T>                the type parameter
+     * @param type               the type
      * @param reactiveSqlSession the reactive sql session
      * @return the mapper
      */

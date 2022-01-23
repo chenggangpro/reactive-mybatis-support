@@ -15,7 +15,6 @@ import java.util.function.Supplier;
  *
  * @author Gang Cheng
  * @version 1.0.0
- * @date 12 /12/21.
  */
 @SuppressWarnings("unchecked")
 public class ProxyInstanceFactory {

@@ -4,9 +4,8 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key;
  * The enum Key generator type.
  *
  * @author evans
- * @date 2022 /1/17.
- * @since 1.0.2
  * @version 1.0.2
+ * @since 1.0.2
  */
 public enum KeyGeneratorType {
 

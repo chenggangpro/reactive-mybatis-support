@@ -13,7 +13,6 @@ import java.nio.ByteBuffer;
  *
  * @author Gang Cheng
  * @version 1.0.0
- * @date 12/9/21.
  */
 public class ByteArrayR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerAdapter<byte[]> {
 

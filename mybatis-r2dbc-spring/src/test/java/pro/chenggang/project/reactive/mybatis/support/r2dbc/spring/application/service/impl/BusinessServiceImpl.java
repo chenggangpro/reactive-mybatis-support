@@ -17,7 +17,6 @@ import static pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.applic
 
 /**
  * @author Gang Cheng
- * @date 7/5/21.
  */
 @Slf4j
 @Service
@@ -37,7 +36,7 @@ public class BusinessServiceImpl implements BusinessService {
     public Mono<Dept> doWithTransactionBusinessRollback() {
         return this.doBusinessInternal()
                 .then(Mono.defer(() -> {
-                    if(true){
+                    if (true) {
                         throw new RuntimeException("manually rollback with @Transaction");
                     }
                     return Mono.empty();
@@ -49,22 +48,22 @@ public class BusinessServiceImpl implements BusinessService {
         return deptMapper.count()
                 .filter(count -> count > 0)
                 .flatMap(count -> deptMapper.selectDeptWithEmpList()
-                        .take(1,true)
+                        .take(1, true)
                         .singleOrEmpty()
                 );
 
     }
 
-    private Mono<Dept> doBusinessInternal(){
+    private Mono<Dept> doBusinessInternal() {
         return deptMapper.selectOne(dsl -> dsl.where(deptNo, isEqualTo(4L)))
-                .doOnNext(people -> log.debug("[Before] Get People ,People:{}",people))
+                .doOnNext(people -> log.debug("[Before] Get People ,People:{}", people))
                 .flatMap(people -> deptMapper.updateSelective(new Dept()
-                        .setDeptName("InsertDept")
-                        .setLocation("InsertLocation")
-                        .setCreateTime(LocalDateTime.now()),
-                        dsl -> dsl.where(deptNo,isEqualTo(4L))))
+                                .setDeptName("InsertDept")
+                                .setLocation("InsertLocation")
+                                .setCreateTime(LocalDateTime.now()),
+                        dsl -> dsl.where(deptNo, isEqualTo(4L))))
                 .flatMap(value -> deptMapper.selectOne(dsl -> dsl.where(deptNo, isEqualTo(4L))))
-                .doOnNext(updatePeople -> log.debug("[After Update] Get People ,People:{}",updatePeople))
+                .doOnNext(updatePeople -> log.debug("[After Update] Get People ,People:{}", updatePeople))
                 .flatMap(updatePeople -> deptMapper.delete(dsl -> dsl.where(deptNo, isEqualTo(4L))))
                 .flatMap(deleteResult -> deptMapper.selectOne(dsl -> dsl.where(deptNo, isEqualTo(4L))));
     }

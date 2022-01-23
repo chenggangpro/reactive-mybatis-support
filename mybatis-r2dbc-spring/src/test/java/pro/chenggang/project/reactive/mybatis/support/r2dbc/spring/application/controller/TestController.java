@@ -10,7 +10,6 @@ import reactor.core.publisher.Mono;
 
 /**
  * @author Gang Cheng
- * @date 1/4/22.
  */
 @RestController
 @RequiredArgsConstructor
@@ -19,7 +18,7 @@ public class TestController {
     private final BenchmarkService benchmarkService;
 
     @GetMapping("/benchmark/list")
-    public Mono<?> getFromDb(){
+    public Mono<?> getFromDb() {
         return benchmarkService.getFromDb();
     }
 
@@ -29,12 +28,12 @@ public class TestController {
     }
 
     @PostMapping("/benchmark/add")
-    public Mono<?> insertDb(){
+    public Mono<?> insertDb() {
         return benchmarkService.insertDb();
     }
 
     @PostMapping("/benchmark/add/delete")
-    public Mono<?> insertThenDeleteDb(){
+    public Mono<?> insertThenDeleteDb() {
         return benchmarkService.insertThenDeleteDb();
     }
 }

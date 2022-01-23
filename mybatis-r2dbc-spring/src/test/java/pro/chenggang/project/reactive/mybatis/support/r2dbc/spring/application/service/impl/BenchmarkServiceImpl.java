@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 
 /**
  * @author Gang Cheng
- * @date 1/4/22.
  */
 @Slf4j
 @Service
@@ -48,7 +47,7 @@ public class BenchmarkServiceImpl implements BenchmarkService {
                 .flatMap(insertResult -> Mono.just("Generated DeptNo: " + dept.getDeptNo()));
     }
 
-    @Transactional(rollbackFor = Exception.class,isolation = Isolation.READ_UNCOMMITTED)
+    @Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_UNCOMMITTED)
     @Override
     public Mono<?> insertThenDeleteDb() {
         Dept dept = new Dept();

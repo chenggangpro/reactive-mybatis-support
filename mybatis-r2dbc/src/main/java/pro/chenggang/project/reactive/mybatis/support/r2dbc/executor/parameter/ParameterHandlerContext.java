@@ -7,7 +7,6 @@ import org.apache.ibatis.type.JdbcType;
  *
  * @author Gang Cheng
  * @version 1.0.0
- * @date 12 /9/21.
  */
 public class ParameterHandlerContext {
 

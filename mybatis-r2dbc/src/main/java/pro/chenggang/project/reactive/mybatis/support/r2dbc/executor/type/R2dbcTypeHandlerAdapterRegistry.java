@@ -19,7 +19,6 @@ import java.util.Map;
  * The type R2dbc type handler adapter registry.
  *
  * @author Gang Cheng
- * @date 12 /9/21.
  */
 public class R2dbcTypeHandlerAdapterRegistry {
 

@@ -20,7 +20,6 @@ import java.util.stream.Stream;
  *
  * @author Gang Cheng
  * @version 1.0.0
- * @date 12 /10/21.
  */
 public class DelegateR2DbcResultRowDataHandler implements InvocationHandler {
 

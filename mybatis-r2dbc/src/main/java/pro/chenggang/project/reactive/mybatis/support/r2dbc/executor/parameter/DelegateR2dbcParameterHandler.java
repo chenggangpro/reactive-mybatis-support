@@ -36,7 +36,6 @@ import java.util.stream.Stream;
  *
  * @author Gang Cheng
  * @version 1.0.0
- * @date 12 /9/21.
  */
 public class DelegateR2dbcParameterHandler implements InvocationHandler {
 
@@ -55,7 +54,7 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
      * @param r2DbcMybatisConfiguration the R2dbc mybatis configuration
      * @param parameterHandler          the parameter handler
      * @param statement                 the statement
-     * @param r2dbcStatementLog        the statement log helper
+     * @param r2dbcStatementLog         the statement log helper
      */
     public DelegateR2dbcParameterHandler(R2dbcMybatisConfiguration r2DbcMybatisConfiguration,
                                          ParameterHandler parameterHandler,

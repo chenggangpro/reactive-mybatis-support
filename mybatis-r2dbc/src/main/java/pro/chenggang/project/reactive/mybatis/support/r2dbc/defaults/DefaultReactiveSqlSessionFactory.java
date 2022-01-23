@@ -16,7 +16,6 @@ import java.util.Objects;
  *
  * @author Gang Cheng
  * @version 1.0.0
- * @date 12 /8/21.
  */
 public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFactory {
 
