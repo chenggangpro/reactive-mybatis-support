@@ -24,7 +24,7 @@ This project has met the general business usage scenarios, including:
     * ❌ 2 . multi resultSet and `resultOrdered = true` in mapper.XML
     * ❌ 3 . nested query with multi SQL
     * ⚠️ 4 . blocking java type (aka: InputStream .eg)
-    * ⚠️ 5 . Mapper Method only support `Flux<T>`/`Mono<T>`/`Mono<Void>`/`Flux<Void>`, and not supported `void`
+* ⚠️ Mapper Method's return type only support `Flux<T>`/`Mono<T>`/`Mono<Void>`/`Flux<Void>`, and not supported `void`
 * Using Reactor's Context to implement Transaction
 * More detail, please see source code and test suits, tests use MySQL database with `test-prepare.sql` schema setup
 * It has been piloted in a small scale within the company, and any bugs found will be updated at any time
@@ -108,7 +108,7 @@ This project has met the general business usage scenarios, including:
 
 * copy `mybatis-generator.yml` form `source-code/mybatis-reactive-generator/resources/META-INF/mybatis-generator.yml`
 * modify source database settings in `mybatis-generator.yml`
-* add a test case 
+* add a test case or a main method
 
 ```java
 public class MyBatisGeneratorAction {
@@ -117,11 +117,17 @@ public class MyBatisGeneratorAction {
     public void generate(){
         MybatisDynamicCodeGenerator.getInstance().generate(MyBatisGeneratorAction.class);
     }
+    
+    // or
+    
+    public static void main(String[] args){
+        MybatisDynamicCodeGenerator.getInstance().generate(MyBatisGeneratorAction.class);
+    }
 
 }
 ```
 * run the test ,then it will generate the dynamic code ,mapper interface ,mapper xml
-* Also see `mybatis-reactive-generator`'s test cases
+* also see `mybatis-reactive-generator`'s test cases
     
 * Using in spring environment
 
