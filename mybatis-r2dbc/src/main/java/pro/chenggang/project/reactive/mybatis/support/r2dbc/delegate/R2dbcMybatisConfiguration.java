@@ -22,7 +22,6 @@ import java.util.Set;
  *
  * @author Gang Cheng
  * @version 1.0.0
- * @date 12 /8/21.
  */
 public class R2dbcMybatisConfiguration extends Configuration {
 
@@ -162,6 +161,7 @@ public class R2dbcMybatisConfiguration extends Configuration {
 
     /**
      * get r2dbc statement log
+     *
      * @param mappedStatement target MappedStatement
      * @return the R2dbcStatementLog
      */
@@ -171,6 +171,7 @@ public class R2dbcMybatisConfiguration extends Configuration {
 
     /**
      * get r2dbc statement log factory
+     *
      * @return the R2dbcStatementLogFactory
      */
     public R2dbcStatementLogFactory getR2dbcStatementLogFactory() {

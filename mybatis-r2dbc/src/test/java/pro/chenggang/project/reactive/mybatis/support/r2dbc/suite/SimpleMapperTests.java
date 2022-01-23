@@ -21,7 +21,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Gang Cheng
- * @date 12/15/21.
  */
 @Slf4j
 public class SimpleMapperTests extends MybatisR2dbcBaseTests {
@@ -32,7 +31,7 @@ public class SimpleMapperTests extends MybatisR2dbcBaseTests {
     private ReactiveSqlSessionOperator reactiveSqlSessionOperator;
 
     @BeforeAll
-    public void initSqlSession () throws Exception {
+    public void initSqlSession() throws Exception {
         this.reactiveSqlSession = super.reactiveSqlSessionFactory.openSession();
         this.reactiveSqlSessionOperator = new DefaultReactiveSqlSessionOperator(reactiveSqlSessionFactory);
         this.deptMapper = this.reactiveSqlSession.getMapper(DeptMapper.class);
@@ -40,42 +39,42 @@ public class SimpleMapperTests extends MybatisR2dbcBaseTests {
     }
 
     @Test
-    public void testGetDeptTotalCount () throws Exception {
+    public void testGetDeptTotalCount() throws Exception {
         reactiveSqlSessionOperator.execute(
-                this.deptMapper.count()
-        )
+                        this.deptMapper.count()
+                )
                 .as(StepVerifier::create)
                 .expectNext(4L)
                 .verifyComplete();
     }
 
     @Test
-    public void testGetAllDept () throws Exception {
+    public void testGetAllDept() throws Exception {
         reactiveSqlSessionOperator.executeMany(
-                this.deptMapper.selectAll()
-        )
+                        this.deptMapper.selectAll()
+                )
                 .as(StepVerifier::create)
                 .expectNextCount(4)
                 .verifyComplete();
     }
 
     @Test
-    public void testGetDeptByDeptNo () throws Exception {
+    public void testGetDeptByDeptNo() throws Exception {
         Long deptNo = 1L;
         this.reactiveSqlSessionOperator.execute(
-                this.deptMapper.selectOneByDeptNo(deptNo)
-        )
+                        this.deptMapper.selectOneByDeptNo(deptNo)
+                )
                 .as(StepVerifier::create)
                 .expectNextMatches(dept -> deptNo.equals(dept.getDeptNo()))
                 .verifyComplete();
     }
 
     @Test
-    public void testGetDeptListByCreateTime () throws Exception {
+    public void testGetDeptListByCreateTime() throws Exception {
         LocalDateTime createTime = LocalDateTime.now();
         this.reactiveSqlSessionOperator.executeMany(
-                this.deptMapper.selectListByTime(createTime)
-        )
+                        this.deptMapper.selectListByTime(createTime)
+                )
                 .as(StepVerifier::create)
                 .thenConsumeWhile(result -> {
                     assertThat(result)
@@ -87,7 +86,7 @@ public class SimpleMapperTests extends MybatisR2dbcBaseTests {
     }
 
     @Test
-    public void testInsertAndReturnGenerateKey() throws Exception{
+    public void testInsertAndReturnGenerateKey() throws Exception {
         Dept dept = new Dept();
         dept.setDeptName("Test_dept_name");
         dept.setCreateTime(LocalDateTime.now());
@@ -100,7 +99,7 @@ public class SimpleMapperTests extends MybatisR2dbcBaseTests {
     }
 
     @Test
-    public void testInsertBySelectKeyAndReturnGenerateKey() throws Exception{
+    public void testInsertBySelectKeyAndReturnGenerateKey() throws Exception {
         Dept dept = new Dept();
         dept.setDeptName("Test_dept_name");
         dept.setCreateTime(LocalDateTime.now());
@@ -119,9 +118,9 @@ public class SimpleMapperTests extends MybatisR2dbcBaseTests {
         dept.setCreateTime(LocalDateTime.now());
         dept.setLocation("Test_location");
         reactiveSqlSessionOperator.executeAndRollback(
-                this.deptMapper.insert(dept)
-                        .then(Mono.defer(() -> this.deptMapper.deleteByDeptNo(dept.getDeptNo())))
-        )
+                        this.deptMapper.insert(dept)
+                                .then(Mono.defer(() -> this.deptMapper.deleteByDeptNo(dept.getDeptNo())))
+                )
                 .as(StepVerifier::create)
                 .expectNextMatches(effectRowCount -> effectRowCount == 1)
                 .verifyComplete();
@@ -141,20 +140,20 @@ public class SimpleMapperTests extends MybatisR2dbcBaseTests {
     @Test
     public void testGetDeptWithEmp() throws Exception {
         this.reactiveSqlSessionOperator.executeMany(
-                this.deptMapper.selectDeptWithEmpList()
-        )
+                        this.deptMapper.selectDeptWithEmpList()
+                )
                 .as(StepVerifier::create)
                 .expectNextMatches(deptWithEmp -> {
                     assertThat(deptWithEmp)
                             .extracting(DeptWithEmp::getEmpList)
-                            .matches(empList -> empList.size() >0 );
+                            .matches(empList -> empList.size() > 0);
                     return true;
                 })
                 .expectNextCount(2L)
                 .expectNextMatches(deptWithEmp -> {
                     assertThat(deptWithEmp)
                             .extracting(DeptWithEmp::getEmpList)
-                            .matches(empList -> empList.size() ==0 );
+                            .matches(empList -> empList.size() == 0);
                     return true;
                 })
                 .verifyComplete();
@@ -163,8 +162,8 @@ public class SimpleMapperTests extends MybatisR2dbcBaseTests {
     @Test
     public void testGetEmpWithDept() throws Exception {
         this.reactiveSqlSessionOperator.executeMany(
-                this.empMapper.selectEmpWithDeptList()
-        )
+                        this.empMapper.selectEmpWithDeptList()
+                )
                 .as(StepVerifier::create)
                 .thenConsumeWhile(empWithDept -> {
                     assertThat(empWithDept.getDept()).isNotNull();
@@ -178,8 +177,8 @@ public class SimpleMapperTests extends MybatisR2dbcBaseTests {
         Emp emp = new Emp();
         emp.setCreateTime(LocalDateTime.now());
         this.reactiveSqlSessionOperator.executeMany(
-                this.empMapper.selectByParameterMap(emp)
-        )
+                        this.empMapper.selectByParameterMap(emp)
+                )
                 .as(StepVerifier::create)
                 .expectNextCount(14)
                 .verifyComplete();

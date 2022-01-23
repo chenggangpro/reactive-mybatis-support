@@ -7,7 +7,6 @@ import io.r2dbc.spi.R2dbcException;
  *
  * @author Gang Cheng
  * @version 1.0.0
- * @date 12 /10/21.
  */
 public class R2dbcResultException extends R2dbcException {
 

@@ -4,7 +4,6 @@ import java.time.Duration;
 
 /**
  * @author Gang Cheng
- * @date 12/15/21.
  */
 public class R2dbcTestConfig {
 

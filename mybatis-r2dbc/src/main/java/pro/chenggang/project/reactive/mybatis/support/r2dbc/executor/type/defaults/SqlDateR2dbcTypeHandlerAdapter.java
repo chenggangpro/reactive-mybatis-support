@@ -14,7 +14,6 @@ import java.time.LocalDate;
  *
  * @author Gang Cheng
  * @version 1.0.0
- * @date 12 /9/21.
  */
 public class SqlDateR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerAdapter<Date> {
 

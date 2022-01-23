@@ -4,9 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
+import pro.chenggang.project.reactive.mybatis.support.generator.annotation.Required;
 import pro.chenggang.project.reactive.mybatis.support.generator.option.GeneratorType;
 import pro.chenggang.project.reactive.mybatis.support.generator.option.LombokConfig;
-import pro.chenggang.project.reactive.mybatis.support.generator.annotation.Required;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -18,7 +18,6 @@ import java.util.stream.Stream;
  * The type Generator extension properties.
  *
  * @author Gang Cheng
- * @date 2020 -01-21.
  */
 @Getter
 @Setter
@@ -94,7 +93,7 @@ public class GeneratorExtensionProperties {
     /**
      * table trim pattern
      */
-    private String tableTrimPattern="";
+    private String tableTrimPattern = "";
     /**
      * lombok config
      */
@@ -124,7 +123,7 @@ public class GeneratorExtensionProperties {
     /**
      * Validate by default.
      */
-    public void validateByDefault(){
+    public void validateByDefault() {
         Stream.of(this.getClass().getDeclaredFields())
                 .filter(field -> field.isAnnotationPresent(Required.class) && String.class.isAssignableFrom(field.getType()))
                 .peek(field -> field.setAccessible(true))
@@ -135,30 +134,30 @@ public class GeneratorExtensionProperties {
                     } catch (IllegalAccessException e) {
                         //ignore
                     }
-                    if(Objects.isNull(fieldValue)){
+                    if (Objects.isNull(fieldValue)) {
                         throw new IllegalArgumentException("Mybatis Generator Properties ( " + field.getName() + " ) Must Be Set");
                     }
                     String fieldStringValue = (String) fieldValue;
-                    if(StringUtils.isEmpty(fieldStringValue)){
+                    if (StringUtils.isEmpty(fieldStringValue)) {
                         throw new IllegalArgumentException("Mybatis Generator Properties ( " + field.getName() + " ) Must Be Set");
                     }
                 });
-        if(StringUtils.isEmpty(this.basePackage)){
+        if (StringUtils.isEmpty(this.basePackage)) {
             throw new IllegalArgumentException("Mybatis Generator Properties ( basePackage ) Must Be Set");
         }
-        if(Objects.isNull(tableName) || tableName.isEmpty()){
+        if (Objects.isNull(tableName) || tableName.isEmpty()) {
             tableName = new HashSet<>();
             tableName.add("%");
         }
-        if(Objects.isNull(lombok)){
+        if (Objects.isNull(lombok)) {
             lombok = new LinkedHashSet<>();
         }
-        if(Objects.isNull(generateType) || generateType.isEmpty()){
+        if (Objects.isNull(generateType) || generateType.isEmpty()) {
             generateType = new HashSet<>();
             generateType.add(GeneratorType.SIMPLE);
             generateType.add(GeneratorType.DYNAMIC);
         }
-        if(!"".equals(parentLocation) && !parentLocation.endsWith("/")){
+        if (!"".equals(parentLocation) && !parentLocation.endsWith("/")) {
             parentLocation = parentLocation + "/";
         }
     }

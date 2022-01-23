@@ -12,7 +12,6 @@ import java.util.Objects;
  * The type R2dbc statement log factory.
  *
  * @author Gang Cheng
- * @date 2022/1/6.
  * @since 1.0.0
  */
 public class R2dbcStatementLogFactory {

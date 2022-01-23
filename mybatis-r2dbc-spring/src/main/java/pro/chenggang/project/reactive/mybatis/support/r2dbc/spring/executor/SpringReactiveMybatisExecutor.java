@@ -13,7 +13,6 @@ import reactor.core.publisher.Mono;
  * {@link org.springframework.r2dbc.core.DatabaseClient}
  *
  * @author Gang Cheng
- * @date 12 /16/21.
  * @since 1.0.0
  */
 public class SpringReactiveMybatisExecutor extends DefaultReactiveMybatisExecutor {

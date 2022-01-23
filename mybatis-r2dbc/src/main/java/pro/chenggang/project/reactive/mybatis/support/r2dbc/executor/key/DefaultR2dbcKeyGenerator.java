@@ -33,9 +33,8 @@ import java.util.concurrent.atomic.LongAdder;
  * {@link org.apache.ibatis.executor.keygen.Jdbc3KeyGenerator}
  *
  * @author Gang Cheng
- * @date 12 /12/21.
- * @since 1.0.0
  * @version 1.0.2
+ * @since 1.0.0
  */
 public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
 

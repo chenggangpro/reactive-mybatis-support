@@ -8,9 +8,8 @@ import reactor.core.publisher.Mono;
  * The type No key r 2 dbc key generator.
  *
  * @author evans
- * @date 2022 /1/17.
- * @since 1.0.2
  * @version 1.0.2
+ * @since 1.0.2
  */
 public class NoKeyR2dbcKeyGenerator implements R2dbcKeyGenerator {
 

@@ -12,7 +12,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Gang Cheng
- * @date 7/6/21.
  */
 public class BusinessServiceTests extends TestApplicationTests {
 
@@ -20,7 +19,7 @@ public class BusinessServiceTests extends TestApplicationTests {
     private BusinessService businessService;
 
     @Test
-    public void testDoWithoutTransaction() throws Exception{
+    public void testDoWithoutTransaction() throws Exception {
         int count = 10;
         CountDownLatch countDownLatch = new CountDownLatch(count);
         for (int i = 0; i < 10; i++) {
@@ -36,7 +35,7 @@ public class BusinessServiceTests extends TestApplicationTests {
     }
 
     @Test
-    public void testDoWithTransactionBusiness(){
+    public void testDoWithTransactionBusiness() {
         businessService.doWithTransactionBusiness()
                 .as(this::withRollback)
                 .as(StepVerifier::create)
@@ -45,7 +44,7 @@ public class BusinessServiceTests extends TestApplicationTests {
     }
 
     @Test
-    public void testDoWithTransactionBusinessRollback() throws Exception{
+    public void testDoWithTransactionBusinessRollback() throws Exception {
         businessService.doWithTransactionBusinessRollback()
                 .as(this::withRollback)
                 .as(StepVerifier::create)
@@ -56,12 +55,12 @@ public class BusinessServiceTests extends TestApplicationTests {
     }
 
     @Test
-    public void testDoWithoutTransactionThenWithTransaction(){
+    public void testDoWithoutTransactionThenWithTransaction() {
         businessService.doWithoutTransaction()
                 .flatMap(deptWithEmp -> {
                     assertThat(deptWithEmp)
                             .extracting(DeptWithEmp::getEmpList)
-                            .matches(empList -> empList.size() >0 );
+                            .matches(empList -> empList.size() > 0);
                     return businessService.doWithTransactionBusinessRollback();
                 })
                 .as(StepVerifier::create)

@@ -12,7 +12,6 @@ import reactor.core.publisher.Mono;
  *
  * @author Gang Cheng
  * @version 1.0.0
- * @date 12 /16/21.
  */
 public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOperator {
 

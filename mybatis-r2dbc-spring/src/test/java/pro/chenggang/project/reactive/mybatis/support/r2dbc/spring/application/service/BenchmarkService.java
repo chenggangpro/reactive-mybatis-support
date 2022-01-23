@@ -4,7 +4,6 @@ import reactor.core.publisher.Mono;
 
 /**
  * @author Gang Cheng
- * @date 1/4/22.
  * @version 1.0.0
  */
 public interface BenchmarkService {

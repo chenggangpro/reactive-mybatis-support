@@ -20,7 +20,6 @@ import static org.springframework.util.StringUtils.hasText;
  *
  * @author Gang Cheng
  * @version 1.0.0
- * @date 6 /25/21.
  */
 @Getter
 @Setter

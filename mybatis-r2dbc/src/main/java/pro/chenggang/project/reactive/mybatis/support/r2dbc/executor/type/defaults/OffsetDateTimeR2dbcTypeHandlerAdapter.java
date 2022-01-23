@@ -14,7 +14,6 @@ import java.time.OffsetDateTime;
  *
  * @author Gang Cheng
  * @version 1.0.0
- * @date 12 /9/21.
  */
 public class OffsetDateTimeR2dbcTypeHandlerAdapter implements R2dbcTypeHandlerAdapter<OffsetDateTime> {
 

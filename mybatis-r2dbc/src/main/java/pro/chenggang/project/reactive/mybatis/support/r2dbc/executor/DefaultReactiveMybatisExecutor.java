@@ -42,10 +42,8 @@ import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.resu
  * The type Default reactive mybatis executor.
  *
  * @author Gang Cheng
- * @version 1.0.0
- * @date 12/9/21.
- * @since 1.0.0
  * @version 1.0.2
+ * @since 1.0.0
  */
 public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecutor {
 
@@ -71,7 +69,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                 .map(ReactiveExecutorContext::getR2dbcStatementLog)
                 .flatMap(r2dbcStatementLog -> {
                     R2dbcKeyGenerator r2dbcKeyGenerator = this.getR2dbcKeyGenerator(mappedStatement);
-                    return r2dbcKeyGenerator.processSelectKey(SELECT_KEY_BEFORE,mappedStatement, parameter)
+                    return r2dbcKeyGenerator.processSelectKey(SELECT_KEY_BEFORE, mappedStatement, parameter)
                             .flatMap(ignoreResult -> {
                                 String boundSql = mappedStatement.getBoundSql(parameter).getSql();
                                 boolean isReturnedGeneratedKeys = SIMPLE_RETURN.equals(r2dbcKeyGenerator.keyGeneratorType());
@@ -94,7 +92,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                         .collect(Collectors.summingInt(Integer::intValue))
                                         .defaultIfEmpty(0)
                                         .doOnNext(r2dbcStatementLog::logUpdates)
-                                        .flatMap(totalUpdateRowCount -> r2dbcKeyGenerator.processSelectKey(SELECT_KEY_AFTER,mappedStatement, parameter)
+                                        .flatMap(totalUpdateRowCount -> r2dbcKeyGenerator.processSelectKey(SELECT_KEY_AFTER, mappedStatement, parameter)
                                                 .flatMap(ignore -> Mono.just(totalUpdateRowCount))
                                         );
                             });
