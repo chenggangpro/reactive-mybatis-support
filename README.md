@@ -33,12 +33,12 @@ This project has met the general business usage scenarios, including:
 
 * ⚠️ `r2dbc-mysql` driver
   * when calling `Row#<T> T get(int index, Class<T> type)`,with jdbcType is `BIGINT` and javaType is `Long.class`
-  * the driver will occur an exception, because  the driver depth binding is `BitInteger.class`,and can't cast to `Long.class`
+  * the driver will occur an exception, because  the driver is deeply bound to `BitInteger.class`,and can't cast to `Long.class`
   * MySQL-JDBC driver and `r2dbc-mariadb` driver don't have this issue 
   * possible link  [r2dbc-mysql/issues/177](https://github.com/mirromutth/r2dbc-mysql/issues/177)
   * This might be fixed in the next release of the driver
 * ⚠️ `r2dbc-postgresql` driver
-  * when calling `Statement.bind(int index, Object value)`,the driver not recognized the `?` parameter placeholder, only recognized `$` parameter placeholder 
+  * when calling `Statement.bind(int index, Object value)`,the driver does not recognize the `?` parameter placeholder, only `$` parameter placeholder are recognized 
   * POSTGRESQL-JDBC driver does not have this problem.
   * possible link [r2dbc-postgresql/pull/468](https://github.com/pgjdbc/r2dbc-postgresql/pull/468)
   * This might be fixed in the next release of the driver
@@ -129,40 +129,50 @@ public class MyBatisGeneratorAction {
 * run the test ,then it will generate the dynamic code ,mapper interface ,mapper xml
 * also see `mybatis-reactive-generator`'s test cases
     
-* Using in spring environment
+#### Using in spring environment
 
-    * import dependency
+  * import dependency
+  
+  ```xml
+  <dependencies>
+      <dependency>
+          <groupId>org.mariadb</groupId>
+          <artifactId>r2dbc-mariadb</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-r2dbc</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>org.mybatis.dynamic-sql</groupId>
+          <artifactId>mybatis-dynamic-sql</artifactId>
+          <version>${latest.version}</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>pro.chenggang</groupId>
+          <artifactId>mybatis-r2dbc-spring</artifactId>
+          <version>${latest.version}</version>
+      </dependency>
+  </dependencies>
+  
+  ```
+  
+  * then use in project as usual ,also support `@Transaction` and `TransactionalOperator`.
+  * other details sees the `mybatis-r2dbc-spring`'s test cases,the test case include mapper tests and service tests.
+  * before run the `mybatis-r2dbc-spring`'s test cases ,you should execute `test_prepare.sql` in the test resources.
+  * spring-boot-test is not support `@Transaction` in tests ,link [Spring Issue](https://github.com/spring-projects/spring-framework/issues/24226)
+  
+  * customize `ConnectionOptions`
     
-    ```xml
-    <dependencies>
-        <dependency>
-            <groupId>org.mariadb</groupId>
-            <artifactId>r2dbc-mariadb</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>org.springframework.boot</groupId>
-          <artifactId>spring-boot-starter-data-r2dbc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.mybatis.dynamic-sql</groupId>
-            <artifactId>mybatis-dynamic-sql</artifactId>
-            <version>${latest.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>pro.chenggang</groupId>
-            <artifactId>mybatis-r2dbc-spring</artifactId>
-            <version>${latest.version}</version>
-        </dependency>
-    </dependencies>
-    
+    ```java
+    @Bean
+    public ConnectionFactoryOptionsCustomizer connectionFactoryOptionsCustomizer(){
+        return connectionFactoryOptions -> connectionFactoryOptions.mutate()
+                .option(Option.valueOf("name"),"value")
+                .build();
+    }
     ```
-    
-    * then use in project as usual ,also support `@Transaction` and `TransactionalOperator`.
-    * other details sees the `mybatis-r2dbc-spring`'s test cases,the test case include mapper tests and service tests.
-    * before run the `mybatis-r2dbc-spring`'s test cases ,you should execute `test_prepare.sql` in the test resources.
-    * spring-boot-test is not support `@Transaction` in tests ,link [Spring Issue](https://github.com/spring-projects/spring-framework/issues/24226)
-    
 
 ##### Using without mybatis-dynamic-sql
 
@@ -191,5 +201,7 @@ public class MyBatisGeneratorAction {
 
 #### Reference
 
-* 1. [linux-china/mybatis-r2dbc](https://github.com/linux-china/mybatis-r2dbc)
-* 2. [DefaultDatabaseClient](https://github.com/spring-projects/spring-data-r2dbc/blob/main/src/main/java/org/springframework/data/r2dbc/core/DefaultDatabaseClient.java)
+* 1. [mybatis/mybatis3](https://github.com/mybatis/mybatis-3)
+* 2. [mybatis/mybatis-dynamic-sql](https://github.com/mybatis/mybatis-dynamic-sql)
+* 3. [linux-china/mybatis-r2dbc](https://github.com/linux-china/mybatis-r2dbc)
+* 4. [DefaultDatabaseClient](https://github.com/spring-projects/spring-data-r2dbc/blob/main/src/main/java/org/springframework/data/r2dbc/core/DefaultDatabaseClient.java)
