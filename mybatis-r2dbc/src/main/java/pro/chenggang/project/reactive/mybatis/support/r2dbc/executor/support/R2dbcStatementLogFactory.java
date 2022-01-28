@@ -63,7 +63,7 @@ public class R2dbcStatementLogFactory {
 
     /**
      * get all r2dbc statement logs
-     * @return unmodifiable Map<String,R2dbcStatementLog>
+     * @return unmodifiable {@code Map<String,R2dbcStatementLog>}
      */
     public Map<String,R2dbcStatementLog> getAllR2dbcStatementLog(){
         return Collections.unmodifiableMap(this.r2dbcStatementLogContainer);
