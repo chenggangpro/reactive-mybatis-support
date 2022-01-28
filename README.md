@@ -17,7 +17,7 @@ This project has met the general business usage scenarios, including:
 * Aimed to adapt mybatis to reactive project (aka WebFlux/Reactor3)
 * `mybatis-r2dbc` Base on [linux-china/mybatis-r2dbc](https://github.com/linux-china/mybatis-r2dbc) and `mybatis3`'s original source code
 * Using `mybatis-generator` adapt `mybatis-dynamic-sql` to  reactive project
-* Support SpringBoot AutoConfiguration,AutoMapperScan and so on.
+* Support SpringBoot AutoConfiguration, `@R2dbcMapperScan`/`@R2dbcMapperScans` for scan `@Mapper`, Spring XML bean config .
 * Support Spring's Transaction.
 * Unsupported mybatis3 feature:
     * ❌ 1 . mybatis-plugin
@@ -147,7 +147,6 @@ public class MyBatisGeneratorAction {
           <groupId>org.mybatis.dynamic-sql</groupId>
           <artifactId>mybatis-dynamic-sql</artifactId>
           <version>${latest.version}</version>
-          <scope>test</scope>
       </dependency>
       <dependency>
           <groupId>pro.chenggang</groupId>
@@ -167,12 +166,24 @@ public class MyBatisGeneratorAction {
     
     ```java
     @Bean
-    public ConnectionFactoryOptionsCustomizer connectionFactoryOptionsCustomizer(){
-        return connectionFactoryOptions -> connectionFactoryOptions.mutate()
-                .option(Option.valueOf("name"),"value")
-                .build();
+    public ConnectionFactoryOptionsCustomizer connectionFactoryOptionsCustomizer() {
+        return connectionFactoryOptionsBuilder -> connectionFactoryOptionsBuilder
+                .option(Option.valueOf("name"), "value");
     }
     ```
+    
+  * customize `R2dbcMybatisConfiguration`
+    
+    ```java
+    @Bean
+    public R2dbcMybatisConfigurationCustomizer r2dbcMybatisConfigurationCustomizer() {
+        return r2dbcMybatisConfiguration -> r2dbcMybatisConfiguration.setLogPrefix("mybatis-log");
+    }
+    ```
+  * custom mapper scan
+
+    * Original `@MapperScan` is replaced by `@R2dbcMapperScan`
+    * Original `@MapperScans` is replaced by `@R2dbcMapperScans`
 
 ##### Using without mybatis-dynamic-sql
 

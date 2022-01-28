@@ -15,8 +15,7 @@ public interface ConnectionFactoryOptionsCustomizer {
     /**
      * customize ConnectionFactoryOptions
      *
-     * @param connectionFactoryOptions the original ConnectionFactoryOptions
-     * @return new ConnectionFactoryOptions
+     * @param connectionFactoryOptionsBuilder the original ConnectionFactoryOptions.Builder
      */
-    ConnectionFactoryOptions customize(ConnectionFactoryOptions connectionFactoryOptions);
+    void customize(ConnectionFactoryOptions.Builder connectionFactoryOptionsBuilder);
 }

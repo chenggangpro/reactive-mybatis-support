@@ -1,4 +1,4 @@
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.mapper;
 
 import org.apache.ibatis.executor.ErrorContext;
 import org.slf4j.Logger;
@@ -20,9 +20,9 @@ public class R2dbcMapperFactoryBean<T> implements FactoryBean<T>, InitializingBe
 
     private static final Logger log = LoggerFactory.getLogger(R2dbcMapperFactoryBean.class);
 
-    private Class<T> mapperInterface;
+    protected Class<T> mapperInterface;
 
-    private ReactiveSqlSessionFactory reactiveSqlSessionFactory;
+    protected ReactiveSqlSessionFactory reactiveSqlSessionFactory;
 
     /**
      * Instantiates a new r2dbc mapper factory bean.
