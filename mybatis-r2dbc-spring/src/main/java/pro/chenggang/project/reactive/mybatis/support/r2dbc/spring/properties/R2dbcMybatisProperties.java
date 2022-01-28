@@ -5,9 +5,11 @@ import lombok.Setter;
 import lombok.ToString;
 import org.apache.ibatis.scripting.LanguageDriver;
 import org.apache.ibatis.type.TypeHandler;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -78,6 +80,12 @@ public class R2dbcMybatisProperties {
      * The default Enum TypeHandler class
      */
     private Class<? extends TypeHandler<?>> defaultEnumTypeHandler;
+
+    /**
+     * A Configuration object for customize default settings.
+     */
+    @NestedConfigurationProperty
+    private R2dbcMybatisConfiguration configuration;
 
     public Resource[] resolveMapperLocations() {
         return Stream.of(Optional.ofNullable(this.mapperLocations).orElse(new String[0]))

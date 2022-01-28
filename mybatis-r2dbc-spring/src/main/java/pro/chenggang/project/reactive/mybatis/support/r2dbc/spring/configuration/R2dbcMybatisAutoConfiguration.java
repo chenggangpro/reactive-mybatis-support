@@ -168,7 +168,9 @@ public class R2dbcMybatisAutoConfiguration {
                                                    ObjectProvider<R2dbcMybatisConfigurationCustomizer> configurationCustomizerProvider,
                                                    ObjectProvider<R2dbcTypeHandlerAdapter<?>> r2dbcTypeHandlerAdapterProvider,
                                                    ObjectProvider<LanguageDriver> languageDriversProvider) throws Exception {
-        R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
+        R2dbcMybatisConfiguration r2dbcMybatisConfiguration = Optional
+                .ofNullable(r2dbcMybatisProperties.getConfiguration())
+                .orElse(new R2dbcMybatisConfiguration());
         r2dbcMybatisConfiguration.setVfsImpl(SpringBootVFS.class);
         if (r2dbcMybatisProperties.getConfigurationProperties() != null) {
             r2dbcMybatisConfiguration.setVariables(r2dbcMybatisProperties.getConfigurationProperties());

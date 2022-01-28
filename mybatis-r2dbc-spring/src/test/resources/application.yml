@@ -5,7 +5,8 @@ server:
 r2dbc:
   mybatis:
     mapper-locations: classpath:mapper/*.xml
-    map-underscore-to-camel-case: true
+    configuration:
+      map-underscore-to-camel-case: true
 spring:
   r2dbc:
     mybatis:
