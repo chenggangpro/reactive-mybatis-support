@@ -162,7 +162,7 @@ public class MyBatisGeneratorAction {
   * before run the `mybatis-r2dbc-spring`'s test cases ,you should execute `test_prepare.sql` in the test resources.
   * spring-boot-test is not support `@Transaction` in tests ,link [Spring Issue](https://github.com/spring-projects/spring-framework/issues/24226)
   
-  * customize `ConnectionOptions`
+  * customize `ConnectionFactoryOptions`
     
     ```java
     @Bean
@@ -182,8 +182,8 @@ public class MyBatisGeneratorAction {
     ```
   * custom mapper scan
 
-    * Original `@MapperScan` is replaced by `@R2dbcMapperScan`
-    * Original `@MapperScans` is replaced by `@R2dbcMapperScans`
+    * Original `@MapperScan` can be replaced with `@R2dbcMapperScan`
+    * Original `@MapperScans` can be replaced with `@R2dbcMapperScans`
 
 ##### Using without mybatis-dynamic-sql
 
