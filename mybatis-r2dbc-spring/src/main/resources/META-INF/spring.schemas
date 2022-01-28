@@ -1,0 +1,2 @@
+http\://mybatis.org/schema/mybatis-spring-1.2.xsd=pro/chenggang/project/reactive/mybatis/support/r2dbc/spring/xml/mybatis-spring.xsd
+http\://mybatis.org/schema/mybatis-spring.xsd=pro/chenggang/project/reactive/mybatis/support/r2dbc/spring/xml/mybatis-spring.xsd
