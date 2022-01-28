@@ -1,0 +1,1 @@
+http\://mybatis.org/schema/mybatis-spring=pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.xml.NamespaceHandler

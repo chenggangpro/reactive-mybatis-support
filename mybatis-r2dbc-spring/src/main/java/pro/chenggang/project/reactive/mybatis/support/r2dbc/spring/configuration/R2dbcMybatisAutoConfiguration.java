@@ -7,26 +7,44 @@ import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import io.r2dbc.spi.ValidationDepth;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.executor.ErrorContext;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.scripting.LanguageDriver;
 import org.apache.ibatis.type.TypeHandler;
+import org.mybatis.spring.boot.autoconfigure.MybatisLanguageDriverAutoConfiguration;
 import org.mybatis.spring.boot.autoconfigure.SpringBootVFS;
+import org.mybatis.spring.mapper.MapperScannerConfigurer;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.NestedIOException;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.ClassMetadata;
 import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
@@ -42,18 +60,21 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFa
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.annotation.R2dbcMapperScan;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.executor.SpringReactiveMybatisExecutor;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.mapper.R2dbcMapperFactoryBean;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.mapper.R2dbcMapperScannerConfigurer;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcMybatisConnectionFactoryProperties;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcMybatisProperties;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.ConnectionFactoryOptionsCustomizer;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.R2dbcAutoConfiguredMapperScannerRegistrar;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.R2dbcMapperScannerRegistrar;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.R2dbcMybatisConfigurationCustomizer;
 
+import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -71,7 +92,7 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
 @Slf4j
 @Configuration
 @AutoConfigureBefore(DataSourceAutoConfiguration.class)
-@Import({R2dbcAutoConfiguredMapperScannerRegistrar.class, R2dbcMapperScannerRegistrar.class})
+@AutoConfigureAfter({MybatisLanguageDriverAutoConfiguration.class})
 @ConditionalOnClass(ConnectionFactory.class)
 public class R2dbcMybatisAutoConfiguration {
 
@@ -102,13 +123,14 @@ public class R2dbcMybatisAutoConfiguration {
         String determineConnectionFactoryUrl = r2DbcMybatisConnectionFactoryProperties.determineConnectionFactoryUrl();
         Assert.notNull(determineConnectionFactoryUrl, "R2DBC Connection URL must not be null");
         ConnectionFactoryOptions connectionFactoryOptions = ConnectionFactoryOptions.parse(determineConnectionFactoryUrl);
+        //ConnectionFactoryOptionsCustomizer
         List<ConnectionFactoryOptionsCustomizer> connectionFactoryOptionsCustomizers = connectionFactoryOptionsCustomizerProvider
                 .orderedStream()
                 .collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(connectionFactoryOptionsCustomizers)) {
-            for (ConnectionFactoryOptionsCustomizer connectionFactoryOptionsCustomizer : connectionFactoryOptionsCustomizers) {
-                connectionFactoryOptions = connectionFactoryOptionsCustomizer.customize(connectionFactoryOptions);
-            }
+            ConnectionFactoryOptions.Builder builder = connectionFactoryOptions.mutate();
+            connectionFactoryOptionsCustomizers.forEach(connectionFactoryOptionsCustomizer -> connectionFactoryOptionsCustomizer.customize(builder));
+            connectionFactoryOptions = builder.build();
         }
         ConnectionFactory connectionFactory = ConnectionFactories.get(connectionFactoryOptions);
         if (connectionFactory instanceof ConnectionPool) {
@@ -132,7 +154,7 @@ public class R2dbcMybatisAutoConfiguration {
             builder.validationDepth(ValidationDepth.LOCAL);
         }
         ConnectionPool connectionPool = new ConnectionPool(builder.build());
-        log.info("Initial Connection Pool Bean Success");
+        log.info("Initialize Connection Pool Success");
         return connectionPool;
     }
 
@@ -294,4 +316,90 @@ public class R2dbcMybatisAutoConfiguration {
                 .build();
     }
 
+    /**
+     * This will just scan the same base package as Spring Boot does. If you want more power, you can explicitly use
+     * {@link R2dbcMapperScan} but this will get typed mappers working correctly, out-of-the-box,
+     * similar to using Spring Data JPA repositories.
+     */
+    public static class AutoConfiguredMapperScannerRegistrar implements BeanFactoryAware, EnvironmentAware, ImportBeanDefinitionRegistrar {
+
+        private BeanFactory beanFactory;
+        private Environment environment;
+
+        @Override
+        public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+
+            if (!AutoConfigurationPackages.has(this.beanFactory)) {
+                log.debug("Could not determine auto-configuration package, automatic mapper scanning disabled.");
+                return;
+            }
+
+            log.debug("Searching for mappers annotated with @Mapper");
+
+            List<String> packages = AutoConfigurationPackages.get(this.beanFactory);
+            if (log.isDebugEnabled()) {
+                packages.forEach(pkg -> log.debug("Using auto-configuration base package '{}'", pkg));
+            }
+
+            BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(R2dbcMapperScannerConfigurer.class);
+            builder.addPropertyValue("processPropertyPlaceHolders", true);
+            builder.addPropertyValue("annotationClass", Mapper.class);
+            builder.addPropertyValue("basePackage", StringUtils.collectionToCommaDelimitedString(packages));
+            BeanWrapper beanWrapper = new BeanWrapperImpl(R2dbcMapperScannerConfigurer.class);
+            Set<String> propertyNames = Stream.of(beanWrapper.getPropertyDescriptors()).map(PropertyDescriptor::getName)
+                    .collect(Collectors.toSet());
+            if (propertyNames.contains("lazyInitialization")) {
+                // Need to mybatis-spring 2.0.2+
+                builder.addPropertyValue("lazyInitialization", "${mybatis.lazy-initialization:false}");
+            }
+            if (propertyNames.contains("defaultScope")) {
+                // Need to mybatis-spring 2.0.6+
+                builder.addPropertyValue("defaultScope", "${mybatis.mapper-default-scope:}");
+            }
+
+            // for spring-native
+            boolean injectSqlSession = environment.getProperty("mybatis.inject-sql-session-on-mapper-scan", Boolean.class,
+                    Boolean.TRUE);
+            if (injectSqlSession && this.beanFactory instanceof ListableBeanFactory) {
+                ListableBeanFactory listableBeanFactory = (ListableBeanFactory) this.beanFactory;
+                Optional.ofNullable(getBeanNameForType(ReactiveSqlSessionFactory.class, listableBeanFactory))
+                        .ifPresent(s -> builder.addPropertyValue("sqlSessionFactoryBeanName", s));
+            }
+            builder.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+
+            registry.registerBeanDefinition(MapperScannerConfigurer.class.getName(), builder.getBeanDefinition());
+        }
+
+        @Override
+        public void setBeanFactory(BeanFactory beanFactory) {
+            this.beanFactory = beanFactory;
+        }
+
+        @Override
+        public void setEnvironment(Environment environment) {
+            this.environment = environment;
+        }
+
+        private String getBeanNameForType(Class<?> type, ListableBeanFactory factory) {
+            String[] beanNames = factory.getBeanNamesForType(type);
+            return beanNames.length > 0 ? beanNames[0] : null;
+        }
+
+    }
+
+    /**
+     * If mapper registering configuration or mapper scanning configuration not present, this configuration allow to scan
+     * mappers based on the same component-scanning path as Spring Boot itself.
+     */
+    @Configuration
+    @Import(AutoConfiguredMapperScannerRegistrar.class)
+    @ConditionalOnMissingBean({R2dbcMapperFactoryBean.class, R2dbcMapperScannerConfigurer.class})
+    public static class R2dbcMapperScannerRegistrarNotFoundConfiguration implements InitializingBean {
+
+        @Override
+        public void afterPropertiesSet() {
+            log.debug("Not found configuration for registering mapper bean using @R2dbcMapperScan, R2dbcMapperFactoryBean and R2dbcMapperScannerConfigurer.");
+        }
+
+    }
 }
