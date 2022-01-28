@@ -64,7 +64,7 @@
         <blockhound.version>1.0.6.RELEASE</blockhound.version>
         <junit.version>4.13.2</junit.version>
         <junit-jupiter.version>5.8.2</junit-jupiter.version>
-        <assertj.version>3.19.0</assertj.version>
+        <assertj.version>3.22.0</assertj.version>
         <byte-buddy.version>1.12.7</byte-buddy.version>
     </properties>
 
