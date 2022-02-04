@@ -50,7 +50,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
         <reactor-bom.version>2020.0.15</reactor-bom.version>
-        <r2dbc-bom.version>Arabba-SR12</r2dbc-bom.version>
+        <r2dbc-bom.version>Borca-RELEASE</r2dbc-bom.version>
         <mybatis.version>3.5.9</mybatis.version>
         <mybatis-spring.version>2.0.6</mybatis-spring.version>
         <mybatis-freemarker.version>1.2.3</mybatis-freemarker.version>
