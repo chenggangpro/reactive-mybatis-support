@@ -21,9 +21,9 @@ import java.util.stream.Stream;
  * @author Gang Cheng
  * @version 1.0.0
  */
-public class DelegateR2DbcResultRowDataHandler implements InvocationHandler {
+public class DelegateR2dbcResultRowDataHandler implements InvocationHandler {
 
-    private static final Log log = LogFactory.getLog(DelegateR2DbcResultRowDataHandler.class);
+    private static final Log log = LogFactory.getLog(DelegateR2dbcResultRowDataHandler.class);
     private final Set<Class<?>> notSupportedDataTypes;
     private final Map<Class<?>, R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapters;
     private TypeHandler delegatedTypeHandler;
@@ -36,7 +36,7 @@ public class DelegateR2DbcResultRowDataHandler implements InvocationHandler {
      * @param notSupportedDataTypes    the not supported data types
      * @param r2dbcTypeHandlerAdapters the R2dbc type handler adapters
      */
-    public DelegateR2DbcResultRowDataHandler(Set<Class<?>> notSupportedDataTypes,
+    public DelegateR2dbcResultRowDataHandler(Set<Class<?>> notSupportedDataTypes,
                                              Map<Class<?>, R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapters) {
         this.notSupportedDataTypes = notSupportedDataTypes;
         this.r2dbcTypeHandlerAdapters = r2dbcTypeHandlerAdapters;

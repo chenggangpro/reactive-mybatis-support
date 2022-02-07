@@ -12,7 +12,7 @@ import org.apache.ibatis.util.MapUtil;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowResultWrapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.TypeHandleContext;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.DelegateR2DbcResultRowDataHandler;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.DelegateR2dbcResultRowDataHandler;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
 import reactor.core.publisher.Mono;
 
@@ -244,7 +244,7 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
         private TypeHandler initDelegateTypeHandler() {
             return ProxyInstanceFactory.newInstanceOfInterfaces(
                     TypeHandler.class,
-                    () -> new DelegateR2DbcResultRowDataHandler(
+                    () -> new DelegateR2dbcResultRowDataHandler(
                             this.r2DbcMybatisConfiguration.getNotSupportedDataTypes(),
                             this.r2DbcMybatisConfiguration.getR2dbcTypeHandlerAdapterRegistry().getR2dbcTypeHandlerAdapters()
                     ),
