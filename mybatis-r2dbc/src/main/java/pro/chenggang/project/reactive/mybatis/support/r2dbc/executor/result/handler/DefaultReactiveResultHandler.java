@@ -778,7 +778,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
     private TypeHandler initDelegateTypeHandler() {
         return ProxyInstanceFactory.newInstanceOfInterfaces(
                 TypeHandler.class,
-                () -> new DelegateR2DbcResultRowDataHandler(
+                () -> new DelegateR2dbcResultRowDataHandler(
                         this.r2DbcMybatisConfiguration.getNotSupportedDataTypes(),
                         this.r2DbcMybatisConfiguration.getR2dbcTypeHandlerAdapterRegistry().getR2dbcTypeHandlerAdapters()
                 ),
