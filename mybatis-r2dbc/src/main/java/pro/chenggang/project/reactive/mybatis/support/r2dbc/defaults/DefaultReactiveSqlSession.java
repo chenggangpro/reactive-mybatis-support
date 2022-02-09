@@ -88,7 +88,8 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
     public <E> Flux<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
         MappedStatement mappedStatement = configuration.getMappedStatement(statement);
         return reactiveMybatisExecutor.<E>query(mappedStatement, this.wrapCollection(parameter), rowBounds)
-                .contextWrite(context -> initReactiveExecutorContext(context, this.configuration.getR2dbcStatementLog(mappedStatement)));
+                .contextWrite(context -> initReactiveExecutorContext(context, this.configuration.getR2dbcStatementLog(mappedStatement)))
+                .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
     }
 
     @Override
@@ -100,7 +101,8 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
     public Mono<Integer> update(String statement, Object parameter) {
         MappedStatement mappedStatement = configuration.getMappedStatement(statement);
         return reactiveMybatisExecutor.update(mappedStatement, this.wrapCollection(parameter))
-                .contextWrite(context -> initReactiveExecutorContext(context, this.configuration.getR2dbcStatementLog(mappedStatement)));
+                .contextWrite(context -> initReactiveExecutorContext(context, this.configuration.getR2dbcStatementLog(mappedStatement)))
+                .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
     }
 
     @Override
@@ -111,13 +113,15 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
     @Override
     public Mono<Void> commit(boolean force) {
         return reactiveMybatisExecutor.commit(force)
-                .contextWrite(this::initReactiveExecutorContext);
+                .contextWrite(this::initReactiveExecutorContext)
+                .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
     }
 
     @Override
     public Mono<Void> rollback(boolean force) {
         return reactiveMybatisExecutor.rollback(force)
-                .contextWrite(this::initReactiveExecutorContext);
+                .contextWrite(this::initReactiveExecutorContext)
+                .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
     }
 
     @Override
@@ -133,7 +137,8 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
     @Override
     public Mono<Void> close() {
         return reactiveMybatisExecutor.close(false)
-                .contextWrite(this::initReactiveExecutorContext);
+                .contextWrite(this::initReactiveExecutorContext)
+                .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
     }
 
     private Object wrapCollection(final Object object) {

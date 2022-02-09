@@ -50,7 +50,8 @@ public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOper
                 ).onErrorResume(ex -> this.reactiveSqlSession.close()
                         .then(Mono.defer(() -> Mono.error(ex)))
                 ))
-                .contextWrite(mybatisReactiveContextManager::initReactiveExecutorContext);
+                .contextWrite(mybatisReactiveContextManager::initReactiveExecutorContext)
+                .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
     }
 
     @Override
@@ -68,7 +69,8 @@ public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOper
                         .then(Mono.defer(this.reactiveSqlSession::close))
                         .then(Mono.defer(() -> Mono.error(ex)))
                 ))
-                .contextWrite(mybatisReactiveContextManager::initReactiveExecutorContext);
+                .contextWrite(mybatisReactiveContextManager::initReactiveExecutorContext)
+                .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
     }
 
     @Override
@@ -86,7 +88,8 @@ public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOper
                         .then(Mono.defer(this.reactiveSqlSession::close))
                         .then(Mono.defer(() -> Mono.error(ex)))
                 ))
-                .contextWrite(mybatisReactiveContextManager::initReactiveExecutorContext);
+                .contextWrite(mybatisReactiveContextManager::initReactiveExecutorContext)
+                .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
     }
 
     @Override
@@ -101,7 +104,8 @@ public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOper
                 ).onErrorResume(ex -> this.reactiveSqlSession.close()
                         .then(Mono.defer(() -> Mono.error(ex)))
                 ))
-                .contextWrite(mybatisReactiveContextManager::initReactiveExecutorContext);
+                .contextWrite(mybatisReactiveContextManager::initReactiveExecutorContext)
+                .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
     }
 
     @Override
@@ -119,7 +123,8 @@ public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOper
                         .then(Mono.defer(this.reactiveSqlSession::close))
                         .then(Mono.defer(() -> Mono.error(ex)))
                 ))
-                .contextWrite(mybatisReactiveContextManager::initReactiveExecutorContext);
+                .contextWrite(mybatisReactiveContextManager::initReactiveExecutorContext)
+                .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
     }
 
     @Override
@@ -137,6 +142,7 @@ public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOper
                         .then(Mono.defer(this.reactiveSqlSession::close))
                         .then(Mono.defer(() -> Mono.error(ex)))
                 ))
-                .contextWrite(mybatisReactiveContextManager::initReactiveExecutorContext);
+                .contextWrite(mybatisReactiveContextManager::initReactiveExecutorContext)
+                .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
     }
 }

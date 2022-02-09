@@ -5,6 +5,9 @@ import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.Configuration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderDialect;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderDialectRegistry;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.defaults.DefaultPlaceholderDialectRegistry;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.R2dbcStatementLog;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.R2dbcStatementLogFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
@@ -28,6 +31,7 @@ public class R2dbcMybatisConfiguration extends Configuration {
     private final R2dbcMapperRegistry r2dbcMapperRegistry = new R2dbcMapperRegistry(this);
     private final R2dbcTypeHandlerAdapterRegistry r2dbcTypeHandlerAdapterRegistry = new R2dbcTypeHandlerAdapterRegistry(this);
     private final R2dbcStatementLogFactory r2dbcStatementLogFactory = new R2dbcStatementLogFactory(this);
+    private final PlaceholderDialectRegistry placeholderDialectRegistry = new DefaultPlaceholderDialectRegistry();
     private final Set<Class<?>> notSupportedDataTypes = new HashSet<>();
     private ConnectionFactory connectionFactory;
 
@@ -176,5 +180,23 @@ public class R2dbcMybatisConfiguration extends Configuration {
      */
     public R2dbcStatementLogFactory getR2dbcStatementLogFactory() {
         return r2dbcStatementLogFactory;
+    }
+
+    /**
+     * Add placeholder dialect.
+     *
+     * @param placeholderDialect the placeholder dialect
+     */
+    public void addPlaceholderDialect(PlaceholderDialect placeholderDialect){
+        this.placeholderDialectRegistry.register(placeholderDialect);
+    }
+
+    /**
+     * Get placeholder dialect registry
+     *
+     * @return the placeholder dialect registry
+     */
+    public PlaceholderDialectRegistry getPlaceholderDialectRegistry(){
+        return this.placeholderDialectRegistry;
     }
 }
