@@ -9,6 +9,7 @@ import org.apache.ibatis.executor.parameter.ParameterHandler;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
+import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.RowBounds;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextManager;
@@ -19,6 +20,8 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.NoKeyR2
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.R2dbcKeyGenerator;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.SelectR2dbcKeyGenerator;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.parameter.DelegateR2dbcParameterHandler;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderFormatter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.defaults.DefaultPlaceholderFormatter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowResultWrapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.DefaultReactiveResultHandler;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.ReactiveResultHandler;
@@ -50,12 +53,18 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
     private static final Log log = LogFactory.getLog(DefaultReactiveMybatisExecutor.class);
 
     /**
+     * The Placeholder formatter.
+     */
+    protected PlaceholderFormatter placeholderFormatter;
+
+    /**
      * Instantiates a new Default reactive mybatis executor.
      *
      * @param configuration the configuration
      */
     public DefaultReactiveMybatisExecutor(R2dbcMybatisConfiguration configuration) {
         super(configuration, configuration.getConnectionFactory());
+        this.placeholderFormatter = new DefaultPlaceholderFormatter(configuration.getPlaceholderDialectRegistry());
     }
 
     @Override
@@ -146,7 +155,9 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
         r2dbcStatementLog.logSql(boundSql);
         StatementHandler handler = configuration.newStatementHandler(null, mappedStatement, parameter, rowBounds, null, null);
         ParameterHandler parameterHandler = handler.getParameterHandler();
-        Statement statement = connection.createStatement(boundSql);
+        BoundSql originalBoundSql = mappedStatement.getBoundSql(parameter);
+        String formattedSql = this.placeholderFormatter.formatPlaceholder(this.connectionFactory,originalBoundSql);
+        Statement statement = connection.createStatement(formattedSql);
         if (returnedGeneratedKeys) {
             statement.returnGeneratedValues(mappedStatement.getKeyColumns());
         }
