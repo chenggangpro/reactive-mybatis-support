@@ -10,7 +10,8 @@ This project has met the general business usage scenarios, including:
 * 4 . Returning a generated key
 * 5 . generated key by nested query (`@SelectKey`/`<selectKey>`)
 * 6 . Manual transaction operation
-* 7 . SpringBoot transaction Integration
+* 7 . Adaptation of parameter binding placeholders for different r2dbc drivers
+* 8 . SpringBoot transaction Integration
 
 #### Instruction
 
@@ -36,11 +37,6 @@ This project has met the general business usage scenarios, including:
   * the driver will occur an exception, because  the driver is deeply bound to `BitInteger.class`,and can't cast to `Long.class`
   * MySQL-JDBC driver and `r2dbc-mariadb` driver don't have this issue 
   * possible link  [r2dbc-mysql/issues/177](https://github.com/mirromutth/r2dbc-mysql/issues/177)
-  * This might be fixed in the next release of the driver
-* ⚠️ `r2dbc-postgresql` driver
-  * when calling `Statement.bind(int index, Object value)`,the driver does not recognize the `?` parameter placeholder, only `$` parameter placeholder are recognized 
-  * POSTGRESQL-JDBC driver does not have this problem.
-  * possible link [r2dbc-postgresql/pull/468](https://github.com/pgjdbc/r2dbc-postgresql/pull/468)
   * This might be fixed in the next release of the driver
 
 #### Maven Central
