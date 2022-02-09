@@ -2,9 +2,10 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholde
 
 import io.r2dbc.spi.ConnectionFactory;
 import org.apache.ibatis.mapping.BoundSql;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContextAttribute;
 
 /**
- * The interface Placeholder formatter.
+ * The Placeholder formatter.
  *
  * @author Gang Cheng
  * @version 1.0.5
@@ -13,11 +14,13 @@ import org.apache.ibatis.mapping.BoundSql;
 public interface PlaceholderFormatter {
 
     /**
-     * Format placeholder string.
+     * Replace sql placeholder string.
      *
-     * @param connectionFactory the connection factory
-     * @param boundSql          the bound sql
+     * @param connectionFactory                the connection factory
+     * @param mappedStatementId                the mapped statement id
+     * @param boundSql                         the bound sql
+     * @param reactiveExecutorContextAttribute the reactive executor context attribute
      * @return the string
      */
-    String formatPlaceholder(ConnectionFactory connectionFactory, BoundSql boundSql);
+    String replaceSqlPlaceholder(ConnectionFactory connectionFactory, String mappedStatementId, BoundSql boundSql, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute);
 }

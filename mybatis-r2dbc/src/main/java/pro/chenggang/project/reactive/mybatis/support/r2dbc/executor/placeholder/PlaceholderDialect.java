@@ -1,8 +1,10 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder;
 
 import io.r2dbc.spi.ConnectionFactory;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContextAttribute;
 
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * Placeholder dialect
@@ -14,6 +16,16 @@ import java.util.Locale;
 public interface PlaceholderDialect {
 
     /**
+     * The constant PLACEHOLDER_DIALECT_NAME_ATTRIBUTE_KEY.
+     */
+    String PLACEHOLDER_DIALECT_NAME_ATTRIBUTE_KEY = "PLACEHOLDER_DIALECT_NAME_ATTRIBUTE_KEY";
+
+    /**
+     * The constant DEFAULT_PLACEHOLDER
+     */
+    String DEFAULT_PLACEHOLDER = "?";
+
+    /**
      * Dialect name.
      *
      * @return the dialect name
@@ -23,11 +35,18 @@ public interface PlaceholderDialect {
     /**
      * Supported boolean.
      *
-     * @param connectionFactory the connection factory
+     * @param connectionFactory                the connection factory
+     * @param reactiveExecutorContextAttribute the reactive executor context attribute
      * @return the boolean
      */
-    default boolean supported(ConnectionFactory connectionFactory) {
-        String name = connectionFactory.getMetadata().getName();
+    default boolean supported(ConnectionFactory connectionFactory, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute) {
+        String name = Optional.ofNullable(reactiveExecutorContextAttribute
+                        .getAttribute()
+                        .get(PLACEHOLDER_DIALECT_NAME_ATTRIBUTE_KEY)
+                )
+                .filter(value -> value instanceof String)
+                .map(String.class::cast)
+                .orElseGet(() -> connectionFactory.getMetadata().getName());
         return name.equalsIgnoreCase(this.name())
                 || name.toLowerCase(Locale.ENGLISH).contains(this.name().toLowerCase(Locale.ENGLISH));
     }
@@ -37,7 +56,9 @@ public interface PlaceholderDialect {
      *
      * @return the marker
      */
-    String getMarker();
+    default String getMarker() {
+        return DEFAULT_PLACEHOLDER;
+    }
 
     /**
      * Using index marker.

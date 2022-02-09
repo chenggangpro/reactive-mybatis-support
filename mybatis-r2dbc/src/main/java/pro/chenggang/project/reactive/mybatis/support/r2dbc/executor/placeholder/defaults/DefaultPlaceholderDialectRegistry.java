@@ -4,16 +4,19 @@ import io.r2dbc.spi.ConnectionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderDialect;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderDialectRegistry;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.dialect.H2PlaceholderDialect;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.dialect.SQLServerPlaceholderDialect;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.dialect.MariaDBPlaceholderDialect;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.dialect.MySQLPlaceholderDialect;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.dialect.OraclePlaceholderDialect;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.dialect.PostgreSQLPlaceholderDialect;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.dialect.SQLServerPlaceholderDialect;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContextAttribute;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
+
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderDialect.PLACEHOLDER_DIALECT_NAME_ATTRIBUTE_KEY;
 
 /**
  * Default placeholder dialect factory
@@ -25,32 +28,14 @@ import java.util.Set;
 public class DefaultPlaceholderDialectRegistry implements PlaceholderDialectRegistry {
 
     private final Map<String, PlaceholderDialect> placeholderDialects = new HashMap<>();
-    private final Set<String> ignorePlaceholderDialectNames = new HashSet<>();
 
     public DefaultPlaceholderDialectRegistry() {
+        this.register(new MySQLPlaceholderDialect());
+        this.register(new MariaDBPlaceholderDialect());
         this.register(new PostgreSQLPlaceholderDialect());
         this.register(new H2PlaceholderDialect());
         this.register(new OraclePlaceholderDialect());
         this.register(new SQLServerPlaceholderDialect());
-        this.initIgnorePlaceholderDialect();
-    }
-
-    /**
-     * init ignore placeholder dialect
-     */
-    private void initIgnorePlaceholderDialect() {
-        this.placeholderDialects.keySet()
-                .forEach(key -> {
-                    boolean isMySQL = key.equalsIgnoreCase("MySQL") || key.toLowerCase(Locale.ENGLISH).contains("mysql");
-                    if (!isMySQL) {
-                        this.ignorePlaceholderDialectNames.add("mysql");
-                        return;
-                    }
-                    boolean isMariaDB = key.equalsIgnoreCase("MariaDB") || key.toLowerCase(Locale.ENGLISH).contains("mariadb");
-                    if (!isMariaDB) {
-                        this.ignorePlaceholderDialectNames.add("mariadb");
-                    }
-                });
     }
 
     @Override
@@ -59,22 +44,19 @@ public class DefaultPlaceholderDialectRegistry implements PlaceholderDialectRegi
     }
 
     @Override
-    public Optional<PlaceholderDialect> getPlaceholderDialect(ConnectionFactory connectionFactory) {
-        String name = connectionFactory.getMetadata().getName();
-        boolean anyMatchIgnoreDialect = ignorePlaceholderDialectNames.stream()
-                .anyMatch(ignoreName -> name.equalsIgnoreCase(ignoreName)
-                        || name.toLowerCase(Locale.ENGLISH).contains(ignoreName)
-                );
-        if (anyMatchIgnoreDialect) {
-            return Optional.empty();
-        }
-        if (this.placeholderDialects.containsKey(name)) {
-            return Optional.of(this.placeholderDialects.get(name));
+    public Optional<PlaceholderDialect> getPlaceholderDialect(ConnectionFactory connectionFactory, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute) {
+        String name = Optional.ofNullable(reactiveExecutorContextAttribute.getAttribute().get(PLACEHOLDER_DIALECT_NAME_ATTRIBUTE_KEY))
+                .filter(value -> value instanceof String)
+                .map(String.class::cast)
+                .orElseGet(() -> connectionFactory.getMetadata().getName());
+        String lowerCaseName = name.toLowerCase(Locale.ENGLISH);
+        if (this.placeholderDialects.containsKey(lowerCaseName)) {
+            return Optional.of(this.placeholderDialects.get(lowerCaseName));
         }
         return this.placeholderDialects
                 .values()
                 .stream()
-                .filter(placeholderDialect -> placeholderDialect.supported(connectionFactory))
+                .filter(placeholderDialect -> placeholderDialect.supported(connectionFactory,reactiveExecutorContextAttribute))
                 .findFirst();
     }
 }

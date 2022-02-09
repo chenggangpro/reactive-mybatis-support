@@ -9,17 +9,22 @@ import org.apache.ibatis.util.MapUtil;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderDialect;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderDialectRegistry;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderFormatter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContextAttribute;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderDialect.DEFAULT_PLACEHOLDER;
+
 /**
  * Default placeholder formatter
+ *
  * @author Gang Cheng
  * @version 1.0.5
  * @since 1.0.5
@@ -38,16 +43,19 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
     }
 
     @Override
-    public String formatPlaceholder(ConnectionFactory connectionFactory, BoundSql boundSql) {
-        Optional<PlaceholderDialect> optionalPlaceholderDialect = placeholderDialectRegistry.getPlaceholderDialect(connectionFactory);
+    public String replaceSqlPlaceholder(ConnectionFactory connectionFactory, String mappedStatementId, BoundSql boundSql, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute) {
+        Optional<PlaceholderDialect> optionalPlaceholderDialect = placeholderDialectRegistry
+                .getPlaceholderDialect(connectionFactory, reactiveExecutorContextAttribute)
+                .filter(placeholderDialect -> !Objects.equals(placeholderDialect.getMarker(), DEFAULT_PLACEHOLDER));
         if (!optionalPlaceholderDialect.isPresent()) {
-            if(log.isTraceEnabled()){
+            if (log.isTraceEnabled()) {
                 log.trace("Placeholder dialect not found ,use original sql");
             }
             return boundSql.getSql();
         }
-        return MapUtil.computeIfAbsent(formattedSqlCache, boundSql.getSql(), sql -> this
-                .formatPlaceholderInternal(optionalPlaceholderDialect.get(), boundSql)
+        return MapUtil.computeIfAbsent(formattedSqlCache,
+                mappedStatementId,
+                statementId -> this.formatPlaceholderInternal(optionalPlaceholderDialect.get(), boundSql)
         );
     }
 
@@ -62,7 +70,7 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
         String sql = boundSql.getSql();
         List<Integer> placeholderIndexList = this.extractJdbcPlaceholderIndex(sql);
         if (placeholderIndexList.isEmpty()) {
-            if(log.isTraceEnabled()){
+            if (log.isTraceEnabled()) {
                 log.trace("Placeholder index not found ,use original sql");
             }
             return sql;
@@ -70,7 +78,7 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
         String marker = placeholderDialect.getMarker();
         int startIndex = placeholderDialect.startIndex();
         StringBuilder builder = new StringBuilder();
-        if(placeholderDialect.usingIndexMarker()){
+        if (placeholderDialect.usingIndexMarker()) {
             for (int i = 0; i < placeholderIndexList.size(); i++) {
                 Integer placeholderIndexValue = placeholderIndexList.get(i);
                 builder.append(sql, i == 0 ? 0 : placeholderIndexList.get(i - 1) + 1, placeholderIndexValue)
@@ -81,7 +89,7 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
                 builder.append(sql, placeholderIndexList.get(placeholderIndexList.size() - 1) + 1, sql.length());
             }
             String formattedSql = builder.toString();
-            if(log.isDebugEnabled()){
+            if (log.isDebugEnabled()) {
                 log.debug("Format placeholder based by index, with (" + placeholderDialect.getClass().getSimpleName() + ") => " + formattedSql);
             }
             return formattedSql;
@@ -98,7 +106,7 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
             builder.append(sql, placeholderIndexList.get(placeholderIndexList.size() - 1) + 1, sql.length());
         }
         String formattedSql = builder.toString();
-        if(log.isDebugEnabled()){
+        if (log.isDebugEnabled()) {
             log.debug("Format placeholder based on parameter name, with (" + placeholderDialect.getClass().getSimpleName() + ") => " + formattedSql);
         }
         return formattedSql;

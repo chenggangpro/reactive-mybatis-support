@@ -4,15 +4,21 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder
 
 /**
  * PostgreSQL placeholder dialect
+ *
  * @author Gang Cheng
- * @since 1.0.5
  * @version 1.0.5
+ * @since 1.0.5
  */
 public class PostgreSQLPlaceholderDialect implements PlaceholderDialect {
 
+    /**
+     * The dialect name
+     */
+    public static final String DIALECT_NAME = "PostgreSQL";
+
     @Override
     public String name() {
-        return "PostgreSQL";
+        return DIALECT_NAME;
     }
 
     @Override
