@@ -7,7 +7,7 @@
     <parent>
         <groupId>pro.chenggang</groupId>
         <artifactId>reactive-mybatis-support</artifactId>
-        <version>1.0.6.RELEASE</version>
+        <version>1.0.7-SNAPSHOT</version>
     </parent>
 
     <artifactId>mybatis-r2dbc</artifactId>
