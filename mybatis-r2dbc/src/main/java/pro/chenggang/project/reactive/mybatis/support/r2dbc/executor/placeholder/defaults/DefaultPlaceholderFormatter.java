@@ -43,18 +43,19 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
     }
 
     @Override
-    public String replaceSqlPlaceholder(ConnectionFactory connectionFactory, String mappedStatementId, BoundSql boundSql, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute) {
+    public String replaceSqlPlaceholder(ConnectionFactory connectionFactory, BoundSql boundSql, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute) {
         Optional<PlaceholderDialect> optionalPlaceholderDialect = placeholderDialectRegistry
                 .getPlaceholderDialect(connectionFactory, reactiveExecutorContextAttribute)
                 .filter(placeholderDialect -> !Objects.equals(placeholderDialect.getMarker(), DEFAULT_PLACEHOLDER));
+        String originalSql = boundSql.getSql();
         if (!optionalPlaceholderDialect.isPresent()) {
             if (log.isTraceEnabled()) {
                 log.trace("Placeholder dialect not found ,use original sql");
             }
-            return boundSql.getSql();
+            return originalSql;
         }
         return MapUtil.computeIfAbsent(formattedSqlCache,
-                mappedStatementId,
+                originalSql,
                 statementId -> this.formatPlaceholderInternal(optionalPlaceholderDialect.get(), boundSql)
         );
     }

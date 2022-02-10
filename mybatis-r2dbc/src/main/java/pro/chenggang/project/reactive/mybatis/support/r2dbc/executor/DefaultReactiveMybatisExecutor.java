@@ -160,7 +160,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
         StatementHandler handler = configuration.newStatementHandler(null, mappedStatement, parameter, rowBounds, null, null);
         ParameterHandler parameterHandler = handler.getParameterHandler();
         BoundSql originalBoundSql = mappedStatement.getBoundSql(parameter);
-        String formattedSql = this.placeholderFormatter.replaceSqlPlaceholder(this.connectionFactory, mappedStatement.getId(), originalBoundSql, reactiveExecutorContextAttribute);
+        String formattedSql = this.placeholderFormatter.replaceSqlPlaceholder(this.connectionFactory, originalBoundSql, reactiveExecutorContextAttribute);
         Statement statement = connection.createStatement(formattedSql);
         if (returnedGeneratedKeys) {
             statement.returnGeneratedValues(mappedStatement.getKeyColumns());

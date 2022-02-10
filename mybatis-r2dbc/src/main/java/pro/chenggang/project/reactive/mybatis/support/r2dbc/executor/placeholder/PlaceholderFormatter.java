@@ -17,10 +17,9 @@ public interface PlaceholderFormatter {
      * Replace sql placeholder string.
      *
      * @param connectionFactory                the connection factory
-     * @param mappedStatementId                the mapped statement id
      * @param boundSql                         the bound sql
      * @param reactiveExecutorContextAttribute the reactive executor context attribute
      * @return the string
      */
-    String replaceSqlPlaceholder(ConnectionFactory connectionFactory, String mappedStatementId, BoundSql boundSql, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute);
+    String replaceSqlPlaceholder(ConnectionFactory connectionFactory, BoundSql boundSql, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute);
 }
