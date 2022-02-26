@@ -12,6 +12,12 @@ This project has met the general business usage scenarios, including:
 * 6 . Manual transaction operation
 * 7 . Adaptation of parameter binding placeholders for different r2dbc drivers
 * 8 . SpringBoot transaction Integration
+* 9 . Support drivers:
+  * mysql
+  * h2
+  * mssql
+  * postgresql
+  * oracle
 
 #### Instruction
 
@@ -73,6 +79,7 @@ This project has met the general business usage scenarios, including:
   * h2
   * mssql
   * postgresql
+  * oracle
 
 ##### Using mybatis-dynamic-sql
 
