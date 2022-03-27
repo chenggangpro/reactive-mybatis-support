@@ -12,7 +12,7 @@ This project has met the general business usage scenarios, including:
 * 6 . Manual transaction operation
 * 7 . Adaptation of parameter binding placeholders for different r2dbc drivers
 * 8 . SpringBoot transaction Integration
-* 9 . Support drivers:
+* 9 . Supported drivers:
   * mysql
   * h2
   * mssql
@@ -21,9 +21,9 @@ This project has met the general business usage scenarios, including:
 
 #### Instruction
 
-* Aimed to adapt mybatis to reactive project (aka WebFlux/Reactor3)
-* `mybatis-r2dbc` Base on [linux-china/mybatis-r2dbc](https://github.com/linux-china/mybatis-r2dbc) and `mybatis3`'s original source code
-* Using `mybatis-generator` adapt `mybatis-dynamic-sql` to  reactive project
+* This project is aimed to adapt mybatis to reactive project (aka WebFlux/Reactor3)
+* `mybatis-r2dbc` module is based on [linux-china/mybatis-r2dbc](https://github.com/linux-china/mybatis-r2dbc) and `mybatis3`'s original source code
+* `mybatis-generator` module is used to adapt `mybatis-dynamic-sql` to reactive project
 * Support SpringBoot AutoConfiguration, `@R2dbcMapperScan`/`@R2dbcMapperScans` for scan `@Mapper`, Spring XML bean config .
 * Support Spring's Transaction.
 * Unsupported mybatis3 feature:
@@ -31,10 +31,10 @@ This project has met the general business usage scenarios, including:
     * ❌ 2 . multi resultSet and `resultOrdered = true` in mapper.XML
     * ❌ 3 . nested query with multi SQL
     * ⚠️ 4 . blocking java type (aka: InputStream .eg)
-* ⚠️ Mapper Method's return type only support `Flux<T>`/`Mono<T>`/`Mono<Void>`/`Flux<Void>`, and not supported `void`
-* Using Reactor's Context to implement Transaction
+* ⚠️ Mapper Method's return type only support `Flux<T>`/`Mono<T>`/`Mono<Void>`/`Flux<Void>`, and not support `void`
+* Using Reactor's Context and dynamic proxy to implement Transaction
 * More detail, please see source code and test suits, tests use MySQL database with `test-prepare.sql` schema setup
-* It has been piloted in a small scale within the company, and any bugs found will be updated at any time
+* It has been piloted in a small scale within my company, and any bugs found will be updated at any time
 
 #### ⚠️ Known issues
 
@@ -74,7 +74,7 @@ This project has met the general business usage scenarios, including:
 
 > [reactive-mybatis-support-examples](https://github.com/chenggangpro/reactive-mybatis-support-examples)
 
-* Distinguish different databases by `reactive-mybatis-support-examples`'s branch
+* The example distinguish different databases by `reactive-mybatis-support-examples`'s branch
   * mysql
   * h2
   * mssql
@@ -86,7 +86,7 @@ This project has met the general business usage scenarios, including:
 * Generate `mybatis-dynamic-sql` 
 
 > Note:
-> the generator based on `mybatis-generator-core` ,that cause generator rely on jdbc-driver
+> the generator is based on `mybatis-generator-core` ,therefor the generator is rely on `jdbc-driver`
 
 * import dependency
 
@@ -191,8 +191,8 @@ public class MyBatisGeneratorAction {
     ```
   * custom mapper scan
 
-    * Original `@MapperScan` can be replaced with `@R2dbcMapperScan`
-    * Original `@MapperScans` can be replaced with `@R2dbcMapperScans`
+    * Original `@MapperScan` is replaced with `@R2dbcMapperScan`
+    * Original `@MapperScans` is replaced with `@R2dbcMapperScans`
 
 ##### Using without mybatis-dynamic-sql
 
