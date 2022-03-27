@@ -4,17 +4,35 @@ import org.apache.commons.lang3.StringUtils;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
-import org.mybatis.generator.api.dom.java.*;
-import org.mybatis.generator.api.dom.xml.*;
+import org.mybatis.generator.api.dom.java.Field;
+import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
+import org.mybatis.generator.api.dom.java.Interface;
+import org.mybatis.generator.api.dom.java.JavaVisibility;
+import org.mybatis.generator.api.dom.java.Method;
+import org.mybatis.generator.api.dom.java.Parameter;
+import org.mybatis.generator.api.dom.java.TopLevelClass;
+import org.mybatis.generator.api.dom.xml.Attribute;
+import org.mybatis.generator.api.dom.xml.Document;
+import org.mybatis.generator.api.dom.xml.TextElement;
+import org.mybatis.generator.api.dom.xml.VisitableElement;
+import org.mybatis.generator.api.dom.xml.XmlElement;
 import org.mybatis.generator.codegen.mybatis3.ListUtilities;
 import org.mybatis.generator.internal.util.JavaBeansUtil;
 import org.mybatis.generator.runtime.dynamic.sql.elements.AbstractMethodGenerator;
 import org.mybatis.generator.runtime.dynamic.sql.elements.FragmentGenerator;
+import org.mybatis.generator.runtime.dynamic.sql.elements.MethodAndImports;
 import pro.chenggang.project.reactive.mybatis.support.generator.core.PropertiesHolder;
 import pro.chenggang.project.reactive.mybatis.support.generator.option.LombokConfig;
 import pro.chenggang.project.reactive.mybatis.support.generator.properties.GeneratorExtensionProperties;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -57,51 +75,83 @@ public class DynamicGenerateExtensionPlugin extends PluginAdapter {
             interfaze.addSuperInterface(commonSelectMapperType);
             interfaze.addImportedType(commonSelectMapperType);
         }
+        // remove original mybatis3's type
         interfaze.getImportedTypes().removeIf(item -> StringUtils.equals(item.getFullyQualifiedName(), "org.mybatis.dynamic.sql.update.UpdateDSL<org.mybatis.dynamic.sql.update.UpdateModel>"));
         interfaze.getImportedTypes().removeIf(item -> StringUtils.equals(item.getFullyQualifiedName(), "org.mybatis.dynamic.sql.util.mybatis3.MyBatis3Utils"));
+        interfaze.getImportedTypes().removeIf(item -> StringUtils.equals(item.getFullyQualifiedName(), "org.mybatis.dynamic.sql.util.mybatis3.CommonCountMapper"));
+        interfaze.getImportedTypes().removeIf(item -> StringUtils.equals(item.getFullyQualifiedName(), "org.mybatis.dynamic.sql.util.mybatis3.CommonDeleteMapper"));
+        interfaze.getImportedTypes().removeIf(item -> StringUtils.equals(item.getFullyQualifiedName(), "org.mybatis.dynamic.sql.util.mybatis3.CommonInsertMapper"));
+        interfaze.getImportedTypes().removeIf(item -> StringUtils.equals(item.getFullyQualifiedName(), "org.mybatis.dynamic.sql.util.mybatis3.CommonUpdateMapper"));
+        interfaze.getSuperInterfaceTypes().removeIf(item -> StringUtils.equals(item.getFullyQualifiedName(), "org.mybatis.dynamic.sql.util.mybatis3.CommonCountMapper"));
+        interfaze.getSuperInterfaceTypes().removeIf(item -> StringUtils.equals(item.getFullyQualifiedName(), "org.mybatis.dynamic.sql.util.mybatis3.CommonDeleteMapper"));
+        interfaze.getSuperInterfaceTypes().removeIf(item -> StringUtils.startsWith(item.getFullyQualifiedName(), "org.mybatis.dynamic.sql.util.mybatis3.CommonInsertMapper"));
+        interfaze.getSuperInterfaceTypes().removeIf(item -> StringUtils.equals(item.getFullyQualifiedName(), "org.mybatis.dynamic.sql.util.mybatis3.CommonUpdateMapper"));
+        // add r2dbc mybatis3's type
+        interfaze.addSuperInterface(new FullyQualifiedJavaType("pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.CommonCountMapper"));
+        interfaze.addSuperInterface(new FullyQualifiedJavaType("pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.CommonDeleteMapper"));
+        FullyQualifiedJavaType commonInsertMapperJavaType = new FullyQualifiedJavaType("pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.CommonInsertMapper");
+        commonInsertMapperJavaType.addTypeArgument(new FullyQualifiedJavaType(introspectedTable.getBaseRecordType()));
+        interfaze.addSuperInterface(commonInsertMapperJavaType);
+        interfaze.addSuperInterface(new FullyQualifiedJavaType("pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.CommonUpdateMapper"));
         interfaze.addImportedType(new FullyQualifiedJavaType("reactor.core.publisher.Mono"));
         interfaze.addImportedType(new FullyQualifiedJavaType("reactor.core.publisher.Flux"));
         interfaze.addImportedType(new FullyQualifiedJavaType("pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.ReactiveMyBatis3Utils"));
-        return true;
-    }
-
-    @Override
-    public boolean clientBasicInsertMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
-        Optional<IntrospectedColumn> authIncrementColumn = introspectedTable.getPrimaryKeyColumns().stream()
-                .filter(IntrospectedColumn::isAutoIncrement)
-                .findFirst();
+        interfaze.addImportedType(new FullyQualifiedJavaType("pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.CommonCountMapper"));
+        interfaze.addImportedType(new FullyQualifiedJavaType("pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.CommonDeleteMapper"));
+        interfaze.addImportedType(new FullyQualifiedJavaType("pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.CommonInsertMapper"));
+        interfaze.addImportedType(new FullyQualifiedJavaType("pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.CommonUpdateMapper"));
+        // override basic insert method with generated key
         GeneratorExtensionProperties extensionProperties = PropertiesHolder.getInstance().getProperties();
         if(extensionProperties.isGenerateReturnedKey()){
-            authIncrementColumn.ifPresent(introspectedColumn -> {
-                FullyQualifiedJavaType importOptionType = new FullyQualifiedJavaType("org.apache.ibatis.annotations.Options");
-                if (!interfaze.getImportedTypes().contains(importOptionType)) {
-                    interfaze.addImportedType(importOptionType);
-                }
-                //@Options(useGeneratedKeys = true,keyProperty = "record.id",keyColumn = "column_name")
-                String optionsAnnotation = "@Options(useGeneratedKeys = true,keyProperty = \"record." + introspectedColumn.getJavaProperty() + "\",keyColumn = \""+ introspectedColumn.getActualColumnName()+"\")";
-                method.addAnnotation(optionsAnnotation);
-            });
+            Optional<IntrospectedColumn> optionalIntrospectedColumn = introspectedTable.getPrimaryKeyColumns().stream()
+                    .filter(IntrospectedColumn::isAutoIncrement)
+                    .findFirst();
+            if(optionalIntrospectedColumn.isPresent()){
+                this.generateInsertWithGeneratedKey(interfaze,introspectedTable);
+            }
         }
-        method.setReturnType(new FullyQualifiedJavaType("reactor.core.publisher.Mono<java.lang.Integer>"));
         return true;
     }
 
-    @Override
-    public boolean clientBasicInsertMultipleMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
+    /**
+     * override basic insert method with generated key
+     * @param interfaze
+     * @param introspectedTable
+     */
+    public void generateInsertWithGeneratedKey(Interface interfaze,IntrospectedTable introspectedTable) {
+        FullyQualifiedJavaType recordType = new FullyQualifiedJavaType(introspectedTable.getBaseRecordType());
+        Set<FullyQualifiedJavaType> imports = new HashSet<>();
+        FullyQualifiedJavaType adapter = new FullyQualifiedJavaType("org.mybatis.dynamic.sql.util.SqlProviderAdapter");
+        FullyQualifiedJavaType annotation = new FullyQualifiedJavaType("org.apache.ibatis.annotations.InsertProvider");
+        imports.add(new FullyQualifiedJavaType("org.mybatis.dynamic.sql.insert.render.InsertStatementProvider"));
+        imports.add(adapter);
+        imports.add(annotation);
+        FullyQualifiedJavaType parameterType = new FullyQualifiedJavaType("org.mybatis.dynamic.sql.insert.render.InsertStatementProvider");
+        imports.add(recordType);
+        parameterType.addTypeArgument(recordType);
+        Method method = new Method("insert");
+        method.setAbstract(true);
         method.setReturnType(new FullyQualifiedJavaType("reactor.core.publisher.Mono<java.lang.Integer>"));
-        return true;
-    }
-
-    @Override
-    public boolean clientBasicCountMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
-        method.setReturnType(new FullyQualifiedJavaType("reactor.core.publisher.Mono<java.lang.Long>"));
-        return true;
-    }
-
-    @Override
-    public boolean clientBasicDeleteMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
-        method.setReturnType(new FullyQualifiedJavaType("reactor.core.publisher.Mono<java.lang.Integer>"));
-        return true;
+        method.addParameter(new Parameter(parameterType, "insertStatement"));
+        context.getCommentGenerator().addGeneralMethodAnnotation(method, introspectedTable, imports);
+        method.addAnnotation("@InsertProvider(type=SqlProviderAdapter.class, method=\"insert\")");
+        MethodAndImports.Builder builder = MethodAndImports.withMethod(method)
+                .withImports(imports);
+        introspectedTable.getPrimaryKeyColumns().stream()
+                .filter(IntrospectedColumn::isAutoIncrement)
+                .findFirst()
+                .ifPresent(introspectedColumn -> {
+            FullyQualifiedJavaType importOptionType = new FullyQualifiedJavaType("org.apache.ibatis.annotations.Options");
+            if (!interfaze.getImportedTypes().contains(importOptionType)) {
+                interfaze.addImportedType(importOptionType);
+            }
+            //@Options(useGeneratedKeys = true,keyProperty = "row.id",keyColumn = "column_name")
+            String optionsAnnotation = "@Options(useGeneratedKeys = true,keyProperty = \"row." + introspectedColumn.getJavaProperty() + "\",keyColumn = \""+ introspectedColumn.getActualColumnName()+"\")";
+            method.addAnnotation(optionsAnnotation);
+        });
+        MethodAndImports methodAndImports = builder.build();
+        interfaze.addImportedTypes(methodAndImports.getImports());
+        interfaze.getMethods().add(0,methodAndImports.getMethod());
     }
 
     @Override
@@ -113,12 +163,6 @@ public class DynamicGenerateExtensionPlugin extends PluginAdapter {
     @Override
     public boolean clientBasicSelectOneMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
         method.setReturnType(new FullyQualifiedJavaType("reactor.core.publisher.Mono<" + introspectedTable.getBaseRecordType() + ">"));
-        return true;
-    }
-
-    @Override
-    public boolean clientBasicUpdateMethodGenerated(Method method, Interface interfaze, IntrospectedTable introspectedTable) {
-        method.setReturnType(new FullyQualifiedJavaType("reactor.core.publisher.Mono<java.lang.Integer>"));
         return true;
     }
 
@@ -233,7 +277,7 @@ public class DynamicGenerateExtensionPlugin extends PluginAdapter {
                 .build();
         method.getBodyLines().clear();
         method.addBodyLine("return update(c ->");
-        method.addBodyLines(fragmentGenerator.getSetEqualWhenPresentLinesV2(introspectedTable.getNonPrimaryKeyColumns(),
+        method.addBodyLines(fragmentGenerator.getSetEqualWhenPresentLines(introspectedTable.getNonPrimaryKeyColumns(),
                 "    c", "    ", false));
         method.addBodyLine("    .applyWhere(whereApplier)");
         method.addBodyLine(");");
@@ -540,11 +584,11 @@ public class DynamicGenerateExtensionPlugin extends PluginAdapter {
             String line = null;
             if (column.isNullable()) {
                 line = start + ".set(" + fieldName
-                        + ").equalTo(record::" + methodName
+                        + ").equalTo(row::" + methodName
                         + ")";
             } else {
                 line = start + ".set(" + fieldName
-                        + ").equalToWhenPresent(record::" + methodName
+                        + ").equalToWhenPresent(row::" + methodName
                         + ")";
             }
             lines.add(line);
@@ -576,11 +620,11 @@ public class DynamicGenerateExtensionPlugin extends PluginAdapter {
             String line = null;
             if (column.isNullable()) {
                 line = start + ".set(" + fieldName
-                        + ").equalTo(record::" + methodName
+                        + ").equalTo(row::" + methodName
                         + ")";
             } else {
                 line = start + ".set(" + fieldName
-                        + ").equalToWhenPresent(record::" + methodName
+                        + ").equalToWhenPresent(row::" + methodName
                         + ")";
             }
             lines.add(line);
@@ -592,12 +636,12 @@ public class DynamicGenerateExtensionPlugin extends PluginAdapter {
                     column.getJavaProperty(), column.getFullyQualifiedJavaType());
             if (first) {
                 lines.add(subsequentLinePrefix + ".where(" + fieldName
-                        + ", isEqualTo(record::" + methodName
+                        + ", isEqualTo(row::" + methodName
                         + "))");
                 first = false;
             } else {
                 lines.add(subsequentLinePrefix + ".and(" + fieldName
-                        + ", isEqualTo(record::" + methodName
+                        + ", isEqualTo(row::" + methodName
                         + "))");
             }
         }
@@ -625,7 +669,7 @@ public class DynamicGenerateExtensionPlugin extends PluginAdapter {
                 start = subsequentLinePrefix;
             }
             String line = start + ".set(" + fieldName
-                    + ").equalToWhenPresent(record::" + methodName
+                    + ").equalToWhenPresent(row::" + methodName
                     + ")";
             lines.add(line);
         }
@@ -636,12 +680,12 @@ public class DynamicGenerateExtensionPlugin extends PluginAdapter {
                     column.getJavaProperty(), column.getFullyQualifiedJavaType());
             if (first) {
                 lines.add(subsequentLinePrefix + ".where(" + fieldName
-                        + ", isEqualTo(record::" + methodName
+                        + ", isEqualTo(row::" + methodName
                         + "))");
                 first = false;
             } else {
                 lines.add(subsequentLinePrefix + ".and(" + fieldName
-                        + ", isEqualTo(record::" + methodName
+                        + ", isEqualTo(row::" + methodName
                         + "))");
             }
         }
