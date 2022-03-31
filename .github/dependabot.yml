@@ -12,6 +12,8 @@ updates:
   labels:
   - dependencies
   ignore:
-  - dependency-name: org.springframework.boot:spring-boot-starter-parent
-    versions:
-    - "> 2.5.x"
+  - dependency-name: org.apache.maven.plugins:maven-compiler-plugin
+  - dependency-name: org.apache.maven.plugins:maven-source-plugin
+  - dependency-name: org.apache.maven.plugins:maven-javadoc-plugin
+  - dependency-name: org.apache.maven.plugins:maven-gpg-plugin
+  - dependency-name: org.codehaus.mojo:versions-maven-plugin
