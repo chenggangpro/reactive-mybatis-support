@@ -58,7 +58,7 @@
         <mybatis-thymeleaf.version>1.0.3</mybatis-thymeleaf.version>
         <mybatis-generator-core.version>1.4.1</mybatis-generator-core.version>
         <mybatis-dynamic-sql.version>1.4.0</mybatis-dynamic-sql.version>
-        <lombok.version>1.18.22</lombok.version>
+        <lombok.version>1.18.24</lombok.version>
         <hutool-all.version>5.7.22</hutool-all.version>
         <spring.boot.version>2.6.5</spring.boot.version>
         <blockhound.version>1.0.6.RELEASE</blockhound.version>
