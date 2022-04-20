@@ -102,12 +102,12 @@ public class DynamicGenerateExtensionPlugin extends PluginAdapter {
         interfaze.addImportedType(new FullyQualifiedJavaType("pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.CommonUpdateMapper"));
         // override basic insert method with generated key
         GeneratorExtensionProperties extensionProperties = PropertiesHolder.getInstance().getProperties();
-        if(extensionProperties.isGenerateReturnedKey()){
+        if (extensionProperties.isGenerateReturnedKey()) {
             Optional<IntrospectedColumn> optionalIntrospectedColumn = introspectedTable.getPrimaryKeyColumns().stream()
                     .filter(IntrospectedColumn::isAutoIncrement)
                     .findFirst();
-            if(optionalIntrospectedColumn.isPresent()){
-                this.generateInsertWithGeneratedKey(interfaze,introspectedTable);
+            if (optionalIntrospectedColumn.isPresent()) {
+                this.generateInsertWithGeneratedKey(interfaze, introspectedTable);
             }
         }
         return true;
@@ -115,10 +115,11 @@ public class DynamicGenerateExtensionPlugin extends PluginAdapter {
 
     /**
      * override basic insert method with generated key
+     *
      * @param interfaze
      * @param introspectedTable
      */
-    public void generateInsertWithGeneratedKey(Interface interfaze,IntrospectedTable introspectedTable) {
+    public void generateInsertWithGeneratedKey(Interface interfaze, IntrospectedTable introspectedTable) {
         FullyQualifiedJavaType recordType = new FullyQualifiedJavaType(introspectedTable.getBaseRecordType());
         Set<FullyQualifiedJavaType> imports = new HashSet<>();
         FullyQualifiedJavaType adapter = new FullyQualifiedJavaType("org.mybatis.dynamic.sql.util.SqlProviderAdapter");
@@ -141,17 +142,17 @@ public class DynamicGenerateExtensionPlugin extends PluginAdapter {
                 .filter(IntrospectedColumn::isAutoIncrement)
                 .findFirst()
                 .ifPresent(introspectedColumn -> {
-            FullyQualifiedJavaType importOptionType = new FullyQualifiedJavaType("org.apache.ibatis.annotations.Options");
-            if (!interfaze.getImportedTypes().contains(importOptionType)) {
-                interfaze.addImportedType(importOptionType);
-            }
-            //@Options(useGeneratedKeys = true,keyProperty = "row.id",keyColumn = "column_name")
-            String optionsAnnotation = "@Options(useGeneratedKeys = true,keyProperty = \"row." + introspectedColumn.getJavaProperty() + "\",keyColumn = \""+ introspectedColumn.getActualColumnName()+"\")";
-            method.addAnnotation(optionsAnnotation);
-        });
+                    FullyQualifiedJavaType importOptionType = new FullyQualifiedJavaType("org.apache.ibatis.annotations.Options");
+                    if (!interfaze.getImportedTypes().contains(importOptionType)) {
+                        interfaze.addImportedType(importOptionType);
+                    }
+                    //@Options(useGeneratedKeys = true,keyProperty = "row.id",keyColumn = "column_name")
+                    String optionsAnnotation = "@Options(useGeneratedKeys = true,keyProperty = \"row." + introspectedColumn.getJavaProperty() + "\",keyColumn = \"" + introspectedColumn.getActualColumnName() + "\")";
+                    method.addAnnotation(optionsAnnotation);
+                });
         MethodAndImports methodAndImports = builder.build();
         interfaze.addImportedTypes(methodAndImports.getImports());
-        interfaze.getMethods().add(0,methodAndImports.getMethod());
+        interfaze.getMethods().add(0, methodAndImports.getMethod());
     }
 
     @Override
@@ -236,6 +237,7 @@ public class DynamicGenerateExtensionPlugin extends PluginAdapter {
 
     /**
      * replace MyBatis3Utils --> ReactiveMyBatis3Utils
+     *
      * @param method
      */
     private void replaceMyBatis3UtilsLine(Method method) {
@@ -387,7 +389,7 @@ public class DynamicGenerateExtensionPlugin extends PluginAdapter {
         subXmlElements.forEach(newXmlElement::addElement);
         elements.add(newXmlElement);
         XmlElement columnSqlXmlElement = new XmlElement("sql");
-        columnSqlXmlElement.addAttribute(new Attribute("id","columnNameWithTable"));
+        columnSqlXmlElement.addAttribute(new Attribute("id", "columnNameWithTable"));
         String columnNameWithTableSql = String.join(", \n    ", columnNameWithTable);
         TextElement columnSqlContentElement = new TextElement(columnNameWithTableSql);
         columnSqlXmlElement.addElement(columnSqlContentElement);
