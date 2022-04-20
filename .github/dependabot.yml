@@ -17,3 +17,6 @@ updates:
   - dependency-name: org.apache.maven.plugins:maven-javadoc-plugin
   - dependency-name: org.apache.maven.plugins:maven-gpg-plugin
   - dependency-name: org.codehaus.mojo:versions-maven-plugin
+  - dependency-name: com.github.ben-manes.caffeine:caffeine
+    versions:
+      - "> 2.9.x"

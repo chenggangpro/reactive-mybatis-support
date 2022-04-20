@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.sql.SQLXML;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -33,6 +34,9 @@ public class R2dbcMybatisConfiguration extends Configuration {
     private final R2dbcStatementLogFactory r2dbcStatementLogFactory = new R2dbcStatementLogFactory(this);
     private final PlaceholderDialectRegistry placeholderDialectRegistry = new DefaultPlaceholderDialectRegistry();
     private final Set<Class<?>> notSupportedDataTypes = new HashSet<>();
+    private Integer formattedDialectSqlCacheMaxSize = 10_000;
+    private Duration formattedDialectSqlCacheExpireDuration = Duration.ofHours(6);
+
     private ConnectionFactory connectionFactory;
 
     /**
@@ -123,7 +127,7 @@ public class R2dbcMybatisConfiguration extends Configuration {
      *
      * @param r2dbcTypeHandlerAdapter the R2dbc type handler adapter
      */
-    public void addR2dbcTypeHandlerAdapter(R2dbcTypeHandlerAdapter r2dbcTypeHandlerAdapter) {
+    public void addR2dbcTypeHandlerAdapter(R2dbcTypeHandlerAdapter<?> r2dbcTypeHandlerAdapter) {
         this.r2dbcTypeHandlerAdapterRegistry.register(r2dbcTypeHandlerAdapter);
     }
 
@@ -198,5 +202,47 @@ public class R2dbcMybatisConfiguration extends Configuration {
      */
     public PlaceholderDialectRegistry getPlaceholderDialectRegistry(){
         return this.placeholderDialectRegistry;
+    }
+
+    /**
+     * get formatted dialect sql cache max size
+     *
+     * @return cache max size
+     */
+    public Integer getFormattedDialectSqlCacheMaxSize() {
+        return formattedDialectSqlCacheMaxSize;
+    }
+
+    /**
+     * Sets formatted dialect sql cache max size.
+     *
+     * @param formattedDialectSqlCacheMaxSize the formatted dialect sql cache max size
+     */
+    public void setFormattedDialectSqlCacheMaxSize(Integer formattedDialectSqlCacheMaxSize) {
+        if(formattedDialectSqlCacheMaxSize < 1){
+            throw new IllegalArgumentException("Formatted dialect sql cache's max size must greater than 0");
+        }
+        this.formattedDialectSqlCacheMaxSize = formattedDialectSqlCacheMaxSize;
+    }
+
+    /**
+     * get formatted dialect sql timeout duration
+     *
+     * @return cache expire duration
+     */
+    public Duration getFormattedDialectSqlCacheExpireDuration() {
+        return formattedDialectSqlCacheExpireDuration;
+    }
+
+    /**
+     * Sets formatted dialect sql cache expire duration.
+     *
+     * @param formattedDialectSqlCacheExpireDuration the formatted dialect sql expire duration
+     */
+    public void setFormattedDialectSqlCacheExpireDuration(Duration formattedDialectSqlCacheExpireDuration) {
+        if(formattedDialectSqlCacheExpireDuration.isNegative() || formattedDialectSqlCacheExpireDuration.isZero()){
+            throw new IllegalArgumentException("Formatted dialect sql cache's expire duration must greater than 0");
+        }
+        this.formattedDialectSqlCacheExpireDuration = formattedDialectSqlCacheExpireDuration;
     }
 }

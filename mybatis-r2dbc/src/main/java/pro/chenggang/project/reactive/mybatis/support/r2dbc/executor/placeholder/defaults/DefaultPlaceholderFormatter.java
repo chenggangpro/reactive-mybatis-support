@@ -1,5 +1,7 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.defaults;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.r2dbc.spi.ConnectionFactory;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
@@ -11,9 +13,9 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderFormatter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContextAttribute;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,10 +38,18 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
     private final Pattern jdbcPlaceholderPattern = Pattern.compile("\\?");
     private final PlaceholderDialectRegistry placeholderDialectRegistry;
     //original SQL  -> formatted SQL
-    private final Map<String, String> formattedSqlCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Class<? extends PlaceholderDialect>, Cache<String, String>> formattedSqlCache = new ConcurrentHashMap<>();
 
-    public DefaultPlaceholderFormatter(PlaceholderDialectRegistry placeholderDialectRegistry) {
+    public DefaultPlaceholderFormatter(PlaceholderDialectRegistry placeholderDialectRegistry, Integer sqlCacheMaxSize, Duration sqlCacheExpireDuration) {
         this.placeholderDialectRegistry = placeholderDialectRegistry;
+        for (Class<? extends PlaceholderDialect> placeholderDialectType : placeholderDialectRegistry.getAllPlaceholderDialectTypes()) {
+            Cache<String, String> cache = Caffeine.newBuilder()
+                    .maximumSize(sqlCacheMaxSize)
+                    .expireAfterAccess(sqlCacheExpireDuration)
+                    .initialCapacity(10)
+                    .build();
+            this.formattedSqlCache.put(placeholderDialectType, cache);
+        }
     }
 
     @Override
@@ -54,9 +64,14 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
             }
             return originalSql;
         }
-        return MapUtil.computeIfAbsent(formattedSqlCache,
+        PlaceholderDialect placeholderDialect = optionalPlaceholderDialect.get();
+        Cache<String, String> cache = this.formattedSqlCache.get(placeholderDialect.getClass());
+        if (Objects.isNull(cache)) {
+            throw new IllegalStateException("Placeholder dialect is found,but Placeholder dialect sql cache is null,Placeholder dialect type : " + placeholderDialect.getClass());
+        }
+        return MapUtil.computeIfAbsent(cache.asMap(),
                 originalSql,
-                statementId -> this.formatPlaceholderInternal(optionalPlaceholderDialect.get(), boundSql)
+                statementId -> this.formatPlaceholderInternal(placeholderDialect, boundSql)
         );
     }
 
@@ -67,7 +82,7 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
      * @param boundSql           the original boundSql sql
      * @return formatted sql
      */
-    private String formatPlaceholderInternal(PlaceholderDialect placeholderDialect, BoundSql boundSql) {
+    protected String formatPlaceholderInternal(PlaceholderDialect placeholderDialect, BoundSql boundSql) {
         String sql = boundSql.getSql();
         List<Integer> placeholderIndexList = this.extractJdbcPlaceholderIndex(sql);
         if (placeholderIndexList.isEmpty()) {
@@ -108,7 +123,7 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
         }
         String formattedSql = builder.toString();
         if (log.isDebugEnabled()) {
-            log.debug("Format placeholder based on parameter name, with (" + placeholderDialect.getClass().getSimpleName() + ") => " + formattedSql);
+            log.debug("Format placeholder based on parameter name, with (" + placeholderDialect.getClass().getSimpleName() + ") \n => " + formattedSql);
         }
         return formattedSql;
     }
