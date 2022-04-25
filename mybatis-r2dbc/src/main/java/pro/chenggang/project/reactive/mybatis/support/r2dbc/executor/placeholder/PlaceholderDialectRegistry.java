@@ -4,6 +4,7 @@ import io.r2dbc.spi.ConnectionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContextAttribute;
 
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * The Placeholder dialect registry.
@@ -20,6 +21,12 @@ public interface PlaceholderDialectRegistry {
      * @param placeholderDialect the placeholder dialect
      */
     void register(PlaceholderDialect placeholderDialect);
+
+    /**
+     * Get all PlaceholderDialect type
+     * @return all PlaceholderDialect's type set
+     */
+    Set<Class<? extends PlaceholderDialect>> getAllPlaceholderDialectTypes();
 
     /**
      * Gets placeholder dialect.

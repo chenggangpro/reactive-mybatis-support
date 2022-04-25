@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderDialect.PLACEHOLDER_DIALECT_NAME_ATTRIBUTE_KEY;
 
@@ -41,6 +43,14 @@ public class DefaultPlaceholderDialectRegistry implements PlaceholderDialectRegi
     @Override
     public void register(PlaceholderDialect placeholderDialect) {
         this.placeholderDialects.put(placeholderDialect.name().toLowerCase(Locale.ENGLISH), placeholderDialect);
+    }
+
+    @Override
+    public Set<Class<? extends PlaceholderDialect>> getAllPlaceholderDialectTypes() {
+        return this.placeholderDialects.values()
+                .stream()
+                .map(PlaceholderDialect::getClass)
+                .collect(Collectors.toSet());
     }
 
     @Override

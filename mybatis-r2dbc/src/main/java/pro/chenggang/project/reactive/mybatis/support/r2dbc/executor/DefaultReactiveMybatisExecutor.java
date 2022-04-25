@@ -65,7 +65,11 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
      */
     public DefaultReactiveMybatisExecutor(R2dbcMybatisConfiguration configuration) {
         super(configuration, configuration.getConnectionFactory());
-        this.placeholderFormatter = new DefaultPlaceholderFormatter(configuration.getPlaceholderDialectRegistry());
+        this.placeholderFormatter = new DefaultPlaceholderFormatter(
+                configuration.getPlaceholderDialectRegistry(),
+                configuration.getFormattedDialectSqlCacheMaxSize(),
+                configuration.getFormattedDialectSqlCacheExpireDuration()
+        );
     }
 
     @Override
