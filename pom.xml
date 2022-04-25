@@ -60,7 +60,7 @@
         <mybatis-dynamic-sql.version>1.4.0</mybatis-dynamic-sql.version>
         <lombok.version>1.18.24</lombok.version>
         <hutool-all.version>5.7.22</hutool-all.version>
-        <spring.boot.version>2.6.5</spring.boot.version>
+        <spring.boot.version>2.6.7</spring.boot.version>
         <blockhound.version>1.0.6.RELEASE</blockhound.version>
         <junit.version>4.13.2</junit.version>
         <junit-jupiter.version>5.8.2</junit-jupiter.version>
