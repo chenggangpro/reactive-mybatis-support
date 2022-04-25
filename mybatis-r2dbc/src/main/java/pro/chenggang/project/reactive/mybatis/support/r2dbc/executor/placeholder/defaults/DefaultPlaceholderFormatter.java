@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,12 +38,13 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
 
     private final Pattern jdbcPlaceholderPattern = Pattern.compile("\\?");
     private final PlaceholderDialectRegistry placeholderDialectRegistry;
-    //original SQL  -> formatted SQL
+    //Class<? extends PlaceholderDialect --> Cache< original SQL , formatted SQL >
     private final ConcurrentHashMap<Class<? extends PlaceholderDialect>, Cache<String, String>> formattedSqlCache = new ConcurrentHashMap<>();
 
     public DefaultPlaceholderFormatter(PlaceholderDialectRegistry placeholderDialectRegistry, Integer sqlCacheMaxSize, Duration sqlCacheExpireDuration) {
         this.placeholderDialectRegistry = placeholderDialectRegistry;
-        for (Class<? extends PlaceholderDialect> placeholderDialectType : placeholderDialectRegistry.getAllPlaceholderDialectTypes()) {
+        Set<Class<? extends PlaceholderDialect>> allPlaceholderDialectTypes = placeholderDialectRegistry.getAllPlaceholderDialectTypes();
+        for (Class<? extends PlaceholderDialect> placeholderDialectType : allPlaceholderDialectTypes) {
             Cache<String, String> cache = Caffeine.newBuilder()
                     .maximumSize(sqlCacheMaxSize)
                     .expireAfterAccess(sqlCacheExpireDuration)
