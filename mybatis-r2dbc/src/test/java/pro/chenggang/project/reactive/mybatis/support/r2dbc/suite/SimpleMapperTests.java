@@ -11,6 +11,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.application.entity.m
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.application.mapper.DeptMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.application.mapper.EmpMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReactiveSqlSessionOperator;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.exception.GeneratedKeysException;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.suite.setup.MybatisR2dbcBaseTests;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -182,5 +183,18 @@ public class SimpleMapperTests extends MybatisR2dbcBaseTests {
                 .as(StepVerifier::create)
                 .expectNextCount(14)
                 .verifyComplete();
+    }
+
+    @Test
+    public void testInsertReturnGeneratedKeysWithNoKeyColumnConfigured() throws Exception {
+        Dept dept = new Dept();
+        dept.setDeptName("Test_dept_name");
+        dept.setCreateTime(LocalDateTime.now());
+        dept.setLocation("Test_location");
+        reactiveSqlSessionOperator.executeAndRollback(this.deptMapper.insertReturnGeneratedKeysWithNoKeyColumnConfigured(dept))
+                .as(StepVerifier::create)
+                .expectErrorMatches(throwable -> GeneratedKeysException.class.equals(throwable.getClass()))
+                .verify();
+        assertThat(dept.getDeptNo()).isNull();
     }
 }

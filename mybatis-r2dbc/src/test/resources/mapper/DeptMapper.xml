@@ -31,6 +31,11 @@
     </selectKey>
     INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})
   </insert>
+  <insert id="insertReturnGeneratedKeysWithNoKeyColumnConfigured" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.entity.model.Dept"
+          useGeneratedKeys="true"
+          keyProperty="deptNo">
+    INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})
+  </insert>
   <update id="updateByDeptNo" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.entity.model.Dept">
     UPDATE dept
     SET dept_name = #{deptName}
