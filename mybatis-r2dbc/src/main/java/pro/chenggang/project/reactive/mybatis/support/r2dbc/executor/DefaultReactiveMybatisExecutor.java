@@ -196,12 +196,12 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
         String[] keyColumns = mappedStatement.getKeyColumns();
         boolean hasKeyColumns = keyColumns != null && keyColumns.length != 0;
         KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
+        boolean useJdbc3KeyGenerator = keyGenerator instanceof Jdbc3KeyGenerator;
         // link to issue #55 , When using useGeneratedKeys="true" in insert sql, there should be a check for keyColumn="xxxx"
-        if(keyGenerator instanceof Jdbc3KeyGenerator && !hasKeyColumns){
+        if(useJdbc3KeyGenerator && !hasKeyColumns){
             throw new GeneratedKeysException("When useGeneratedKeys is configured to simply return the generated keys , " +
                     "the keyColumns must also be configured , please check @Options or xml 's keyColumns configuration.");
         }
-        boolean useJdbc3KeyGenerator = keyGenerator instanceof Jdbc3KeyGenerator;
         if (useJdbc3KeyGenerator) {
             return new DefaultR2dbcKeyGenerator(mappedStatement, super.configuration);
         }
