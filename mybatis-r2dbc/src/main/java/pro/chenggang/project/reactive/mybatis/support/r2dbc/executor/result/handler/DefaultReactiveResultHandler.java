@@ -145,9 +145,9 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
     /**
      * handle row values for nested resultMap
      *
-     * @param rowResultWrapper
-     * @param resultMap
-     * @throws SQLException
+     * @param rowResultWrapper the RowResultWrapper
+     * @param resultMap        the ResultMap
+     * @throws SQLException the SQLException
      */
     private List<Object> handleRowValuesForNestedResultMap(RowResultWrapper rowResultWrapper, ResultMap resultMap) throws SQLException {
         final DefaultResultHandler resultHandler = new DefaultResultHandler(objectFactory);
@@ -176,7 +176,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
             previousRowValue = rowValue;
         }
         List<Object> resultList = resultHandler.getResultList();
-        if(resultList != null && !resultList.isEmpty()){
+        if (resultList != null && !resultList.isEmpty()) {
             this.resultHolder.addAll(resultList);
         }
         return Collections.singletonList(DEFERRED);
