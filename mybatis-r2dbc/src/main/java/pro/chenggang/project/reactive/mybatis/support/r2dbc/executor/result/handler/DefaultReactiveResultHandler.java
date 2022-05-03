@@ -86,6 +86,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         return totalCount.intValue();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> List<T> handleResult(RowResultWrapper rowResultWrapper) {
         List<ResultMap> resultMaps = mappedStatement.getResultMaps();
@@ -114,6 +115,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> List<T> getRemainedResults() {
         return (List<T>) this.resultHolder;
@@ -122,11 +124,11 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
     /**
      * get row value for simple result map
      *
-     * @param rowResultWrapper
-     * @param resultMap
-     * @param columnPrefix
-     * @return
-     * @throws SQLException
+     * @param rowResultWrapper the RowResultWrapper
+     * @param resultMap        the ResultMap
+     * @param columnPrefix     the columnPrefix
+     * @return data
+     * @throws SQLException SQLException
      */
     private Object getRowValueForSimpleResultMap(RowResultWrapper rowResultWrapper, ResultMap resultMap, String columnPrefix) throws SQLException {
         Object rowValue = createResultObject(rowResultWrapper, resultMap, columnPrefix);
