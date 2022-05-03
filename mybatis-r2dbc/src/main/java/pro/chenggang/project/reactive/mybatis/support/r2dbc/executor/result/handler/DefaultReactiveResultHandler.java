@@ -86,6 +86,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         return totalCount.intValue();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T> List<T> handleResult(RowResultWrapper rowResultWrapper) {
         List<ResultMap> resultMaps = mappedStatement.getResultMaps();
@@ -114,14 +115,20 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> List<T> getRemainedResults() {
+        return (List<T>) this.resultHolder;
+    }
+
     /**
      * get row value for simple result map
      *
-     * @param rowResultWrapper
-     * @param resultMap
-     * @param columnPrefix
-     * @return
-     * @throws SQLException
+     * @param rowResultWrapper the RowResultWrapper
+     * @param resultMap        the ResultMap
+     * @param columnPrefix     the columnPrefix
+     * @return data
+     * @throws SQLException SQLException
      */
     private Object getRowValueForSimpleResultMap(RowResultWrapper rowResultWrapper, ResultMap resultMap, String columnPrefix) throws SQLException {
         Object rowValue = createResultObject(rowResultWrapper, resultMap, columnPrefix);
@@ -140,9 +147,9 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
     /**
      * handle row values for nested resultMap
      *
-     * @param rowResultWrapper
-     * @param resultMap
-     * @throws SQLException
+     * @param rowResultWrapper the RowResultWrapper
+     * @param resultMap        the ResultMap
+     * @throws SQLException the SQLException
      */
     private List<Object> handleRowValuesForNestedResultMap(RowResultWrapper rowResultWrapper, ResultMap resultMap) throws SQLException {
         final DefaultResultHandler resultHandler = new DefaultResultHandler(objectFactory);
@@ -170,11 +177,9 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         } else if (rowValue != null) {
             previousRowValue = rowValue;
         }
-        this.resultHolder.addAll(resultHandler.getResultList());
-        if (totalCount.intValue() != 0 && null == partialObject) {
-            List<Object> holdResultList = new ArrayList<>(this.resultHolder);
-            this.resultHolder.clear();
-            return holdResultList;
+        List<Object> resultList = resultHandler.getResultList();
+        if (resultList != null && !resultList.isEmpty()) {
+            this.resultHolder.addAll(resultList);
         }
         return Collections.singletonList(DEFERRED);
     }

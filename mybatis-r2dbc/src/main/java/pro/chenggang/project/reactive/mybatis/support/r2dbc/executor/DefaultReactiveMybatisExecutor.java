@@ -138,6 +138,10 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                         return (List<E>) reactiveResultHandler.handleResult(rowResultWrapper);
                                     }))
                                     .concatMap(resultList -> Flux.fromStream(resultList.stream().filter(Objects::nonNull)))
+                                    .concatWith(Flux.defer(() -> {
+                                        List<E> remainedResult = reactiveResultHandler.getRemainedResults();
+                                        return Flux.fromStream(remainedResult.stream().filter(Objects::nonNull));
+                                    }))
                                     .filter(data -> !Objects.equals(data, DEFERRED))
                                     .doOnComplete(() -> r2dbcStatementLog.logTotal(reactiveResultHandler.getResultRowTotalCount()));
                         }));
