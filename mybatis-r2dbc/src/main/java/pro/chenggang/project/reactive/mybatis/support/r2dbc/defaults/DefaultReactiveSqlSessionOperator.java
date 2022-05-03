@@ -133,7 +133,7 @@ public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOper
                 .flatMapMany(reactiveExecutorContext -> Flux.usingWhen(
                         Mono.just(reactiveSqlSession),
                         session -> fluxExecution,
-                        session -> session.commit(true)
+                        session -> session.rollback(true)
                                 .then(Mono.defer(session::close)),
                         (session, err) -> Mono.empty(),
                         session -> session.rollback(true)
