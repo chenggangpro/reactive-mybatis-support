@@ -31,6 +31,8 @@ public interface DeptMapper {
 
     Flux<DeptWithEmp> selectDeptWithEmpList();
 
+    Flux<DeptWithEmp> selectDeptWithEmpListWithDisorderResult();
+
     Mono<Integer> insertUseSelectKey(Dept dept);
 
     Mono<Integer> insertReturnGeneratedKeysWithNoKeyColumnConfigured(Dept dept);

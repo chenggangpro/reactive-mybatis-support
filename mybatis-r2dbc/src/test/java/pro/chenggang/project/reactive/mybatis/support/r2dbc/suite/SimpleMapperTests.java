@@ -140,21 +140,125 @@ public class SimpleMapperTests extends MybatisR2dbcBaseTests {
 
     @Test
     public void testGetDeptWithEmp() throws Exception {
+        // test get dept with emp in natual order
         this.reactiveSqlSessionOperator.executeMany(
                         this.deptMapper.selectDeptWithEmpList()
                 )
                 .as(StepVerifier::create)
                 .expectNextMatches(deptWithEmp -> {
+                    assertThat(deptWithEmp).isNotNull();
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getDeptNo)
+                            .matches(deptNo -> deptNo == 1);
                     assertThat(deptWithEmp)
                             .extracting(DeptWithEmp::getEmpList)
-                            .matches(empList -> empList.size() > 0);
+                            .matches(empList -> empList.size() == 3);
                     return true;
                 })
-                .expectNextCount(2L)
                 .expectNextMatches(deptWithEmp -> {
+                    assertThat(deptWithEmp).isNotNull();
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getDeptNo)
+                            .matches(deptNo -> deptNo == 2);
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getEmpList)
+                            .matches(empList -> empList.size() == 5);
+                    return true;
+                })
+                .expectNextMatches(deptWithEmp -> {
+                    assertThat(deptWithEmp).isNotNull();
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getDeptNo)
+                            .matches(deptNo -> deptNo == 3);
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getEmpList)
+                            .matches(empList -> empList.size() == 6);
+                    return true;
+                })
+                .expectNextMatches(deptWithEmp -> {
+                    assertThat(deptWithEmp).isNotNull();
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getDeptNo)
+                            .matches(deptNo -> deptNo == 4);
                     assertThat(deptWithEmp)
                             .extracting(DeptWithEmp::getEmpList)
                             .matches(empList -> empList.size() == 0);
+                    return true;
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    public void testGetDeptWithEmpWithDisorderResults() throws Exception {
+        // test get dept with emp in emp_no asc order
+        this.reactiveSqlSessionOperator.executeMany(
+                        this.deptMapper.selectDeptWithEmpListWithDisorderResult()
+                )
+                .as(StepVerifier::create)
+                .expectNextMatches(deptWithEmp -> {
+                    assertThat(deptWithEmp).isNotNull();
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getDeptNo)
+                            .matches(deptNo -> deptNo == 4);
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getEmpList)
+                            .matches(empList -> empList.size() == 0);
+                    return true;
+                })
+                .expectNextMatches(deptWithEmp -> {
+                    assertThat(deptWithEmp).isNotNull();
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getDeptNo)
+                            .matches(deptNo -> deptNo == 2);
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getEmpList)
+                            .matches(empList -> empList.size() == 5);
+                    return true;
+                })
+                .expectNextMatches(deptWithEmp -> {
+                    assertThat(deptWithEmp).isNotNull();
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getDeptNo)
+                            .matches(deptNo -> deptNo == 3);
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getEmpList)
+                            .matches(empList -> empList.size() == 6);
+                    return true;
+                })
+                .expectNextMatches(deptWithEmp -> {
+                    assertThat(deptWithEmp).isNotNull();
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getDeptNo)
+                            .matches(deptNo -> deptNo == 1);
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getEmpList)
+                            .matches(empList -> empList.size() == 3);
+                    return true;
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    public void testGetDeptWithEmpReturnsOneRecord() throws Exception {
+        // test get dept with emp with one record
+        reactiveSqlSessionOperator.executeManyAndRollback(
+                this.empMapper.deleteByDeptNo(2L)
+                        .then(this.empMapper.deleteByDeptNo(3L))
+                        .then(this.empMapper.deleteByDeptNo(4L))
+                        .then(this.deptMapper.deleteByDeptNo(2L))
+                        .then(this.deptMapper.deleteByDeptNo(3L))
+                        .then(this.deptMapper.deleteByDeptNo(4L))
+                        .thenMany(this.deptMapper.selectDeptWithEmpList())
+        )
+                .as(StepVerifier::create)
+                .expectNextMatches(deptWithEmp -> {
+                    assertThat(deptWithEmp).isNotNull();
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getDeptNo)
+                            .matches(deptNo -> deptNo == 1);
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getEmpList)
+                            .matches(empList -> empList.size() == 3);
                     return true;
                 })
                 .verifyComplete();

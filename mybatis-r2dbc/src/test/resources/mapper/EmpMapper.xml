@@ -67,5 +67,9 @@
     WHERE emp.create_time &lt;= #{createTime}
   </select>
 
+  <delete id="deleteByDeptNo">
+    DELETE FROM emp WHERE dept_no = #{deptNo}
+  </delete>
+
 
 </mapper>

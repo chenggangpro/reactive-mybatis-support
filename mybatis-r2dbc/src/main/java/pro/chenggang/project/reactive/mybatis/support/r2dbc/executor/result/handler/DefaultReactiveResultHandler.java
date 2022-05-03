@@ -114,6 +114,11 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         }
     }
 
+    @Override
+    public <T> List<T> getRemainedResults() {
+        return (List<T>) this.resultHolder;
+    }
+
     /**
      * get row value for simple result map
      *
@@ -170,11 +175,9 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         } else if (rowValue != null) {
             previousRowValue = rowValue;
         }
-        this.resultHolder.addAll(resultHandler.getResultList());
-        if (totalCount.intValue() != 0 && null == partialObject) {
-            List<Object> holdResultList = new ArrayList<>(this.resultHolder);
-            this.resultHolder.clear();
-            return holdResultList;
+        List<Object> resultList = resultHandler.getResultList();
+        if(resultList != null && !resultList.isEmpty()){
+            this.resultHolder.addAll(resultList);
         }
         return Collections.singletonList(DEFERRED);
     }

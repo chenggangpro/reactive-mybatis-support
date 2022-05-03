@@ -11,7 +11,8 @@ import reactor.core.publisher.Mono;
  * The type Default reactive sql session operator.
  *
  * @author Gang Cheng
- * @version 1.0.0
+ * @version 1.0.10
+ * @since 1.0.0
  */
 public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOperator {
 
