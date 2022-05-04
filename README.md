@@ -3,6 +3,8 @@
 [![Pom Maven Central](https://maven-badges.herokuapp.com/maven-central/pro.chenggang/reactive-mybatis-support/badge.svg)](https://maven-badges.herokuapp.com/maven-central/pro.chenggang/reactive-mybatis-support)
 # Reactive-Mybatis-Support
 
+> Note: if you want to use this repository,please keep the version up to date
+
 This project has met the general business usage scenarios, including:
 * 1 . Parameter parsing and mapping
 * 2 . One-to-many associative relationships for result mapping
