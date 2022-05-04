@@ -22,7 +22,7 @@ This project has met the general business usage scenarios, including:
 #### Instruction
 
 * This project is aimed to adapt mybatis to reactive project (aka WebFlux/Reactor3)
-* `mybatis-r2dbc` module is based on [linux-china/mybatis-r2dbc](https://github.com/linux-china/mybatis-r2dbc) and `mybatis3`'s original source code
+* `mybatis-r2dbc` module is inspired by [linux-china/mybatis-r2dbc](https://github.com/linux-china/mybatis-r2dbc) and based on `mybatis3`'s original source code
 * `mybatis-generator` module is used to adapt `mybatis-dynamic-sql` to reactive project
 * Support SpringBoot AutoConfiguration, `@R2dbcMapperScan`/`@R2dbcMapperScans` for scan `@Mapper`, Spring XML bean config .
 * Support Spring's Transaction.
