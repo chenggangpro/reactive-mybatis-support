@@ -428,11 +428,11 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
     private Object createByConstructorSignature(RowResultWrapper rowResultWrapper, ResultMap resultMap, String columnPrefix, Class<?> resultType,
                                                 List<Class<?>> constructorArgTypes, List<Object> constructorArgs) throws SQLException {
         return applyConstructorAutomapping(rowResultWrapper, resultMap, columnPrefix, resultType, constructorArgTypes, constructorArgs,
-                findConstructorForAutomapping(resultType, rowResultWrapper).orElseThrow(() -> new ExecutorException(
+                findConstructorForAutomapping(resultType).orElseThrow(() -> new ExecutorException(
                         "No constructor found in " + resultType.getName() + " matching " + rowResultWrapper.getClassNames())));
     }
 
-    private Optional<Constructor<?>> findConstructorForAutomapping(final Class<?> resultType, RowResultWrapper rowResultWrapper) {
+    private Optional<Constructor<?>> findConstructorForAutomapping(final Class<?> resultType) {
         Constructor<?>[] constructors = resultType.getDeclaredConstructors();
         if (constructors.length == 1) {
             return Optional.of(constructors[0]);
@@ -466,7 +466,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
     private Object applyConstructorAutomapping(RowResultWrapper rowResultWrapper, ResultMap resultMap, String columnPrefix, Class<?> resultType, List<Class<?>> constructorArgTypes, List<Object> constructorArgs, Constructor<?> constructor) throws SQLException {
         boolean foundValues = false;
         if (r2DbcMybatisConfiguration.isArgNameBasedConstructorAutoMapping()) {
-            foundValues = applyArgNameBasedConstructorAutoMapping(rowResultWrapper, resultMap, columnPrefix, resultType, constructorArgTypes, constructorArgs,
+            foundValues = applyArgNameBasedConstructorAutoMapping(rowResultWrapper, resultMap, columnPrefix, constructorArgTypes, constructorArgs,
                     constructor, foundValues);
         } else {
             foundValues = applyColumnOrderBasedConstructorAutomapping(rowResultWrapper, constructorArgTypes, constructorArgs, constructor,
@@ -490,7 +490,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         return foundValues;
     }
 
-    private boolean applyArgNameBasedConstructorAutoMapping(RowResultWrapper rowResultWrapper, ResultMap resultMap, String columnPrefix, Class<?> resultType,
+    private boolean applyArgNameBasedConstructorAutoMapping(RowResultWrapper rowResultWrapper, ResultMap resultMap, String columnPrefix,
                                                             List<Class<?>> constructorArgTypes, List<Object> constructorArgs, Constructor<?> constructor, boolean foundValues)
             throws SQLException {
         List<String> missingArgs = null;
