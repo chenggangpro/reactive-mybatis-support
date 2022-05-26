@@ -2,6 +2,7 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.han
 
 import io.r2dbc.spi.Row;
 import org.apache.ibatis.annotations.AutomapConstructor;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.cache.CacheKey;
 import org.apache.ibatis.executor.ExecutorException;
 import org.apache.ibatis.executor.result.DefaultResultContext;
@@ -19,6 +20,7 @@ import org.apache.ibatis.session.AutoMappingBehavior;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
+import org.apache.ibatis.util.MapUtil;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.exception.R2dbcResultException;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowResultWrapper;
@@ -26,14 +28,18 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.Type
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Parameter;
 import java.sql.SQLException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -57,6 +63,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
     private final Map<CacheKey, List<DefaultReactiveResultHandler.PendingRelation>> pendingRelations = new HashMap<>();
     // Cached Automappings
     private final Map<String, List<DefaultReactiveResultHandler.UnMappedColumnAutoMapping>> autoMappingsCache = new HashMap<>();
+    private final Map<String, List<String>> constructorAutoMappingColumns = new HashMap<>();
     // nested resultmaps
     private final Map<CacheKey, Object> nestedResultObjects = new HashMap<>();
     private final Map<String, Object> ancestorObjects = new HashMap<>();
@@ -305,6 +312,11 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         if (autoMapping == null) {
             autoMapping = new ArrayList<>();
             final List<String> unmappedColumnNames = rowResultWrapper.getUnmappedColumnNames(resultMap, columnPrefix);
+            // Remove the entry to release the memory
+            List<String> mappedInConstructorAutoMapping = constructorAutoMappingColumns.remove(mapKey);
+            if (mappedInConstructorAutoMapping != null) {
+                unmappedColumnNames.removeAll(mappedInConstructorAutoMapping);
+            }
             for (String columnName : unmappedColumnNames) {
                 String propertyName = columnName;
                 if (columnPrefix != null && !columnPrefix.isEmpty()) {
@@ -380,7 +392,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         } else if (resultType.isInterface() || metaType.hasDefaultConstructor()) {
             return objectFactory.create(resultType);
         } else if (shouldApplyAutomaticMappings(resultMap, false)) {
-            return createByConstructorSignature(rowResultWrapper, resultType, constructorArgTypes, constructorArgs);
+            return createByConstructorSignature(rowResultWrapper, resultMap, columnPrefix, resultType, constructorArgTypes, constructorArgs);
         }
         throw new ExecutorException("Do not know how to create an instance of " + resultType);
     }
@@ -413,50 +425,35 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         return foundValues ? objectFactory.create(resultType, constructorArgTypes, constructorArgs) : null;
     }
 
-    private Object createByConstructorSignature(RowResultWrapper rowResultWrapper, Class<?> resultType, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) throws SQLException {
-        final Constructor<?>[] constructors = resultType.getDeclaredConstructors();
-        final Constructor<?> defaultConstructor = findDefaultConstructor(constructors);
-        if (defaultConstructor != null) {
-            return createUsingConstructor(rowResultWrapper, resultType, constructorArgTypes, constructorArgs, defaultConstructor);
-        } else {
-            for (Constructor<?> constructor : constructors) {
-                if (allowedConstructorUsingTypeHandlers(constructor)) {
-                    return createUsingConstructor(rowResultWrapper, resultType, constructorArgTypes, constructorArgs, constructor);
-                }
-            }
-        }
-        throw new ExecutorException("No constructor found in " + resultType.getName() + " matching " + rowResultWrapper.getClassNames());
+    private Object createByConstructorSignature(RowResultWrapper rowResultWrapper, ResultMap resultMap, String columnPrefix, Class<?> resultType,
+                                                List<Class<?>> constructorArgTypes, List<Object> constructorArgs) throws SQLException {
+        return applyConstructorAutomapping(rowResultWrapper, resultMap, columnPrefix, resultType, constructorArgTypes, constructorArgs,
+                findConstructorForAutomapping(resultType).orElseThrow(() -> new ExecutorException(
+                        "No constructor found in " + resultType.getName() + " matching " + rowResultWrapper.getClassNames())));
     }
 
-    private Object createUsingConstructor(RowResultWrapper rowResultWrapper, Class<?> resultType, List<Class<?>> constructorArgTypes, List<Object> constructorArgs, Constructor<?> constructor) throws SQLException {
-        boolean foundValues = false;
-        for (int i = 0; i < constructor.getParameterTypes().length; i++) {
-            Class<?> parameterType = constructor.getParameterTypes()[i];
-            String columnName = rowResultWrapper.getColumnNames().get(i);
-            TypeHandler<?> typeHandler = rowResultWrapper.getTypeHandler(parameterType, columnName);
-            ((TypeHandleContext) this.delegatedTypeHandler).contextWith(typeHandler, rowResultWrapper);
-            Object value = delegatedTypeHandler.getResult(null, columnName);
-            constructorArgTypes.add(parameterType);
-            constructorArgs.add(value);
-            foundValues = value != null || foundValues;
-        }
-        return foundValues ? objectFactory.create(resultType, constructorArgTypes, constructorArgs) : null;
-    }
-
-    private Constructor<?> findDefaultConstructor(final Constructor<?>[] constructors) {
+    private Optional<Constructor<?>> findConstructorForAutomapping(final Class<?> resultType) {
+        Constructor<?>[] constructors = resultType.getDeclaredConstructors();
         if (constructors.length == 1) {
-            return constructors[0];
+            return Optional.of(constructors[0]);
         }
-
         for (final Constructor<?> constructor : constructors) {
             if (constructor.isAnnotationPresent(AutomapConstructor.class)) {
-                return constructor;
+                return Optional.of(constructor);
             }
         }
-        return null;
+        if (r2DbcMybatisConfiguration.isArgNameBasedConstructorAutoMapping()) {
+            // Finding-best-match type implementation is possible,
+            // but using @AutomapConstructor seems sufficient.
+            throw new ExecutorException(MessageFormat.format(
+                    "'argNameBasedConstructorAutoMapping' is enabled and the class ''{0}'' has multiple constructors, so @AutomapConstructor must be added to one of the constructors.",
+                    resultType.getName()));
+        } else {
+            return Arrays.stream(constructors).filter(this::findUsableConstructorByArgTypes).findAny();
+        }
     }
 
-    private boolean allowedConstructorUsingTypeHandlers(final Constructor<?> constructor) {
+    private boolean findUsableConstructorByArgTypes(final Constructor<?> constructor) {
         final Class<?>[] parameterTypes = constructor.getParameterTypes();
         for (int i = 0; i < parameterTypes.length; i++) {
             if (!typeHandlerRegistry.hasTypeHandler(parameterTypes[i])) {
@@ -464,6 +461,85 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
             }
         }
         return true;
+    }
+
+    private Object applyConstructorAutomapping(RowResultWrapper rowResultWrapper, ResultMap resultMap, String columnPrefix, Class<?> resultType, List<Class<?>> constructorArgTypes, List<Object> constructorArgs, Constructor<?> constructor) throws SQLException {
+        boolean foundValues = false;
+        if (r2DbcMybatisConfiguration.isArgNameBasedConstructorAutoMapping()) {
+            foundValues = applyArgNameBasedConstructorAutoMapping(rowResultWrapper, resultMap, columnPrefix, constructorArgTypes, constructorArgs,
+                    constructor, foundValues);
+        } else {
+            foundValues = applyColumnOrderBasedConstructorAutomapping(rowResultWrapper, constructorArgTypes, constructorArgs, constructor,
+                    foundValues);
+        }
+        return foundValues ? objectFactory.create(resultType, constructorArgTypes, constructorArgs) : null;
+    }
+
+    private boolean applyColumnOrderBasedConstructorAutomapping(RowResultWrapper rowResultWrapper, List<Class<?>> constructorArgTypes,
+                                                                List<Object> constructorArgs, Constructor<?> constructor, boolean foundValues) throws SQLException {
+        for (int i = 0; i < constructor.getParameterTypes().length; i++) {
+            Class<?> parameterType = constructor.getParameterTypes()[i];
+            String columnName = rowResultWrapper.getColumnNames().get(i);
+            final TypeHandler<?> typeHandler = rowResultWrapper.getTypeHandler(parameterType, columnName);
+            ((TypeHandleContext) this.delegatedTypeHandler).contextWith(typeHandler, rowResultWrapper);
+            Object value = delegatedTypeHandler.getResult(null, columnName);
+            constructorArgTypes.add(parameterType);
+            constructorArgs.add(value);
+            foundValues = value != null || foundValues;
+        }
+        return foundValues;
+    }
+
+    private boolean applyArgNameBasedConstructorAutoMapping(RowResultWrapper rowResultWrapper, ResultMap resultMap, String columnPrefix,
+                                                            List<Class<?>> constructorArgTypes, List<Object> constructorArgs, Constructor<?> constructor, boolean foundValues)
+            throws SQLException {
+        List<String> missingArgs = null;
+        Parameter[] params = constructor.getParameters();
+        for (Parameter param : params) {
+            boolean columnNotFound = true;
+            Param paramAnno = param.getAnnotation(Param.class);
+            String paramName = paramAnno == null ? param.getName() : paramAnno.value();
+            for (String columnName : rowResultWrapper.getColumnNames()) {
+                if (columnMatchesParam(columnName, paramName, columnPrefix)) {
+                    Class<?> paramType = param.getType();
+                    TypeHandler<?> typeHandler = rowResultWrapper.getTypeHandler(paramType, columnName);
+                    ((TypeHandleContext) this.delegatedTypeHandler).contextWith(typeHandler, rowResultWrapper);
+                    Object value = this.delegatedTypeHandler.getResult(null, columnName);
+                    constructorArgTypes.add(paramType);
+                    constructorArgs.add(value);
+                    final String mapKey = resultMap.getId() + ":" + columnPrefix;
+                    if (!autoMappingsCache.containsKey(mapKey)) {
+                        MapUtil.computeIfAbsent(constructorAutoMappingColumns, mapKey, k -> new ArrayList<>()).add(columnName);
+                    }
+                    columnNotFound = false;
+                    foundValues = value != null || foundValues;
+                }
+            }
+            if (columnNotFound) {
+                if (missingArgs == null) {
+                    missingArgs = new ArrayList<>();
+                }
+                missingArgs.add(paramName);
+            }
+        }
+        if (foundValues && constructorArgs.size() < params.length) {
+            throw new ExecutorException(MessageFormat.format("Constructor auto-mapping of ''{1}'' failed "
+                            + "because ''{0}'' were not found in the result set; "
+                            + "Available columns are ''{2}'' and mapUnderscoreToCamelCase is ''{3}''.",
+                    missingArgs, constructor, rowResultWrapper.getColumnNames(), r2DbcMybatisConfiguration.isMapUnderscoreToCamelCase()));
+        }
+        return foundValues;
+    }
+
+    private boolean columnMatchesParam(String columnName, String paramName, String columnPrefix) {
+        if (columnPrefix != null) {
+            if (!columnName.toUpperCase(Locale.ENGLISH).startsWith(columnPrefix)) {
+                return false;
+            }
+            columnName = columnName.substring(columnPrefix.length());
+        }
+        return paramName
+                .equalsIgnoreCase(r2DbcMybatisConfiguration.isMapUnderscoreToCamelCase() ? columnName.replace("_", "") : columnName);
     }
 
     /**

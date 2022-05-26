@@ -50,6 +50,8 @@ public class RowResultWrapper {
         this.row = row;
         this.rowMetadata = rowMetadata;
         rowMetadata.getColumnMetadatas().forEach(columnMetadata -> {
+            //jdbc provide ResultSetMetaData#getColumnLabel(int index) to get column label
+            //bug r2dbc ColumnMetadata doesn't provide any method to get column label
             columnNames.add(columnMetadata.getName());
             Class<?> javaType = columnMetadata.getJavaType();
             if (null == javaType) {
