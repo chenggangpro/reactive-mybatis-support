@@ -3,7 +3,9 @@
 [![Pom Maven Central](https://maven-badges.herokuapp.com/maven-central/pro.chenggang/reactive-mybatis-support/badge.svg)](https://maven-badges.herokuapp.com/maven-central/pro.chenggang/reactive-mybatis-support)
 # Reactive-Mybatis-Support
 
-> Note: if you want to use this repository,please keep the version above `1.1.0.RELEASE`
+> Note: if you want to use this repository,please keep the version above `1.1.0.RELEASE`.
+>
+> Note: this repository project currently only supports up to `SpringBoot` `2.6.x`.Higher versions will be adapted after offical project.
 
 This project has met the general business usage scenarios, including:
 * 1 . Parameter parsing and mapping
