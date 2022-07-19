@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.UUID;
 
+import static io.r2dbc.pool.ConnectionPoolConfiguration.NO_TIMEOUT;
 import static org.springframework.util.StringUtils.hasText;
 
 /**
@@ -127,20 +128,24 @@ public class R2dbcConnectionFactoryProperties {
 
         /**
          * r2dbc connection factory max create connection time
-         * ZERO indicates no-timeout
+         * Duration.ZERO indicates immediate failure if the connection is not created immediately.
          */
-        private Duration maxCreateConnectionTime = Duration.ZERO;
+        private Duration maxCreateConnectionTime = NO_TIMEOUT;
+
         /**
          * r2dbc connection factory max acquire time
-         * ZERO indicates no-timeout
+         * Duration.ZERO indicates that the connection must be immediately available otherwise acquisition fails.
+         * A negative or a null value results in not applying a timeout.
          */
-        private Duration maxAcquireTime = Duration.ZERO;
+        private Duration maxAcquireTime = NO_TIMEOUT;
 
         /**
          * r2dbc connection factory max life time
-         * ZERO indicates no-lifetime
+         * Duration.ZERO indicates immediate connection disposal.
+         * A negative or a null value results in not applying a timeout.
          */
-        private Duration maxLifeTime = Duration.ZERO;
+        private Duration maxLifeTime = NO_TIMEOUT;
+
         /**
          * r2dbc connection factory validation query
          */
@@ -166,7 +171,7 @@ public class R2dbcConnectionFactoryProperties {
          * r2dbc connection factory background eviction interval
          * ZERO indicates no-timeout, negative marks unconfigured.
          */
-        private Duration backgroundEvictionInterval = Duration.ofNanos(-1);
+        private Duration backgroundEvictionInterval = NO_TIMEOUT;
 
     }
 
