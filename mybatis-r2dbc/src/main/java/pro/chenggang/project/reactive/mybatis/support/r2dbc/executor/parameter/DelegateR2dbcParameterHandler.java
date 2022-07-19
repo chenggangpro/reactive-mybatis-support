@@ -200,8 +200,11 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             String methodName = method.getName();
+            if (methodName.equals("equals") || methodName.equals("hashCode") || methodName.equals("toString")) {
+                return method.invoke(proxy, args);
+            }
             if (!methodName.startsWith("set")) {
-                //not handle no set method
+                //Does not handle non-set methods
                 return null;
             }
             int index = (int) args[0];

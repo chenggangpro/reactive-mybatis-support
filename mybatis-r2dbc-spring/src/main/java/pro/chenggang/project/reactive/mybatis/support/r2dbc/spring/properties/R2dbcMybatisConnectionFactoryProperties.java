@@ -1,10 +1,12 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties;
 
+import io.r2dbc.pool.SimplePoolMetricsRecorder;
 import io.r2dbc.spi.ValidationDepth;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.springframework.util.ClassUtils;
+import reactor.pool.PoolMetricsRecorder;
 import reactor.util.annotation.Nullable;
 
 import java.io.UnsupportedEncodingException;
@@ -13,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.UUID;
 
+import static io.r2dbc.pool.ConnectionPoolConfiguration.NO_TIMEOUT;
 import static org.springframework.util.StringUtils.hasText;
 
 /**
@@ -139,20 +142,25 @@ public class R2dbcMybatisConnectionFactoryProperties {
 
         /**
          * r2dbc connection factory max create connection time
-         * ZERO indicates no-timeout
+         * Duration.ZERO indicates immediate failure if the connection is not created immediately.
+         * A negative or a null value results in not applying a timeout.
          */
-        private Duration maxCreateConnectionTime = Duration.ZERO;
+        private Duration maxCreateConnectionTime = NO_TIMEOUT;
+
         /**
          * r2dbc connection factory max acquire time
-         * ZERO indicates no-timeout
+         * Duration.ZERO indicates that the connection must be immediately available otherwise acquisition fails.
+         * A negative or a null value results in not applying a timeout.
          */
-        private Duration maxAcquireTime = Duration.ZERO;
+        private Duration maxAcquireTime = NO_TIMEOUT;
 
         /**
          * r2dbc connection factory max lifetime
-         * ZERO indicates no-lifetime
+         * Duration.ZERO indicates immediate connection disposal.
+         * A negative or a null value results in not applying a timeout.
          */
-        private Duration maxLifeTime = Duration.ZERO;
+        private Duration maxLifeTime = NO_TIMEOUT;
+
         /**
          * r2dbc connection factory validation query
          */
@@ -178,7 +186,12 @@ public class R2dbcMybatisConnectionFactoryProperties {
          * r2dbc connection factory background eviction interval
          * ZERO indicates no-timeout, negative marks unconfigured.
          */
-        private Duration backgroundEvictionInterval = Duration.ofNanos(-1);
+        private Duration backgroundEvictionInterval = NO_TIMEOUT;
+
+        /**
+         * r2dbc {@link PoolMetricsRecorder} to calculate elapsed time and instrumentation data
+         */
+        private PoolMetricsRecorder metricsRecorder = new SimplePoolMetricsRecorder();
 
     }
 

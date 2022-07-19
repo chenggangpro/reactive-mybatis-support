@@ -145,6 +145,7 @@ public class R2dbcMybatisAutoConfiguration {
                 .maxAcquireTime(pool.getMaxAcquireTime())
                 .maxCreateConnectionTime(pool.getMaxCreateConnectionTime())
                 .maxLifeTime(pool.getMaxLifeTime())
+                .metricsRecorder(pool.getMetricsRecorder())
                 .validationDepth(pool.getValidationDepth());
         if (hasText(pool.getValidationQuery())) {
             builder.validationQuery(pool.getValidationQuery());
