@@ -10,7 +10,7 @@
 |project-version|reactor-bom|r2dbc-bom|spring-boot|
 |:--|:--|:--|:--|
 |`1.1.x`| `>= 2020.0.17` |`Arabba-SRxxx`|`2.6.x`|
-|`1.2.0`| `>= 2020.0.21` |`Borca-SR1`|`>=2.7.0 && <=2.7.1`|
+|`1.2.0`| `>= 2020.0.21` |`Borca-SR1`|`>=2.7.0 && <=2.7.2`|
 
 > The `Borca-SR1` is based on `r2dbc-spi`[0.9.1.RELEASE]
 > Since `r2dbc-spi` is changed in `1.0.0.RELEASE`, `Borca-SR1`'s future versions need to be re-adapted.
