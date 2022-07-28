@@ -1,107 +1,223 @@
 package pro.chenggang.project.reactive.mybatis.support.generator.core;
 
+import org.apache.commons.lang3.StringUtils;
 import org.mybatis.generator.api.MyBatisGenerator;
 import org.mybatis.generator.api.VerboseProgressCallback;
 import org.mybatis.generator.config.Configuration;
 import org.mybatis.generator.internal.DefaultShellCallback;
-import pro.chenggang.project.reactive.mybatis.support.generator.core.context.MyBatisSimpleContextGenerator;
-import pro.chenggang.project.reactive.mybatis.support.generator.core.context.MybatisDynamicContextGenerator;
-import pro.chenggang.project.reactive.mybatis.support.generator.properties.GeneratorExtensionProperties;
+import pro.chenggang.project.reactive.mybatis.support.generator.core.context.ContextGenerator;
+import pro.chenggang.project.reactive.mybatis.support.generator.core.context.ContextGeneratorFactory;
+import pro.chenggang.project.reactive.mybatis.support.generator.plugin.type.GeneratedJavaTypeModifier;
+import pro.chenggang.project.reactive.mybatis.support.generator.properties.FluentGeneratorPropertiesLoader;
+import pro.chenggang.project.reactive.mybatis.support.generator.properties.GeneratorProperties;
+import pro.chenggang.project.reactive.mybatis.support.generator.properties.GeneratorPropertiesBuilder;
+import pro.chenggang.project.reactive.mybatis.support.generator.properties.GeneratorPropertiesHolder;
+import pro.chenggang.project.reactive.mybatis.support.generator.properties.GeneratorPropertiesLoader;
+import pro.chenggang.project.reactive.mybatis.support.generator.properties.YamlGeneratorPropertiesLoader;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 
 /**
- * The type Mybatis dynamic code generator.
+ * The Mybatis dynamic code generator builder.
  *
  * @author Gang Cheng
  * @version 1.0.0
  */
 public class MybatisDynamicCodeGenerator {
 
-    private final GeneratorConfigurationFactory configurationFactory;
+    private final ContextGeneratorFactory contextGeneratorFactory = new ContextGeneratorFactory();
 
-    private MybatisDynamicCodeGenerator(){
-        this.configurationFactory = initConfigurationFactory();
+    private MybatisDynamicCodeGenerator() {
+
     }
 
-    private GeneratorConfigurationFactory initConfigurationFactory(){
-        GeneratorConfigurationFactory configurationFactory = new GeneratorConfigurationFactory();
-        configurationFactory.addContextGenerator(new MybatisDynamicContextGenerator());
-        configurationFactory.addContextGenerator(new MyBatisSimpleContextGenerator());
-        return configurationFactory;
-    }
-
-    /**
-     * Generate.
-     */
-    public void generate(){
-        initProperties(null,false);
-        generateInternal();
+    private MybatisDynamicCodeGenerator(GeneratorPropertiesLoader generatorPropertiesLoader) {
+        GeneratorPropertiesHolder.getInstance()
+                .setGeneratorPropertiesLoader(generatorPropertiesLoader);
     }
 
     /**
-     * Generate.
+     * With specific generator properties loader
      *
-     * @param executeClass the execute class
+     * @param generatorPropertiesLoader the generator properties loader
+     * @return the mybatis dynamic code generator
      */
-    public void generate(Class executeClass){
-        if(Objects.isNull(executeClass)){
-            throw new IllegalArgumentException("Execute Class Must Be Not Null");
-        }
-        initProperties(executeClass.getPackage().getName(),true);
-        generateInternal();
+    public static MybatisDynamicCodeGenerator withGeneratorPropertiesLoader(GeneratorPropertiesLoader generatorPropertiesLoader) {
+        return new MybatisDynamicCodeGenerator(generatorPropertiesLoader);
     }
 
     /**
-     * Generate.
+     * With default yaml configuration file in classpath
+     * <br>
+     * <li>mybatis-generator.yaml</li>
+     * <li>mybatis-generator.yml</li>
      *
-     * @param basePackage the base package
+     * @return the mybatis dynamic code generator
      */
-    public void generate(String basePackage){
-        initProperties(basePackage,true);
-        generateInternal();
+    public static MybatisDynamicCodeGenerator withYamlConfiguration() {
+        return new MybatisDynamicCodeGenerator(new YamlGeneratorPropertiesLoader());
     }
 
-    private void initProperties(String basePackage, boolean forceBasePackage){
-        GeneratorExtensionProperties properties = PropertiesHolder.getInstance().getProperties();
-        if(forceBasePackage){
-            properties.setBasePackage(basePackage);
+    /**
+     * With generator properties builder
+     *
+     * @return the generator properties builder
+     */
+    public static GeneratorPropertiesBuilder withGeneratorPropertiesBuilder() {
+        FluentGeneratorPropertiesLoader fluentGeneratorPropertiesLoader = new FluentGeneratorPropertiesLoader(new Configurer(new MybatisDynamicCodeGenerator()));
+        GeneratorPropertiesHolder.getInstance().setGeneratorPropertiesLoader(fluentGeneratorPropertiesLoader);
+        return fluentGeneratorPropertiesLoader.getGeneratorPropertiesBuilder();
+    }
+
+    /**
+     * With target yaml configuration file name.
+     * <br>
+     * <li>1. classpath:config.yaml will load by classloader</li>
+     * <li>2. /xxx/config.yaml will load by file system</li>
+     *
+     * @param configurationFileName the configuration file name
+     * @return the mybatis dynamic code generator
+     */
+    public static MybatisDynamicCodeGenerator withYamlConfiguration(String configurationFileName) {
+        if (StringUtils.isBlank(configurationFileName)) {
+            throw new IllegalArgumentException("The configuration file name can not be blank");
         }
-        properties.validateByDefault();
+        if (StringUtils.endsWithAny(configurationFileName, "yaml", "yml")) {
+            throw new IllegalArgumentException("The configuration file type must be yaml or yml");
+        }
+        return new MybatisDynamicCodeGenerator(new YamlGeneratorPropertiesLoader(configurationFileName));
     }
 
-    private void generateInternal(){
-        Configuration configuration = this.configurationFactory.getConfiguration();
-        GeneratorExtensionProperties properties = PropertiesHolder.getInstance().getProperties();
-        DefaultShellCallback callback = new DefaultShellCallback(properties.isOverwrite());
+    /**
+     * Execute generate action.
+     */
+    public void generate() {
+        GeneratorProperties generatorProperties = GeneratorPropertiesHolder.getInstance().getGeneratorProperties();
+        generatorProperties.validate();
+        Configuration configuration = this.getConfiguration(generatorProperties);
+        DefaultShellCallback callback = new DefaultShellCallback(generatorProperties.isOverwrite());
         List<String> warnings = new ArrayList<>();
-        try{
+        try {
             MyBatisGenerator myBatisGenerator = new MyBatisGenerator(configuration, callback, warnings);
             myBatisGenerator.generate(new VerboseProgressCallback());
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         warnings.forEach(System.out::println);
     }
 
     /**
-     * Get instance mybatis dynamic code generator.
+     * get configuration
      *
-     * @return the mybatis dynamic code generator
+     * @return the configuration
      */
-    public static MybatisDynamicCodeGenerator getInstance(){
-        return InstanceHolder.INSTANCE;
+    private Configuration getConfiguration(GeneratorProperties generatorProperties) {
+        Configuration configuration = new Configuration();
+        generatorProperties
+                .getGeneratorTypes()
+                .stream()
+                .map(this.contextGeneratorFactory::getContextGenerator)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .map(contextGenerator -> contextGenerator.generateContext(generatorProperties))
+                .forEach(configuration::addContext);
+        return configuration;
     }
 
-    private static class InstanceHolder{
+    /**
+     * Custom configure.
+     *
+     * @return the configurer
+     */
+    public Configurer customConfigure() {
+        return new Configurer(this);
+    }
 
-        private static final MybatisDynamicCodeGenerator INSTANCE;
+    /**
+     * The Configurer.
+     */
+    public static class Configurer {
 
-        static {
-            INSTANCE = new MybatisDynamicCodeGenerator();
+        private final MybatisDynamicCodeGenerator mybatisDynamicCodeGenerator;
+
+        public Configurer(MybatisDynamicCodeGenerator mybatisDynamicCodeGenerator) {
+            this.mybatisDynamicCodeGenerator = mybatisDynamicCodeGenerator;
+        }
+
+        /**
+         * Configure properties.
+         *
+         * @return the configurer
+         */
+        public GeneratorPropertiesBuilder customizeGeneratorProperties() {
+            return new GeneratorPropertiesBuilder(GeneratorPropertiesHolder.getInstance().getGeneratorProperties(), this);
+        }
+
+        /**
+         * Configure generate base package
+         *
+         * @param baseLocation the base location
+         * @param basePackage  the base package
+         * @return the configurer
+         */
+        public Configurer configureGenerateBasePackage(String baseLocation, String basePackage) {
+            return new GeneratorPropertiesBuilder(GeneratorPropertiesHolder.getInstance().getGeneratorProperties(), this)
+                    .targetLocationBuilder()
+                    .baseLocation(baseLocation)
+                    .thenBuilder()
+                    .targetPackageBuilder()
+                    .basePackage(basePackage)
+                    .thenPropertiesBuilder()
+                    .thenConfigurer();
+        }
+
+        /**
+         * Configure default java type modifier
+         *
+         * @param javaTypeModifierClass the type extend DefaultJavaTypeModifier class
+         * @return the configurer
+         */
+        public Configurer configureDefaultJavaTypeModifier(Class<? extends GeneratedJavaTypeModifier> javaTypeModifierClass) {
+            return new GeneratorPropertiesBuilder(GeneratorPropertiesHolder.getInstance().getGeneratorProperties(), this)
+                    .defaultJavaTypeModifierClass(javaTypeModifierClass)
+                    .thenConfigurer();
+        }
+
+        /**
+         * Configure base package from specific class
+         *
+         * @param specificClass the specific class
+         * @return the configurer
+         */
+        public Configurer applyGenerateBasePackageFromClass(Class<?> specificClass) {
+            return new GeneratorPropertiesBuilder(GeneratorPropertiesHolder.getInstance().getGeneratorProperties(), this)
+                    .targetPackageBuilder()
+                    .basePackage(specificClass.getPackage().getName())
+                    .thenPropertiesBuilder()
+                    .thenConfigurer();
+        }
+
+
+        /**
+         * Configure context generator.
+         *
+         * @param contextGenerator the context generator
+         * @return the configurer
+         */
+        public Configurer registerContextGenerator(ContextGenerator contextGenerator) {
+            this.mybatisDynamicCodeGenerator.contextGeneratorFactory.registerContextGenerator(contextGenerator);
+            return this;
+        }
+
+        /**
+         * Return mybatis dynamic code generator.
+         *
+         * @return the mybatis dynamic code generator
+         */
+        public MybatisDynamicCodeGenerator toGenerator() {
+            return this.mybatisDynamicCodeGenerator;
         }
     }
-
 }
