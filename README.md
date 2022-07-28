@@ -141,16 +141,31 @@ This project has met the general business usage scenarios, including:
 ```java
 public class MyBatisGeneratorAction {
 
-    @Test
-    public void generate(){
-        MybatisDynamicCodeGenerator.getInstance().generate(MyBatisGeneratorAction.class);
-    }
-    
-    // or
-    
-    public static void main(String[] args){
-        MybatisDynamicCodeGenerator.getInstance().generate(MyBatisGeneratorAction.class);
-    }
+  /**
+   * generate through main method
+   *
+   * @param args args
+   */
+  public static void main(String[] args) {
+    String codeAbsoluteLocation = new File("").getAbsolutePath() + "/mybatis-r2dbc-generator";
+    MybatisDynamicCodeGenerator.withYamlConfiguration()
+            .customConfigure()
+            .configureGenerateBasePackage(codeAbsoluteLocation, "pro.chenggang.project.reactive.mybatis.support.generator")
+            .toGenerator()
+            .generate();
+  }
+
+  /**
+   * generate through junit test method
+   */
+  @Test
+  public void generateWithYamlWithJunitTestMethod() {
+    MybatisDynamicCodeGenerator.withYamlConfiguration()
+            .customConfigure()
+            .applyGenerateBasePackageFromClass(MyBatisGeneratorAction.class)
+            .toGenerator()
+            .generate();
+  }
 
 }
 ```
