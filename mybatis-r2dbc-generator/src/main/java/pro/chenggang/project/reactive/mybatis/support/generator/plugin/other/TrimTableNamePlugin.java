@@ -1,4 +1,4 @@
-package pro.chenggang.project.reactive.mybatis.support.generator.support;
+package pro.chenggang.project.reactive.mybatis.support.generator.plugin.other;
 
 import lombok.NoArgsConstructor;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -12,6 +12,7 @@ import static org.mybatis.generator.internal.util.messages.Messages.getString;
 
 /**
  * The type Trim table name plugin.
+ *
  * @author Gang Cheng
  * @version 1.0.0
  */
@@ -20,7 +21,7 @@ public class TrimTableNamePlugin extends PluginAdapter {
 
     private String prefix;
 
-	@Override
+    @Override
     public boolean validate(List<String> warnings) {
         String trimPrefix = properties.getProperty("tablePrefix");
         boolean valid = stringHasValue(trimPrefix);
@@ -45,27 +46,27 @@ public class TrimTableNamePlugin extends PluginAdapter {
 
     }
 
-    private String trimPrefix(String name){
+    private String trimPrefix(String name) {
         String[] split = name.split("\\.");
-        if(split.length == 0){
+        if (split.length == 0) {
             return name;
         }
         String last = split[split.length - 1];
-        if(!StringUtility.stringHasValue(last)){
+        if (!StringUtility.stringHasValue(last)) {
             return name;
         }
-        if(!last.startsWith(this.prefix)){
+        if (!last.startsWith(this.prefix)) {
             return name;
         }
-        last = last.replaceFirst(this.prefix,"");
-        split[split.length-1] = last;
-        return String.join(".",split);
+        last = last.replaceFirst(this.prefix, "");
+        split[split.length - 1] = last;
+        return String.join(".", split);
     }
 
-    private String upperFirstLetter(String letter){
+    private String upperFirstLetter(String letter) {
         char[] chars = letter.toCharArray();
-        if(chars[0]>='a' && chars[0]<='z'){
-            chars[0] = (char) (chars[0]-32);
+        if (chars[0] >= 'a' && chars[0] <= 'z') {
+            chars[0] = (char) (chars[0] - 32);
         }
         return new String(chars);
     }

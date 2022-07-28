@@ -1,33 +1,57 @@
-# NOTE -->  generate type
-generateType:
+# The target generator types
+generatorTypes:
+  # model + simple mapper + xml
   - SIMPLE
+  # model + simple mapper + dynamic mapper + dynamic mapper support + xml
   - DYNAMIC
-# NOTE --> target trim Regex pattern Note:Must start with ^ ,otherwise it'll replace all string matched the pattern
-# tableTrimPattern: ^Sys
-# NOTE --> basePackage of all target package
-# basePackage:
-# NOTE --> javaLocation and mapperXmlLocation 's parentLocation (Absolute DIR)
-#parentLocation:
-javaLocation: src/main/java
-mapperXmlLocation: src/main/resources
-# NOTE --> model location
-modelPackage: entity.model
-# NOTE --> mapper package
-mapperInterfacePackage: mapper
-# NOTE --> xml package
-mapperXmPackage: mapper
-# NOTE --> jdbc driver class name
-driverClass: com.mysql.cj.jdbc.Driver
-# NOTE --> jdbc connection url
-connectionUrl: jdbc:mysql://127.0.0.1:3306/database_name?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
-# NOTE --> jdbc username
-username: root
-# NOTE --> jdbc password
-password: 123456
+  # model only
+  - MODEL
+  # model + xml
+  - MODEL_XML
+  # dynamic mapper + dynamic mapper support
+  - DYNAMIC_MAPPER
+# Whether extend dynamic mapper,default is true
 extendDynamicMapper: true
-overwrite: true
-# NOTE --> lombok
-lombok:
+# Whether overwrite generated file,default is false
+overwrite: false
+# Whether generate returned key,default is false
+generateReturnedKey: false
+# Whether generate column comment,default is true
+generateComment: true
+# The table name trim regex pattern
+# Setting '^Sys' will replace the generated table name start with Sys
+tableNameTrimPattern: ""
+# The column name trim regex pattern
+# Setting '^Sys' will replace the generated column name start with Sys
+columnNameTrimPattern: ""
+# location settings
+targetLocation:
+  # The base location
+  baseLocation: ""
+  # The java location
+  javaLocation: "src/main/java"
+  # The mapper xml location
+  mapperXmlLocation: "src/main/resources"
+targetPackage:
+  # The base package
+  basePackage: ""
+  # The model package
+  modelPackage: "entity.model"
+  # The mapper interface package
+  mapperInterfacePackage: "mapper"
+  # The mapper xml package
+  mapperXmlPackage: "mapper"
+targetConnection:
+  # The jdbc driver class name
+  jdbcDriverClassName: "com.mysql.cj.jdbc.Driver"
+  # The jdbc connection url
+  jdbcConnectionUrl: "jdbc:mysql://127.0.0.1:3306/database_name?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false"
+  # The jdbc username
+  username: "root"
+  # The jdbc password
+  password: "123456"
+# The Lombok configs if needed
+lombokConfigs:
   - ToString
   - Getter
   - Setter
@@ -36,6 +60,6 @@ lombok:
   - AllArgsConstructor
   - Builder
   - EqualsAndHashCode
-# NOTE --> if empty then generate all tables
-tableName:
+# The target table names,if empty then generate all tables
+tableNames:
   - table_name

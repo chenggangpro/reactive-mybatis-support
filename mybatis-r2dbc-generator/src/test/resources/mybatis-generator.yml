@@ -1,32 +1,46 @@
-# generate type
-generateType:
+# The target generator types
+generatorTypes:
   - SIMPLE
   - DYNAMIC
-# target trim pattern
-# tableTrimPattern: ^Sys
-#parentLocation
-# bacePackage:
-javaLocation: src/test/java
-mapperXmlLocation: src/test/resources
-# model location
-modelPackage: entity.model
-# mapper package
-mapperInterfacePackage: mapper
-# xml package
-mapperXmPackage: mapper
-# jdbc driver class name
-driverClass: com.mysql.cj.jdbc.Driver
-# jdbc connection url
-connectionUrl: jdbc:mysql://127.0.0.1:3306/r2dbc?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
-# jdbc username
-username: root
-# jdbc password
-password: 123456
+# Whether extend dynamic mapper,default is true
 extendDynamicMapper: true
-overwrite: true
+# Whether overwrite generated file,default is false
+overwrite: false
+# Whether generate returned key,default is false
 generateReturnedKey: true
-#lombok
-lombok:
+# Whether generate column comment,default is true
+generateComment: true
+# The table name trim regex pattern
+# Setting '^Sys' will replace the generated table name start with Sys
+# tableNameTrimPattern: ""
+# location settings
+targetLocation:
+  # The base location
+  # baseLocation: ""
+  # The java location
+  javaLocation: "src/test/java"
+  # The mapper xml location
+  mapperXmlLocation: "src/test/resources"
+targetPackage:
+  # The base package
+  basePackage: ""
+  # The model package
+  modelPackage: "entity.model"
+  # The mapper interface package
+  mapperInterfacePackage: "mapper"
+  # The mapper xml package
+  mapperXmlPackage: "mapper"
+targetConnection:
+  # The jdbc driver class name
+  jdbcDriverClassName: "com.mysql.cj.jdbc.Driver"
+  # The jdbc connection url
+  jdbcConnectionUrl: "jdbc:mysql://127.0.0.1:3306/r2dbc?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false"
+  # The jdbc username
+  username: "root"
+  # The jdbc password
+  password: "123456"
+# The Lombok configs if needed
+lombokConfigs:
   - ToString
   - Getter
   - Setter
@@ -35,7 +49,7 @@ lombok:
   - AllArgsConstructor
   - Builder
   - EqualsAndHashCode
-# all tables if not exist
-tableName:
+# The target table names,if empty then generate all tables
+tableNames:
   - dept
   - emp

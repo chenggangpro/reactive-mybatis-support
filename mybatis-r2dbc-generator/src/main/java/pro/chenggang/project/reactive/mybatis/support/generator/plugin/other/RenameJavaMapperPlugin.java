@@ -1,4 +1,4 @@
-package pro.chenggang.project.reactive.mybatis.support.generator.support;
+package pro.chenggang.project.reactive.mybatis.support.generator.plugin.other;
 
 import lombok.NoArgsConstructor;
 import org.mybatis.generator.api.IntrospectedTable;
@@ -13,6 +13,7 @@ import static org.mybatis.generator.internal.util.messages.Messages.getString;
 
 /**
  * The type Rename java mapper plugin.
+ *
  * @author Gang Cheng
  * @version 1.0.0
  */
@@ -21,7 +22,7 @@ public class RenameJavaMapperPlugin extends PluginAdapter {
     private String replaceString;
     private Pattern pattern;
 
-	@Override
+    @Override
     public boolean validate(List<String> warnings) {
         String searchString = properties.getProperty("searchString");
         this.replaceString = properties.getProperty("replaceString");
