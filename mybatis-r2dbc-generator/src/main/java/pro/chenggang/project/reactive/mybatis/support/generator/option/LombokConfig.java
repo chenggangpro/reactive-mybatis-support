@@ -47,5 +47,4 @@ public enum LombokConfig {
      * EqualsAndHashCode
      */
     EqualsAndHashCode,
-    ;
 }

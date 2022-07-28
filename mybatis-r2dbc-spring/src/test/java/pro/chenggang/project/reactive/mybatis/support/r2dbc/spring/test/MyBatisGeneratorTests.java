@@ -10,7 +10,16 @@ public class MyBatisGeneratorTests {
 
     @Test
     public void testGenerate() {
-        MybatisDynamicCodeGenerator.getInstance().generate("pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application");
+        MybatisDynamicCodeGenerator.withYamlConfiguration()
+                .customConfigure()
+                .applyGenerateBasePackageFromClass(MyBatisGeneratorTests.class)
+                .customizeGeneratorProperties()
+                .targetPackageBuilder()
+                .basePackage("pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application")
+                .thenPropertiesBuilder()
+                .thenConfigurer()
+                .toGenerator()
+                .generate();
     }
 
 }

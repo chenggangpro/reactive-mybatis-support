@@ -1,4 +1,4 @@
-package pro.chenggang.project.reactive.mybatis.support.generator.support;
+package pro.chenggang.project.reactive.mybatis.support.generator.plugin.comment;
 
 import org.mybatis.generator.api.CommentGenerator;
 import org.mybatis.generator.api.IntrospectedColumn;
@@ -19,18 +19,12 @@ import java.util.Properties;
 import java.util.Set;
 
 /**
- * The type Extension comment generator.
+ * The custom comment generator.
+ *
  * @author Gang Cheng
  * @version 1.0.0
  */
-public class ExtensionCommentGenerator implements CommentGenerator {
-
-    /**
-     * Instantiates a new Extension comment generator.
-     */
-    public ExtensionCommentGenerator() {
-        super();
-    }
+public class CustomCommentGenerator implements CommentGenerator {
 
     @Override
     public void addConfigurationProperties(Properties properties) {
@@ -41,8 +35,8 @@ public class ExtensionCommentGenerator implements CommentGenerator {
     public void addFieldComment(Field field, IntrospectedTable introspectedTable, IntrospectedColumn introspectedColumn) {
         if (StringUtility.stringHasValue(introspectedColumn.getRemarks())) {
             field.addJavaDocLine("/**");
-            String sb = " * " + introspectedColumn.getRemarks();
-            field.addJavaDocLine(sb);
+            String remarks = " * " + introspectedColumn.getRemarks();
+            field.addJavaDocLine(remarks);
             field.addJavaDocLine(" */");
         }
     }
@@ -95,8 +89,8 @@ public class ExtensionCommentGenerator implements CommentGenerator {
     @Override
     public void addComment(XmlElement xmlElement) {
         xmlElement.addElement(new TextElement("<!--"));
-        String sb = "  WARNING - " + MergeConstants.NEW_ELEMENT_TAG;
-        xmlElement.addElement(new TextElement(sb));
+        String comment = "  WARNING - " + MergeConstants.NEW_ELEMENT_TAG;
+        xmlElement.addElement(new TextElement(comment));
         xmlElement.addElement(new TextElement("-->"));
     }
 
@@ -122,7 +116,12 @@ public class ExtensionCommentGenerator implements CommentGenerator {
 
     @Override
     public void addFieldAnnotation(Field field, IntrospectedTable introspectedTable, IntrospectedColumn introspectedColumn, Set<FullyQualifiedJavaType> imports) {
-
+        if (StringUtility.stringHasValue(introspectedColumn.getRemarks())) {
+            field.addJavaDocLine("/**");
+            String remarks = " * " + introspectedColumn.getRemarks();
+            field.addJavaDocLine(remarks);
+            field.addJavaDocLine(" */");
+        }
     }
 
     @Override

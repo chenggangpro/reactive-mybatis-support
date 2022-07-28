@@ -9,13 +9,29 @@ package pro.chenggang.project.reactive.mybatis.support.generator.option;
 public enum GeneratorType {
 
     /**
-     * Mybatis dynamic sql basedCode
+     * dynamic sql code
      */
     DYNAMIC,
+
     /**
-     * Mybatis basic basedCode
+     * simple code
      */
     SIMPLE,
-    ;
 
+    /**
+     * simple model only
+     */
+    MODEL,
+
+    /**
+     * simple model and xml only
+     */
+    MODEL_XML,
+
+    /**
+     * dynamic model only
+     */
+    DYNAMIC_MAPPER,
+
+    ;
 }
