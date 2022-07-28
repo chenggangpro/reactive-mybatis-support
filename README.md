@@ -4,8 +4,16 @@
 # Reactive-Mybatis-Support
 
 > Note: if you want to use this repository,please keep the version above `1.1.0.RELEASE`.
->
-> Note: this repository project currently only supports up to `SpringBoot` `2.6.x`.Higher versions will be adapted after offical project.
+
+#### Description of applicable version
+
+|project-version|reactor-bom|r2dbc-bom|spring-boot|
+|:--|:--|:--|:--|
+|`1.1.x`| `>= 2020.0.17` |`Arabba-SRxxx`|`2.6.x`|
+|`1.2.x`| `>= 2020.0.21` |`Borca-SR1`|`>=2.7.0 && <=2.7.2`|
+
+> The `Borca-SR1` is based on `r2dbc-spi`[0.9.1.RELEASE]
+> Since `r2dbc-spi` is changed in `1.0.0.RELEASE`, `Borca-SR1`'s future versions need to be re-adapted.
 
 This project has met the general business usage scenarios, including:
 * 1 . Parameter parsing and mapping
