@@ -20,6 +20,9 @@ updates:
   - dependency-name: cn.hutool:hutool-all
   - dependency-name: org.assertj:assertj-core
   - dependency-name: junit:junit
+  - dependency-name: org.junit:junit-bom
+    versions:
+      - "> 5.8.x"
   - dependency-name: com.github.ben-manes.caffeine:caffeine
     versions:
       - "> 2.9.x"
