@@ -29,7 +29,7 @@ public class GeneratorPropertiesBuilder {
     private boolean generateComment = true;
     private String tableNameTrimPattern;
     private String columnNameTrimPattern;
-    private Class<? extends GeneratedJavaTypeModifier> defaultJavaTypeModifierClass;
+    private Class<? extends GeneratedJavaTypeModifier> generatedJavaTypeModifierClass;
     private Set<LombokConfig> lombokConfigs = new HashSet<>();
     private Set<String> tableNames;
     private TargetLocation targetLocation;
@@ -49,7 +49,7 @@ public class GeneratorPropertiesBuilder {
         this.generateComment = generatorProperties.isGenerateComment();
         this.tableNameTrimPattern = generatorProperties.getTableNameTrimPattern();
         this.columnNameTrimPattern = generatorProperties.getColumnNameTrimPattern();
-        this.defaultJavaTypeModifierClass = generatorProperties.getDefaultJavaTypeModifierClass();
+        this.generatedJavaTypeModifierClass = generatorProperties.getGeneratedJavaTypeModifierClass();
         this.lombokConfigs = generatorProperties.getLombokConfigs();
         this.tableNames = generatorProperties.getTableNames();
         this.targetLocation = generatorProperties.getTargetLocation();
@@ -150,13 +150,13 @@ public class GeneratorPropertiesBuilder {
     }
 
     /**
-     * The default java type modifier class
+     * The generated java type modifier class
      *
-     * @param defaultJavaTypeModifierClass the default java type modifier class
+     * @param generatedJavaTypeModifierClass the generated java type modifier class
      * @return the generator properties builder
      */
-    public GeneratorPropertiesBuilder defaultJavaTypeModifierClass(Class<? extends GeneratedJavaTypeModifier> defaultJavaTypeModifierClass) {
-        this.defaultJavaTypeModifierClass = defaultJavaTypeModifierClass;
+    public GeneratorPropertiesBuilder generatedJavaTypeModifierClass(Class<? extends GeneratedJavaTypeModifier> generatedJavaTypeModifierClass) {
+        this.generatedJavaTypeModifierClass = generatedJavaTypeModifierClass;
         return this;
     }
 
@@ -244,7 +244,7 @@ public class GeneratorPropertiesBuilder {
                 generateComment,
                 tableNameTrimPattern,
                 columnNameTrimPattern,
-                defaultJavaTypeModifierClass,
+                generatedJavaTypeModifierClass,
                 targetLocation,
                 targetPackage,
                 targetConnection,

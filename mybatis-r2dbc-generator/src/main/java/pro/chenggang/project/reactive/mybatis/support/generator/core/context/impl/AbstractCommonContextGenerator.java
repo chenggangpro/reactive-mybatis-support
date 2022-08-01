@@ -192,8 +192,8 @@ public abstract class AbstractCommonContextGenerator implements ContextGenerator
         javaTypeResolverConfiguration.setConfigurationType(CustomJavaTypeResolver.class.getCanonicalName());
         javaTypeResolverConfiguration.addProperty("useJSR310Types", "true");
         javaTypeResolverConfiguration.addProperty("forceBigDecimals", "true");
-        if (Objects.nonNull(generatorProperties.getDefaultJavaTypeModifierClass())) {
-            javaTypeResolverConfiguration.addProperty("defaultJavaTypeModifierType", generatorProperties.getDefaultJavaTypeModifierClass().getCanonicalName());
+        if (Objects.nonNull(generatorProperties.getGeneratedJavaTypeModifierClass())) {
+            javaTypeResolverConfiguration.addProperty("generatedJavaTypeModifierType", generatorProperties.getGeneratedJavaTypeModifierClass().getCanonicalName());
         }
         context.setJavaTypeResolverConfiguration(javaTypeResolverConfiguration);
     }
