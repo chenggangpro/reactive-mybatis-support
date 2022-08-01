@@ -174,14 +174,14 @@ public class MybatisDynamicCodeGenerator {
         }
 
         /**
-         * Configure default java type modifier
+         * Configure generated java type modifier
          *
-         * @param javaTypeModifierClass the type extend DefaultJavaTypeModifier class
+         * @param generatedJavaTypeModifierClass the type extend GeneratedJavaTypeModifier class
          * @return the configurer
          */
-        public Configurer configureDefaultJavaTypeModifier(Class<? extends GeneratedJavaTypeModifier> javaTypeModifierClass) {
+        public Configurer configureGeneratedJavaTypeModifier(Class<? extends GeneratedJavaTypeModifier> generatedJavaTypeModifierClass) {
             return new GeneratorPropertiesBuilder(GeneratorPropertiesHolder.getInstance().getGeneratorProperties(), this)
-                    .defaultJavaTypeModifierClass(javaTypeModifierClass)
+                    .generatedJavaTypeModifierClass(generatedJavaTypeModifierClass)
                     .thenConfigurer();
         }
 

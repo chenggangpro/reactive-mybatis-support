@@ -22,7 +22,7 @@ public class MyBatisGeneratorAction {
         MybatisDynamicCodeGenerator.withYamlConfiguration()
                 .customConfigure()
                 .configureGenerateBasePackage(codeAbsoluteLocation, "pro.chenggang.project.reactive.mybatis.support.generator")
-                .configureDefaultJavaTypeModifier(TestJavaTypeModifier.class)
+                .configureGeneratedJavaTypeModifier(TestJavaTypeModifier.class)
                 .toGenerator()
                 .generate();
     }
@@ -35,7 +35,7 @@ public class MyBatisGeneratorAction {
         MybatisDynamicCodeGenerator.withYamlConfiguration()
                 .customConfigure()
                 .applyGenerateBasePackageFromClass(MyBatisGeneratorAction.class)
-                .configureDefaultJavaTypeModifier(TestJavaTypeModifier.class)
+                .configureGeneratedJavaTypeModifier(TestJavaTypeModifier.class)
                 .toGenerator()
                 .generate();
     }

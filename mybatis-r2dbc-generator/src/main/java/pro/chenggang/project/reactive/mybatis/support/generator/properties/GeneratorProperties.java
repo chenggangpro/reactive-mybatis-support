@@ -74,9 +74,9 @@ public class GeneratorProperties {
     private String columnNameTrimPattern;
 
     /**
-     * The default java type modifier class
+     * The generated java type modifier class
      */
-    private Class<? extends GeneratedJavaTypeModifier> defaultJavaTypeModifierClass;
+    private Class<? extends GeneratedJavaTypeModifier> generatedJavaTypeModifierClass;
 
     /**
      * The target location
