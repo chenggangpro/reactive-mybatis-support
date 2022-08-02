@@ -4,6 +4,7 @@ import org.mybatis.spring.annotation.MapperScannerRegistrar;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanNameGenerator;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.annotation.AliasFor;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.mapper.R2dbcMapperFactoryBean;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.mapper.R2dbcMapperScannerConfigurer;
 
@@ -46,6 +47,7 @@ public @interface R2dbcMapperScan {
    *
    * @return base package names
    */
+  @AliasFor("basePackages")
   String[] value() default {};
 
   /**
@@ -54,6 +56,7 @@ public @interface R2dbcMapperScan {
    *
    * @return base package names for scanning mapper interface
    */
+  @AliasFor("value")
   String[] basePackages() default {};
 
   /**
