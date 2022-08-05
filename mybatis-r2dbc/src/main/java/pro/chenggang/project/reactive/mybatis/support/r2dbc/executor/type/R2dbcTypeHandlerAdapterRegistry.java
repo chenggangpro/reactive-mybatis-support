@@ -61,6 +61,17 @@ public class R2dbcTypeHandlerAdapterRegistry {
     }
 
     /**
+     * Register with r2dbcTypeHandlerAdapter's Class
+     *
+     * @param r2dbcTypeHandlerAdapterClass the r2dbc type handler adapter class
+     */
+    public void register(Class<? extends R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapterClass) {
+        ObjectFactory objectFactory = r2DbcMybatisConfiguration.getObjectFactory();
+        R2dbcTypeHandlerAdapter r2dbcTypeHandlerAdapter = objectFactory.create(r2dbcTypeHandlerAdapterClass);
+        this.register(r2dbcTypeHandlerAdapter);
+    }
+
+    /**
      * Register from package
      *
      * @param packageName the package name
