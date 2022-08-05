@@ -2,7 +2,7 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholde
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import io.r2dbc.spi.ConnectionFactory;
+import io.r2dbc.spi.ConnectionMetadata;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.BoundSql;
@@ -14,14 +14,11 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContextAttribute;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderDialect.DEFAULT_PLACEHOLDER;
 
@@ -36,7 +33,6 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
 
     private static final Log log = LogFactory.getLog(DefaultPlaceholderFormatter.class);
 
-    private final Pattern jdbcPlaceholderPattern = Pattern.compile("\\?");
     private final PlaceholderDialectRegistry placeholderDialectRegistry;
     //Class<? extends PlaceholderDialect --> Cache< original SQL , formatted SQL >
     private final ConcurrentHashMap<Class<? extends PlaceholderDialect>, Cache<String, String>> formattedSqlCache = new ConcurrentHashMap<>();
@@ -55,21 +51,21 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
     }
 
     @Override
-    public String replaceSqlPlaceholder(ConnectionFactory connectionFactory, BoundSql boundSql, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute) {
+    public String replaceSqlPlaceholder(ConnectionMetadata connectionMetadata, BoundSql boundSql, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute) {
         Optional<PlaceholderDialect> optionalPlaceholderDialect = placeholderDialectRegistry
-                .getPlaceholderDialect(connectionFactory, reactiveExecutorContextAttribute)
+                .getPlaceholderDialect(connectionMetadata, reactiveExecutorContextAttribute)
                 .filter(placeholderDialect -> !Objects.equals(placeholderDialect.getMarker(), DEFAULT_PLACEHOLDER));
         String originalSql = boundSql.getSql();
         if (!optionalPlaceholderDialect.isPresent()) {
             if (log.isTraceEnabled()) {
-                log.trace("Placeholder dialect not found ,use original sql");
+                log.trace("Placeholder dialect not found or is default placeholder ,use original sql");
             }
             return originalSql;
         }
         PlaceholderDialect placeholderDialect = optionalPlaceholderDialect.get();
         Cache<String, String> cache = this.formattedSqlCache.get(placeholderDialect.getClass());
         if (Objects.isNull(cache)) {
-            throw new IllegalStateException("Placeholder dialect is found,but Placeholder dialect sql cache is null,Placeholder dialect type : " + placeholderDialect.getClass());
+            throw new IllegalStateException("Placeholder dialect found,but Placeholder dialect sql cache is null,Placeholder dialect type : " + placeholderDialect.getClass());
         }
         return MapUtil.computeIfAbsent(cache.asMap(),
                 originalSql,
@@ -86,85 +82,66 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
      */
     protected String formatPlaceholderInternal(PlaceholderDialect placeholderDialect, BoundSql boundSql) {
         String sql = boundSql.getSql();
-        List<Integer> placeholderIndexList = this.extractJdbcPlaceholderIndex(sql);
-        if (placeholderIndexList.isEmpty()) {
+        char defaultPlaceholder = DEFAULT_PLACEHOLDER.charAt(0);
+        boolean containsAnyPlaceholder = sql.chars().anyMatch(aChar -> aChar == defaultPlaceholder);
+        if (!containsAnyPlaceholder) {
             if (log.isTraceEnabled()) {
-                log.trace("Placeholder index not found ,use original sql");
+                log.trace("Placeholder not found ,use original sql");
             }
             return sql;
         }
+        char[] chars = sql.toCharArray();
         String marker = placeholderDialect.getMarker();
-        int startIndex = placeholderDialect.startIndex();
-        StringBuilder builder = new StringBuilder();
+        StringBuilder builder = new StringBuilder(sql.length() + 10);
         if (placeholderDialect.usingIndexMarker()) {
-            for (int i = 0; i < placeholderIndexList.size(); i++) {
-                Integer placeholderIndexValue = placeholderIndexList.get(i);
-                builder.append(sql, i == 0 ? 0 : placeholderIndexList.get(i - 1) + 1, placeholderIndexValue)
-                        .append(marker)
-                        .append(i + startIndex);
-            }
-            if (placeholderIndexList.get(placeholderIndexList.size() - 1) < sql.length()) {
-                builder.append(sql, placeholderIndexList.get(placeholderIndexList.size() - 1) + 1, sql.length());
+            int startIndex = placeholderDialect.startIndex();
+            for (int i = 0; i < chars.length; i++) {
+                char aChar = chars[i];
+                if (aChar != defaultPlaceholder) {
+                    builder.append(aChar);
+                    continue;
+                }
+                boolean previousMatched = chars[i - 1] == defaultPlaceholder;
+                boolean forwardMatched = i + 1 < chars.length && chars[i + 1] == defaultPlaceholder;
+                if (previousMatched || forwardMatched) {
+                    builder.append(aChar);
+                    continue;
+                }
+                builder.append(marker).append(startIndex);
+                startIndex++;
             }
             String formattedSql = builder.toString();
             if (log.isDebugEnabled()) {
-                log.debug("Format placeholder based by index, with (" + placeholderDialect.getClass().getSimpleName() + ") => " + formattedSql);
+                log.debug("Format placeholder based by index, with (" + placeholderDialect.getClass().getSimpleName() + ")");
+                log.debug("Formatted SQL  => " + formattedSql);
             }
             return formattedSql;
         }
         List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
-        for (int i = 0; i < placeholderIndexList.size(); i++) {
-            Integer placeholderIndexValue = placeholderIndexList.get(i);
-            builder.append(sql, i == 0 ? 0 : placeholderIndexList.get(i - 1) + 1, placeholderIndexValue)
-                    .append(marker);
-            String parameterProperty = parameterMappings.get(i).getProperty().replaceAll("\\.", "_");
+        int identifierCount = 0;
+        for (int i = 0; i < chars.length; i++) {
+            char aChar = chars[i];
+            if (aChar != defaultPlaceholder) {
+                builder.append(aChar);
+                continue;
+            }
+            boolean previousMatched = chars[i - 1] == defaultPlaceholder;
+            boolean forwardMatched = i + 1 < chars.length && chars[i + 1] == defaultPlaceholder;
+            if (previousMatched || forwardMatched) {
+                builder.append(aChar);
+                continue;
+            }
+            builder.append(marker);
+            String parameterProperty = parameterMappings.get(identifierCount).getProperty().replaceAll("\\.", "_");
             builder.append(parameterProperty);
-        }
-        if (placeholderIndexList.get(placeholderIndexList.size() - 1) < sql.length()) {
-            builder.append(sql, placeholderIndexList.get(placeholderIndexList.size() - 1) + 1, sql.length());
+            identifierCount++;
         }
         String formattedSql = builder.toString();
         if (log.isDebugEnabled()) {
-            log.debug("Format placeholder based on parameter name, with (" + placeholderDialect.getClass().getSimpleName() + ") \n => " + formattedSql);
+            log.debug("Format placeholder based on parameter name, with (" + placeholderDialect.getClass().getSimpleName() + ")");
+            log.debug("Formatted SQL  => " + formattedSql);
         }
         return formattedSql;
-    }
-
-    /**
-     * extract jdbc placeholder index
-     *
-     * @param sql the original sql
-     * @return the index list
-     */
-    protected List<Integer> extractJdbcPlaceholderIndex(String sql) {
-        Matcher matcher = jdbcPlaceholderPattern.matcher(sql);
-        List<Integer> indexList = new ArrayList<>();
-        int previous = -1;
-        int result = -1;
-        while (matcher.find()) {
-            int start = matcher.start();
-            if (previous < 0) {
-                previous = start;
-                result = start;
-                continue;
-            }
-            if (start - previous == 1) {
-                previous = start;
-                if (result >= 0) {
-                    result = -1;
-                }
-                continue;
-            }
-            if (result >= 0) {
-                indexList.add(result);
-            }
-            previous = start;
-            result = start;
-        }
-        if (result > 0) {
-            indexList.add(result);
-        }
-        return indexList;
     }
 
 }

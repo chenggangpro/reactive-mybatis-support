@@ -1,6 +1,6 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder;
 
-import io.r2dbc.spi.ConnectionFactory;
+import io.r2dbc.spi.ConnectionMetadata;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContextAttribute;
 
 import java.util.Optional;
@@ -31,9 +31,9 @@ public interface PlaceholderDialectRegistry {
     /**
      * Gets placeholder dialect.
      *
-     * @param connectionFactory                the connection factory
+     * @param connectionMetadata                the connection metadata
      * @param reactiveExecutorContextAttribute the reactive executor context attribute
      * @return the placeholder dialect
      */
-    Optional<PlaceholderDialect> getPlaceholderDialect(ConnectionFactory connectionFactory, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute);
+    Optional<PlaceholderDialect> getPlaceholderDialect(ConnectionMetadata connectionMetadata, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute);
 }
