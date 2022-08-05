@@ -1,6 +1,6 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.defaults;
 
-import io.r2dbc.spi.ConnectionFactory;
+import io.r2dbc.spi.ConnectionMetadata;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderDialect;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderDialectRegistry;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.dialect.H2PlaceholderDialect;
@@ -54,11 +54,11 @@ public class DefaultPlaceholderDialectRegistry implements PlaceholderDialectRegi
     }
 
     @Override
-    public Optional<PlaceholderDialect> getPlaceholderDialect(ConnectionFactory connectionFactory, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute) {
+    public Optional<PlaceholderDialect> getPlaceholderDialect(ConnectionMetadata connectionMetadata, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute) {
         String name = Optional.ofNullable(reactiveExecutorContextAttribute.getAttribute().get(PLACEHOLDER_DIALECT_NAME_ATTRIBUTE_KEY))
                 .filter(value -> value instanceof String)
                 .map(String.class::cast)
-                .orElseGet(() -> connectionFactory.getMetadata().getName());
+                .orElseGet(connectionMetadata::getDatabaseProductName);
         String lowerCaseName = name.toLowerCase(Locale.ENGLISH);
         if (this.placeholderDialects.containsKey(lowerCaseName)) {
             return Optional.of(this.placeholderDialects.get(lowerCaseName));
@@ -66,7 +66,7 @@ public class DefaultPlaceholderDialectRegistry implements PlaceholderDialectRegi
         return this.placeholderDialects
                 .values()
                 .stream()
-                .filter(placeholderDialect -> placeholderDialect.supported(connectionFactory,reactiveExecutorContextAttribute))
+                .filter(placeholderDialect -> placeholderDialect.supported(connectionMetadata,reactiveExecutorContextAttribute))
                 .findFirst();
     }
 }

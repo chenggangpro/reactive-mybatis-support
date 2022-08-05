@@ -2,7 +2,7 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholde
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import io.r2dbc.spi.ConnectionFactory;
+import io.r2dbc.spi.ConnectionMetadata;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.BoundSql;
@@ -55,9 +55,9 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
     }
 
     @Override
-    public String replaceSqlPlaceholder(ConnectionFactory connectionFactory, BoundSql boundSql, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute) {
+    public String replaceSqlPlaceholder(ConnectionMetadata connectionMetadata, BoundSql boundSql, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute) {
         Optional<PlaceholderDialect> optionalPlaceholderDialect = placeholderDialectRegistry
-                .getPlaceholderDialect(connectionFactory, reactiveExecutorContextAttribute)
+                .getPlaceholderDialect(connectionMetadata, reactiveExecutorContextAttribute)
                 .filter(placeholderDialect -> !Objects.equals(placeholderDialect.getMarker(), DEFAULT_PLACEHOLDER));
         String originalSql = boundSql.getSql();
         if (!optionalPlaceholderDialect.isPresent()) {
@@ -69,7 +69,7 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
         PlaceholderDialect placeholderDialect = optionalPlaceholderDialect.get();
         Cache<String, String> cache = this.formattedSqlCache.get(placeholderDialect.getClass());
         if (Objects.isNull(cache)) {
-            throw new IllegalStateException("Placeholder dialect is found,but Placeholder dialect sql cache is null,Placeholder dialect type : " + placeholderDialect.getClass());
+            throw new IllegalStateException("Placeholder dialect found,but Placeholder dialect sql cache is null,Placeholder dialect type : " + placeholderDialect.getClass());
         }
         return MapUtil.computeIfAbsent(cache.asMap(),
                 originalSql,
