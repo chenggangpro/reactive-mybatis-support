@@ -206,7 +206,14 @@ public class R2dbcMybatisAutoConfiguration {
                 });
         // r2dbc type handler adapter
         if (StringUtils.hasLength(r2dbcMybatisProperties.getR2dbcTypeHandlerAdapterPackage())) {
-            r2dbcMybatisConfiguration.getR2dbcTypeHandlerAdapterRegistry().register(r2dbcMybatisProperties.getR2dbcTypeHandlerAdapterPackage());
+            scanClasses(r2dbcMybatisProperties.getR2dbcTypeHandlerAdapterPackage(), R2dbcTypeHandlerAdapter.class)
+                    .stream()
+                    .filter(clazz -> !clazz.isAnonymousClass())
+                    .filter(clazz -> !clazz.isInterface())
+                    .filter(clazz -> !Modifier.isAbstract(clazz.getModifiers()))
+                    .forEach(clazz -> r2dbcMybatisConfiguration.getR2dbcTypeHandlerAdapterRegistry()
+                            .register((Class<? extends R2dbcTypeHandlerAdapter>) clazz)
+                    );
         }
         r2dbcTypeHandlerAdapterProvider.stream()
                 .forEach(r2dbcTypeHandlerAdapter -> {
