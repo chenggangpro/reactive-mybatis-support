@@ -1,6 +1,6 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder;
 
-import io.r2dbc.spi.ConnectionFactory;
+import io.r2dbc.spi.ConnectionMetadata;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContextAttribute;
 
 import java.util.Locale;
@@ -35,18 +35,18 @@ public interface PlaceholderDialect {
     /**
      * Supported boolean.
      *
-     * @param connectionFactory                the connection factory
+     * @param connectionMetadata                the connection metadata
      * @param reactiveExecutorContextAttribute the reactive executor context attribute
      * @return the boolean
      */
-    default boolean supported(ConnectionFactory connectionFactory, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute) {
+    default boolean supported(ConnectionMetadata connectionMetadata, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute) {
         String name = Optional.ofNullable(reactiveExecutorContextAttribute
                         .getAttribute()
                         .get(PLACEHOLDER_DIALECT_NAME_ATTRIBUTE_KEY)
                 )
                 .filter(value -> value instanceof String)
                 .map(String.class::cast)
-                .orElseGet(() -> connectionFactory.getMetadata().getName());
+                .orElseGet(connectionMetadata::getDatabaseProductName);
         return name.equalsIgnoreCase(this.name())
                 || name.toLowerCase(Locale.ENGLISH).contains(this.name().toLowerCase(Locale.ENGLISH));
     }
