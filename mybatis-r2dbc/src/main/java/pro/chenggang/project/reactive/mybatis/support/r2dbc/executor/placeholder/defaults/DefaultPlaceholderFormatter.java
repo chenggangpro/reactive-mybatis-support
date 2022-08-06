@@ -95,20 +95,14 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
         int identifierIndex = placeholderDialect.usingIndexMarker() ? placeholderDialect.startIndex() : 0;
         StringBuilder builder = new StringBuilder(length + 10);
         int begin = 0;
-        boolean multiMatched = false;
         for (int i = 0; i < length; i++) {
             char aChar = sql.charAt(i);
             if (aChar != defaultPlaceholder) {
                 continue;
             }
-            if (i < length - 1 && sql.charAt(i + 1) == defaultPlaceholder) {
-                multiMatched = true;
-                continue;
-            }
-            if (multiMatched) {
-                builder.append(sql, begin, i + 1);
-                begin = i + 1;
-                multiMatched = false;
+            boolean previousMatched = i != 0 && sql.charAt(i - 1) == defaultPlaceholder;
+            boolean forwardMatched = i < length - 1 && sql.charAt(i + 1) == defaultPlaceholder;
+            if (previousMatched || forwardMatched) {
                 continue;
             }
             if (placeholderDialect.usingIndexMarker()) {
