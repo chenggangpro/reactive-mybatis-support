@@ -34,9 +34,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SELECT_KEY_AFTER;
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SELECT_KEY_BEFORE;
@@ -135,13 +135,13 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                     .take(rowBounds.getLimit(), true)
                                     .concatMap(result -> result.map((row, rowMetadata) -> {
                                         RowResultWrapper rowResultWrapper = new RowResultWrapper(row, rowMetadata, configuration);
-                                        return (List<E>) reactiveResultHandler.handleResult(rowResultWrapper);
+                                        return (E) reactiveResultHandler.handleResult(rowResultWrapper);
                                     }))
-                                    .concatMap(resultList -> Flux.fromStream(resultList.stream().filter(Objects::nonNull)))
-                                    .concatWith(Flux.defer(() -> {
-                                        List<E> remainedResult = reactiveResultHandler.getRemainedResults();
-                                        return Flux.fromStream(remainedResult.stream().filter(Objects::nonNull));
-                                    }))
+                                    .concatWith(Flux.defer(() -> Flux
+                                            .fromStream((Stream<E>) reactiveResultHandler.getRemainedResults()
+                                            .stream()
+                                            .filter(Objects::nonNull))
+                                    ))
                                     .filter(data -> !Objects.equals(data, DEFERRED))
                                     .doOnComplete(() -> r2dbcStatementLog.logTotal(reactiveResultHandler.getResultRowTotalCount()));
                         }));

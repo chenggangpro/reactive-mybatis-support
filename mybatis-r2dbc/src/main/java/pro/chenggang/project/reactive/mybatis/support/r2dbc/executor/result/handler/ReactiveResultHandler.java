@@ -32,7 +32,7 @@ public interface ReactiveResultHandler {
      * @param rowResultWrapper the row result wrapper
      * @return list
      */
-    <T> List<T> handleResult(RowResultWrapper rowResultWrapper);
+    <T> T handleResult(RowResultWrapper rowResultWrapper);
 
     /**
      * get remained result or empty list
