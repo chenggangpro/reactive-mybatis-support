@@ -10,9 +10,9 @@
 |project-version|reactor-bom|r2dbc-bom|spring-boot|
 |:--|:--|:--|:--|
 |`1.1.x`| `>= 2020.0.17` |`Arabba-SRxxx`|`2.6.x`|
-|`1.2.x`| `>= 2020.0.21` |`Borca-SR1`|`>=2.7.0 && <=2.7.2`|
+|`1.2.x`| `>= 2020.0.21` |`Borca-SR1`|`>=2.7.0 && <=2.7.x`|
 
-> The `Borca-SR1` is based on `r2dbc-spi`[0.9.1.RELEASE]
+> The `[Borca-SR1,~)` is based on `r2dbc-spi`[0.9.1.RELEASE]
 > Since `r2dbc-spi` is changed in `1.0.0.RELEASE`, `Borca-SR1`'s future versions need to be re-adapted.
 
 This project has met the general business usage scenarios, including:
@@ -63,6 +63,11 @@ This project has met the general business usage scenarios, including:
   * MySQL-JDBC driver and `r2dbc-mariadb` driver don't have this issue 
   * possible link  [r2dbc-mysql/issues/177](https://github.com/mirromutth/r2dbc-mysql/issues/177)
   * This might be fixed in the next release of the driver
+  
+* ⚠️ `resultOrdered` in `select` label of mapper-xml
+  * Since r2dbc only return single `Result`(`ResultSet` in JDBC) , so I change the `resultOrdered` process for hold result data for nested result mapping in order to reduce the cache generated when nested-result-map processing as much as possible
+  * When using `resultOrdered="true"` in `select` label of mapper-xml, the `DefaultReactiveResultHandler` only hold the related result data for nested result mapping.
+  * When using `resultOrdered="false"` in `select` label of mapper-xml (by default), the `DefaultReactiveResultHandler` hold all related result data for nested result mapping.
 
 #### Maven Central
 
