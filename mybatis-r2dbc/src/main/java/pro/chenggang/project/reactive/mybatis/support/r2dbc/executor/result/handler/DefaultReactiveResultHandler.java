@@ -33,7 +33,6 @@ import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -95,7 +94,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> List<T> handleResult(RowResultWrapper rowResultWrapper) {
+    public <T> T handleResult(RowResultWrapper rowResultWrapper) {
         List<ResultMap> resultMaps = mappedStatement.getResultMaps();
         int resultMapCount = resultMaps.size();
         if (resultMapCount < 1) {
@@ -108,15 +107,15 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
                 ResultMap discriminatedResultMap = resolveDiscriminatedResultMap(rowResultWrapper, resultMap, null);
                 Object rowValue = getRowValueForSimpleResultMap(rowResultWrapper, discriminatedResultMap, null);
                 totalCount.increment();
-                return Collections.singletonList((T) rowValue);
+                return (T) (rowValue == null ? DEFERRED : rowValue);
             } catch (SQLException e) {
                 throw new R2dbcResultException(e);
             }
         }
         try {
-            List<Object> objects = handleRowValuesForNestedResultMap(rowResultWrapper, resultMap);
+            Object rowValue = handleRowValuesForNestedResultMap(rowResultWrapper, resultMap);
             totalCount.increment();
-            return (List<T>) objects;
+            return (T) (rowValue == null ? DEFERRED : rowValue);
         } catch (SQLException e) {
             throw new R2dbcResultException(e);
         }
@@ -158,37 +157,40 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
      * @param resultMap        the ResultMap
      * @throws SQLException the SQLException
      */
-    private List<Object> handleRowValuesForNestedResultMap(RowResultWrapper rowResultWrapper, ResultMap resultMap) throws SQLException {
+    private Object handleRowValuesForNestedResultMap(RowResultWrapper rowResultWrapper, ResultMap resultMap) throws SQLException {
         final DefaultResultHandler resultHandler = new DefaultResultHandler(objectFactory);
         final DefaultResultContext<Object> resultContext = new DefaultResultContext<>();
-        Object rowValue = previousRowValue;
         final ResultMap discriminatedResultMap = resolveDiscriminatedResultMap(rowResultWrapper, resultMap, null);
         final CacheKey rowKey = createRowKey(discriminatedResultMap, rowResultWrapper, null);
         Object partialObject = nestedResultObjects.get(rowKey);
-        // issue #577 && #542
-        if (mappedStatement.isResultOrdered()) {
-            if (partialObject == null && rowValue != null) {
-                nestedResultObjects.clear();
-                storeObject(resultHandler, resultContext, rowValue, null, rowResultWrapper);
-            }
-            rowValue = getRowValueForNestedResultMap(rowResultWrapper, discriminatedResultMap, rowKey, null, partialObject);
-        } else {
-            rowValue = getRowValueForNestedResultMap(rowResultWrapper, discriminatedResultMap, rowKey, null, partialObject);
-            if (partialObject == null) {
-                storeObject(resultHandler, resultContext, rowValue, null, rowResultWrapper);
-            }
-        }
-        if (rowValue != null && mappedStatement.isResultOrdered()) {
+        Object rowValue = getRowValueForNestedResultMap(rowResultWrapper, discriminatedResultMap, rowKey, null, partialObject);
+        if (partialObject == null) {
             storeObject(resultHandler, resultContext, rowValue, null, rowResultWrapper);
-            previousRowValue = null;
-        } else if (rowValue != null) {
+        }
+        if (rowValue != null) {
             previousRowValue = rowValue;
         }
         List<Object> resultList = resultHandler.getResultList();
-        if (resultList != null && !resultList.isEmpty()) {
-            this.resultHolder.addAll(resultList);
+        if(resultList == null || resultList.isEmpty()){
+            return DEFERRED;
         }
-        return Collections.singletonList(DEFERRED);
+        // if result is not ordered , then hold all results for nested result mapping
+        if(!mappedStatement.isResultOrdered()){
+            this.resultHolder.addAll(resultList);
+            return DEFERRED;
+        }
+        // result is ordered,then hold before next nested result mapping
+
+        // result holder has value then return hold results and clear hold results
+        if(!this.resultHolder.isEmpty()){
+            Object resultRowValue = this.resultHolder.get(0);
+            this.resultHolder.clear();
+            this.resultHolder.addAll(resultList);
+            return resultRowValue;
+        }
+        // result holder is empty then hold result
+        this.resultHolder.addAll(resultList);
+        return DEFERRED;
     }
 
     private boolean applyNestedResultMappings(RowResultWrapper rowResultWrapper, ResultMap resultMap, MetaObject metaObject, String parentPrefix, CacheKey parentRowKey, boolean newObject) {

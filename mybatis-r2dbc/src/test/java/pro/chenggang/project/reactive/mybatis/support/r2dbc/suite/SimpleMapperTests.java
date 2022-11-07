@@ -189,6 +189,56 @@ public class SimpleMapperTests extends MybatisR2dbcBaseTests {
     }
 
     @Test
+    public void testGetDeptWithEmpByResultOrdered() throws Exception {
+        // test get dept with emp in natual order
+        this.reactiveSqlSessionOperator.executeMany(
+                        this.deptMapper.selectDeptWithEmpListByResultOrdered()
+                )
+                .as(StepVerifier::create)
+                .expectNextMatches(deptWithEmp -> {
+                    assertThat(deptWithEmp).isNotNull();
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getDeptNo)
+                            .matches(deptNo -> deptNo == 1);
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getEmpList)
+                            .matches(empList -> empList.size() == 3);
+                    return true;
+                })
+                .expectNextMatches(deptWithEmp -> {
+                    assertThat(deptWithEmp).isNotNull();
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getDeptNo)
+                            .matches(deptNo -> deptNo == 2);
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getEmpList)
+                            .matches(empList -> empList.size() == 5);
+                    return true;
+                })
+                .expectNextMatches(deptWithEmp -> {
+                    assertThat(deptWithEmp).isNotNull();
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getDeptNo)
+                            .matches(deptNo -> deptNo == 3);
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getEmpList)
+                            .matches(empList -> empList.size() == 6);
+                    return true;
+                })
+                .expectNextMatches(deptWithEmp -> {
+                    assertThat(deptWithEmp).isNotNull();
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getDeptNo)
+                            .matches(deptNo -> deptNo == 4);
+                    assertThat(deptWithEmp)
+                            .extracting(DeptWithEmp::getEmpList)
+                            .matches(empList -> empList.size() == 0);
+                    return true;
+                })
+                .verifyComplete();
+    }
+
+    @Test
     public void testGetDeptWithEmpWithDisorderResults() throws Exception {
         // test get dept with emp in emp_no asc order
         this.reactiveSqlSessionOperator.executeMany(
