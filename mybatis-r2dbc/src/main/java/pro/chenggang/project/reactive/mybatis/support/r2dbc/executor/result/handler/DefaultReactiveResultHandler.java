@@ -160,27 +160,14 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
     private Object handleRowValuesForNestedResultMap(RowResultWrapper rowResultWrapper, ResultMap resultMap) throws SQLException {
         final DefaultResultHandler resultHandler = new DefaultResultHandler(objectFactory);
         final DefaultResultContext<Object> resultContext = new DefaultResultContext<>();
-        Object rowValue = previousRowValue;
         final ResultMap discriminatedResultMap = resolveDiscriminatedResultMap(rowResultWrapper, resultMap, null);
         final CacheKey rowKey = createRowKey(discriminatedResultMap, rowResultWrapper, null);
         Object partialObject = nestedResultObjects.get(rowKey);
-        // issue #577 && #542
-        if (mappedStatement.isResultOrdered()) {
-            if (partialObject == null && rowValue != null) {
-                nestedResultObjects.clear();
-                storeObject(resultHandler, resultContext, rowValue, null, rowResultWrapper);
-            }
-            rowValue = getRowValueForNestedResultMap(rowResultWrapper, discriminatedResultMap, rowKey, null, partialObject);
-        } else {
-            rowValue = getRowValueForNestedResultMap(rowResultWrapper, discriminatedResultMap, rowKey, null, partialObject);
-            if (partialObject == null) {
-                storeObject(resultHandler, resultContext, rowValue, null, rowResultWrapper);
-            }
-        }
-        if (rowValue != null && mappedStatement.isResultOrdered()) {
+        Object rowValue = getRowValueForNestedResultMap(rowResultWrapper, discriminatedResultMap, rowKey, null, partialObject);
+        if (partialObject == null) {
             storeObject(resultHandler, resultContext, rowValue, null, rowResultWrapper);
-            previousRowValue = null;
-        } else if (rowValue != null) {
+        }
+        if (rowValue != null) {
             previousRowValue = rowValue;
         }
         List<Object> resultList = resultHandler.getResultList();
@@ -196,10 +183,10 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
 
         // result holder has value then return hold results and clear hold results
         if(!this.resultHolder.isEmpty()){
-            List<Object> holdResults = new ArrayList<>(this.resultHolder);
+            Object resultRowValue = this.resultHolder.get(0);
             this.resultHolder.clear();
             this.resultHolder.addAll(resultList);
-            return holdResults;
+            return resultRowValue;
         }
         // result holder is empty then hold result
         this.resultHolder.addAll(resultList);
