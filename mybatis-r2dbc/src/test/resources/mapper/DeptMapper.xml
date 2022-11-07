@@ -69,6 +69,13 @@
     FROM dept LEFT JOIN emp ON dept.dept_no = emp.dept_no
   </select>
 
+  <select id="selectDeptWithEmpListByResultOrdered" resultMap="DeptWithEmp" resultOrdered="true">
+    SELECT
+    dept.*,
+    <include refid="pro.chenggang.project.reactive.mybatis.support.r2dbc.application.mapper.EmpMapper.columnNameWithTable" />
+    FROM dept LEFT JOIN emp ON dept.dept_no = emp.dept_no
+  </select>
+
   <select id="selectDeptWithEmpListWithDisorderResult" resultMap="DeptWithEmp">
     SELECT
     dept.*,
