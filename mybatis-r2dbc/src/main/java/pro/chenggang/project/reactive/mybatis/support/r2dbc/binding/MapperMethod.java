@@ -282,7 +282,7 @@ public class MapperMethod {
                 this.returnType = method.getReturnType();
             }
             this.returnInferredType = parseInferredClass(method.getGenericReturnType());
-            this.returnsVoid = Void.TYPE.equals(this.returnInferredType);
+            this.returnsVoid = Void.class.equals(this.returnInferredType);
             this.returnsMany = Flux.class.equals(this.returnType);
             this.rowBoundsIndex = getUniqueParamIndex(method, RowBounds.class);
             this.resultHandlerIndex = getUniqueParamIndex(method, ResultHandler.class);
