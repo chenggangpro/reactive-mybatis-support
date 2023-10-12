@@ -91,8 +91,8 @@ public class SelectR2dbcKeyGenerator implements R2dbcKeyGenerator {
     }
 
     @Override
-    public Integer processGeneratedKeyResult(RowResultWrapper rowResultWrapper, Object parameter) {
-        return 0;
+    public Long processGeneratedKeyResult(RowResultWrapper rowResultWrapper, Object parameter) {
+        return 0L;
     }
 
     private void handleMultipleProperties(String[] keyProperties,

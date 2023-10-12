@@ -56,7 +56,7 @@ public class R2dbcStatementLog {
      *
      * @param updateCount the update count
      */
-    public void logUpdates(Integer updateCount) {
+    public void logUpdates(Long updateCount) {
         debug("   Updates: " + updateCount, false);
     }
 

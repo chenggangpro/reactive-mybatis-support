@@ -84,10 +84,10 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
     }
 
     @Override
-    public Integer processGeneratedKeyResult(RowResultWrapper rowResultWrapper, Object parameter) {
+    public Long processGeneratedKeyResult(RowResultWrapper rowResultWrapper, Object parameter) {
         this.assignKeys(r2dbcMybatisConfiguration, rowResultWrapper, mappedStatement.getKeyProperties(), parameter);
         this.resultRowCounter.increment();
-        return this.resultRowCounter.intValue();
+        return this.resultRowCounter.longValue();
     }
 
     @SuppressWarnings("unchecked")

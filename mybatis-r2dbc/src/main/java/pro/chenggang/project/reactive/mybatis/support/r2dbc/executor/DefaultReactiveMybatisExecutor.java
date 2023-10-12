@@ -105,11 +105,11 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                                         .checkpoint("SQL: \"" + boundSql + "\" [DefaultReactiveExecutor]")
                                                         .flatMap(result -> Mono.from(result.getRowsUpdated()))
                                                 )
-                                                .collect(Collectors.summingInt(Integer::intValue))
-                                                .defaultIfEmpty(0)
+                                                .collect(Collectors.summingLong(Long::longValue))
+                                                .defaultIfEmpty(0L)
                                                 .doOnNext(r2dbcStatementLog::logUpdates)
                                                 .flatMap(totalUpdateRowCount -> r2dbcKeyGenerator.processSelectKey(SELECT_KEY_AFTER, mappedStatement, parameter)
-                                                        .flatMap(ignore -> Mono.just(totalUpdateRowCount))
+                                                        .flatMap(ignore -> Mono.just(totalUpdateRowCount.intValue()))
                                                 );
                                     }));
                 });

@@ -37,5 +37,5 @@ public interface R2dbcKeyGenerator {
      * @param parameter        the parameter
      * @return the mono
      */
-    Integer processGeneratedKeyResult(RowResultWrapper rowResultWrapper, Object parameter);
+    Long processGeneratedKeyResult(RowResultWrapper rowResultWrapper, Object parameter);
 }

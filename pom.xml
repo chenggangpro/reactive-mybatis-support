@@ -6,7 +6,7 @@
 
     <groupId>pro.chenggang</groupId>
     <artifactId>reactive-mybatis-support</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>reactive-mybatis-support</name>
@@ -48,24 +48,24 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>1.8</java.version>
+        <java.version>17</java.version>
         <reactor-bom.version>2022.0.12</reactor-bom.version>
         <r2dbc-bom.version>Borca-SR2</r2dbc-bom.version>
         <mybatis.version>3.5.13</mybatis.version>
-        <mybatis-spring.version>2.1.1</mybatis-spring.version>
+        <mybatis-spring.version>3.0.2</mybatis-spring.version>
         <mybatis-freemarker.version>1.2.4</mybatis-freemarker.version>
         <mybatis-velocity.version>2.1.1</mybatis-velocity.version>
         <mybatis-thymeleaf.version>1.0.4</mybatis-thymeleaf.version>
         <mybatis-generator-core.version>1.4.2</mybatis-generator-core.version>
         <mybatis-dynamic-sql.version>1.4.1</mybatis-dynamic-sql.version>
         <lombok.version>1.18.26</lombok.version>
-        <spring-boot-starter-parent.version>2.7.16</spring-boot-starter-parent.version>
+        <spring-boot-starter-parent.version>3.0.11</spring-boot-starter-parent.version>
         <blockhound.version>1.0.8.RELEASE</blockhound.version>
         <junit-jupiter.version>5.10.0</junit-jupiter.version>
         <testcontainers.version>1.18.3</testcontainers.version>
         <assertj.version>3.24.2</assertj.version>
         <byte-buddy.version>1.14.9</byte-buddy.version>
-        <caffeine.version>2.9.3</caffeine.version>
+        <caffeine.version>3.1.8</caffeine.version>
         <mysql-connector-java.version>8.0.33</mysql-connector-java.version>
     </properties>
 
