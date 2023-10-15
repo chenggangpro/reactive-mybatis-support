@@ -1,3 +1,18 @@
+/*
+ *    Copyright 2009-2023 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package pro.chenggang.project.reactive.mybatis.support.generator.support;
 
 import org.apache.commons.lang3.StringUtils;
@@ -8,7 +23,6 @@ import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
 import org.mybatis.generator.api.dom.java.JavaVisibility;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
 import org.mybatis.generator.config.Context;
-import pro.chenggang.project.reactive.mybatis.support.generator.option.LombokConfig;
 import pro.chenggang.project.reactive.mybatis.support.generator.properties.GeneratorProperties;
 import pro.chenggang.project.reactive.mybatis.support.generator.properties.GeneratorPropertiesHolder;
 
@@ -39,54 +53,28 @@ public class GeneratedModelCustomizer {
         topLevelClass.addJavaDocLine(" */");
         topLevelClass.getFields().forEach(field -> field.setVisibility(JavaVisibility.PROTECTED));
         GeneratorProperties generatorProperties = GeneratorPropertiesHolder.getInstance().getGeneratorProperties();
-        Set<LombokConfig> lombokConfigs = generatorProperties.getLombokConfigs();
+        Set<String> lombokConfigs = generatorProperties.getLombokAnnotations();
         if (Objects.isNull(lombokConfigs) || lombokConfigs.isEmpty()) {
             return;
         }
-        lombokConfigs.forEach(lombok -> {
-            switch (lombok) {
-                case Getter:
-                    topLevelClass.addImportedType("lombok.Getter");
-                    topLevelClass.addAnnotation("@Getter");
-                    break;
-                case Setter:
-                    topLevelClass.addImportedType("lombok.Setter");
-                    topLevelClass.addAnnotation("@Setter");
-                    break;
-                case ToString:
-                    topLevelClass.addImportedType("lombok.ToString");
-                    topLevelClass.addAnnotation("@ToString");
-                    break;
-                case Data:
-                    topLevelClass.addImportedType("lombok.Data");
-                    topLevelClass.addAnnotation("@Data");
-                    break;
-                case Builder:
-                    topLevelClass.addImportedType("lombok.Builder");
-                    topLevelClass.addAnnotation("@Builder");
-                    break;
-                case NoArgsConstructor:
-                    topLevelClass.addImportedType("lombok.NoArgsConstructor");
-                    topLevelClass.addAnnotation("@NoArgsConstructor");
-                    break;
-                case AllArgsConstructor:
-                    topLevelClass.addImportedType("lombok.AllArgsConstructor");
-                    topLevelClass.addAnnotation("@AllArgsConstructor");
-                    break;
-                case EqualsAndHashCode:
-                    topLevelClass.addImportedType("lombok.EqualsAndHashCode");
-                    topLevelClass.addAnnotation("@EqualsAndHashCode");
-                    break;
-                case AccessorsChain:
-                    topLevelClass.addImportedType("lombok.experimental.Accessors");
-                    topLevelClass.addAnnotation("@Accessors(chain = true)");
-                    break;
-                case AccessorsFluent:
-                    topLevelClass.addImportedType("lombok.experimental.Accessors");
-                    topLevelClass.addAnnotation("@Accessors(fluent = true)");
-                    break;
-                default:
+        lombokConfigs.forEach(lombokAnnotationName -> {
+            if(!StringUtils.startsWith(lombokAnnotationName,"lombok")){
+                return;
             }
+            String lombokImport;
+            String lombokAnnotation;
+            if(lombokAnnotationName.contains("(")){
+                String pureAnnotation = StringUtils.substringBetween(lombokAnnotationName, ".", "(");
+                lombokImport = StringUtils.substringBefore(lombokAnnotationName,"(");
+                lombokAnnotation = StringUtils.substringAfter(lombokAnnotationName,
+                        StringUtils.substringBeforeLast(lombokImport, pureAnnotation)
+                );
+            }else {
+                lombokAnnotation = StringUtils.substringAfterLast(lombokAnnotationName,".");
+                lombokImport = lombokAnnotationName;
+            }
+            topLevelClass.addImportedType(lombokImport);
+            topLevelClass.addAnnotation("@" + lombokAnnotation);
         });
     }
 

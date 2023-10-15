@@ -39,17 +39,13 @@ targetConnection:
   username: "root"
   # The jdbc password
   password: "123456"
-# The Lombok configs if needed
-lombokConfigs:
-  - ToString
-  - Getter
-  - Setter
-  - AccessorsChain
-  - NoArgsConstructor
-  - AllArgsConstructor
-  - Builder
-  - EqualsAndHashCode
-# The target table names,if empty then generate all tables
+# The lombok annotations if needed
+lombokAnnotations:
+  - lombok.extern.jackson.Jacksonized
+  - lombok.Builder(toBuilder = true)
+  - lombok.Getter
+  - lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PRIVATE)
+  - lombok.EqualsAndHashCode
+# The target table names,or "%" to generate all tables
 tableNames:
-  - dept
-  - emp
+  - "%"

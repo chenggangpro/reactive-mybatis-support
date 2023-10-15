@@ -34,7 +34,7 @@ targetConnection:
   username: "root"
   # The jdbc password
   password: "123456"
-# The Lombok configs if needed
+# The lombok annotations if needed
 lombokConfigs:
   - ToString
   - Getter

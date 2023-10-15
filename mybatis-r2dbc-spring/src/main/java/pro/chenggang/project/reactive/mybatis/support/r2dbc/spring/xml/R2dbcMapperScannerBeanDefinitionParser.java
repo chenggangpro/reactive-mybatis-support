@@ -1,17 +1,17 @@
-/**
- * Copyright 2010-2020 the original author or authors.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/*
+ *    Copyright 2009-2023 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.xml;
 
@@ -53,6 +53,7 @@ public class R2dbcMapperScannerBeanDefinitionParser extends AbstractBeanDefiniti
     private static final String ATTRIBUTE_MAPPER_FACTORY_BEAN_CLASS = "mapper-factory-bean-class";
     private static final String ATTRIBUTE_LAZY_INITIALIZATION = "lazy-initialization";
     private static final String ATTRIBUTE_DEFAULT_SCOPE = "default-scope";
+    private static final String ATTRIBUTE_PROCESS_PROPERTY_PLACEHOLDERS = "process-property-placeholders";
 
     /**
      * {@inheritDoc}
@@ -65,7 +66,9 @@ public class R2dbcMapperScannerBeanDefinitionParser extends AbstractBeanDefiniti
 
         ClassLoader classLoader = ClassUtils.getDefaultClassLoader();
 
-        builder.addPropertyValue("processPropertyPlaceHolders", true);
+        String processPropertyPlaceHolders = element.getAttribute(ATTRIBUTE_PROCESS_PROPERTY_PLACEHOLDERS);
+        builder.addPropertyValue("processPropertyPlaceHolders",
+                !StringUtils.hasText(processPropertyPlaceHolders) || Boolean.parseBoolean(processPropertyPlaceHolders));
         try {
             String annotationClassName = element.getAttribute(ATTRIBUTE_ANNOTATION);
             if (StringUtils.hasText(annotationClassName)) {
