@@ -21,16 +21,18 @@ import org.apache.ibatis.type.TypeHandler;
  * The interface Type handle context.
  *
  * @author Gang Cheng
- * @version 1.0.0
+ * @version 2.0.0
+ * @since 1.0.0
  */
 public interface TypeHandleContext {
 
     /**
-     * set delegated type handler
+     * Set delegated type handler
      *
+     * @param targetType           the target type
      * @param delegatedTypeHandler the delegated type handler
      * @param rowResultWrapper     the row result wrapper
      */
-    void contextWith(TypeHandler delegatedTypeHandler, RowResultWrapper rowResultWrapper);
+    void contextWith(Class<?> targetType, TypeHandler<?> delegatedTypeHandler, RowResultWrapper rowResultWrapper);
 
 }

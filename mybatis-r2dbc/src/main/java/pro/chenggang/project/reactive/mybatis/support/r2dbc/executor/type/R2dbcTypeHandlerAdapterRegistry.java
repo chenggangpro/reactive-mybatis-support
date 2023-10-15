@@ -18,6 +18,9 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type;
 import org.apache.ibatis.io.ResolverUtil;
 import org.apache.ibatis.reflection.factory.ObjectFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.converter.EnumMybatisTypeHandlerConverter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.converter.EnumOrdinalMybatisTypeHandlerConverter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.converter.MybatisTypeHandlerConverter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaults.ByteArrayR2dbcTypeHandlerAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaults.ByteObjectArrayR2dbcTypeHandlerAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaults.OffsetDateTimeR2dbcTypeHandlerAdapter;
@@ -27,8 +30,11 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaul
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaults.TimestampR2dbcTypeHandlerAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaults.ZonedDateTimeR2dbcTypeHandlerAdapter;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * The type R2dbc type handler adapter registry.
@@ -37,16 +43,17 @@ import java.util.Map;
  */
 public class R2dbcTypeHandlerAdapterRegistry {
 
-    private final Map<Class<?>, R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapterContainer = new HashMap<>();
-    private final R2dbcMybatisConfiguration r2DbcMybatisConfiguration;
+    private final Map<Class<?>, R2dbcTypeHandlerAdapter<?>> r2dbcTypeHandlerAdapterContainer = new HashMap<>();
+    private final R2dbcMybatisConfiguration r2dbcMybatisConfiguration;
+    private final List<MybatisTypeHandlerConverter> mybatisTypeHandlerConverterList = new ArrayList<>();
 
     /**
      * Instantiates a new R2dbc type handler adapter registry.
      *
-     * @param r2DbcMybatisConfiguration the r2dbc mybatis configuration
+     * @param r2dbcMybatisConfiguration the r2dbc mybatis configuration
      */
-    public R2dbcTypeHandlerAdapterRegistry(R2dbcMybatisConfiguration r2DbcMybatisConfiguration) {
-        this.r2DbcMybatisConfiguration = r2DbcMybatisConfiguration;
+    public R2dbcTypeHandlerAdapterRegistry(R2dbcMybatisConfiguration r2dbcMybatisConfiguration) {
+        this.r2dbcMybatisConfiguration = r2dbcMybatisConfiguration;
         register(new ByteArrayR2dbcTypeHandlerAdapter());
         register(new ByteObjectArrayR2dbcTypeHandlerAdapter());
         register(new OffsetDateTimeR2dbcTypeHandlerAdapter());
@@ -55,6 +62,8 @@ public class R2dbcTypeHandlerAdapterRegistry {
         register(new SqlTimeR2dbcTypeHandlerAdapter());
         register(new TimestampR2dbcTypeHandlerAdapter());
         register(new ZonedDateTimeR2dbcTypeHandlerAdapter());
+        register(new EnumMybatisTypeHandlerConverter());
+        register(new EnumOrdinalMybatisTypeHandlerConverter());
     }
 
     /**
@@ -62,8 +71,17 @@ public class R2dbcTypeHandlerAdapterRegistry {
      *
      * @return the map
      */
-    public Map<Class<?>, R2dbcTypeHandlerAdapter> getR2dbcTypeHandlerAdapters() {
+    public Map<Class<?>, R2dbcTypeHandlerAdapter<?>> getR2dbcTypeHandlerAdapters() {
         return this.r2dbcTypeHandlerAdapterContainer;
+    }
+
+    /**
+     * Get mybatis type handler converters list.
+     *
+     * @return the list
+     */
+    public List<MybatisTypeHandlerConverter> getMybatisTypeHandlerConverters(){
+        return this.mybatisTypeHandlerConverterList;
     }
 
     /**
@@ -71,7 +89,7 @@ public class R2dbcTypeHandlerAdapterRegistry {
      *
      * @param r2dbcTypeHandlerAdapter the r2dbc type handler adapter
      */
-    public void register(R2dbcTypeHandlerAdapter r2dbcTypeHandlerAdapter) {
+    public void register(R2dbcTypeHandlerAdapter<?> r2dbcTypeHandlerAdapter) {
         r2dbcTypeHandlerAdapterContainer.put(r2dbcTypeHandlerAdapter.adaptClazz(), r2dbcTypeHandlerAdapter);
     }
 
@@ -80,9 +98,9 @@ public class R2dbcTypeHandlerAdapterRegistry {
      *
      * @param r2dbcTypeHandlerAdapterClass the r2dbc type handler adapter class
      */
-    public void register(Class<? extends R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapterClass) {
-        ObjectFactory objectFactory = r2DbcMybatisConfiguration.getObjectFactory();
-        R2dbcTypeHandlerAdapter r2dbcTypeHandlerAdapter = objectFactory.create(r2dbcTypeHandlerAdapterClass);
+    public void register(Class<? extends R2dbcTypeHandlerAdapter<?>> r2dbcTypeHandlerAdapterClass) {
+        ObjectFactory objectFactory = r2dbcMybatisConfiguration.getObjectFactory();
+        R2dbcTypeHandlerAdapter<?> r2dbcTypeHandlerAdapter = objectFactory.create(r2dbcTypeHandlerAdapterClass);
         this.register(r2dbcTypeHandlerAdapter);
     }
 
@@ -92,13 +110,22 @@ public class R2dbcTypeHandlerAdapterRegistry {
      * @param packageName the package name
      */
     public void register(String packageName) {
-        ResolverUtil<R2dbcTypeHandlerAdapter> resolverUtil = new ResolverUtil<>();
+        ResolverUtil<R2dbcTypeHandlerAdapter<?>> resolverUtil = new ResolverUtil<>();
         resolverUtil.find(new ResolverUtil.IsA(R2dbcTypeHandlerAdapter.class), packageName);
         resolverUtil.getClasses().forEach(clazz -> {
-            ObjectFactory objectFactory = r2DbcMybatisConfiguration.getObjectFactory();
-            R2dbcTypeHandlerAdapter r2dbcTypeHandlerAdapter = objectFactory.create(clazz);
+            ObjectFactory objectFactory = r2dbcMybatisConfiguration.getObjectFactory();
+            R2dbcTypeHandlerAdapter<?> r2dbcTypeHandlerAdapter = objectFactory.create(clazz);
             this.register(r2dbcTypeHandlerAdapter);
         });
+    }
 
+    /**
+     * Register with MybatisTypeHandlerConverter.
+     *
+     * @param mybatisTypeHandlerConverter the mybatis type handler converter
+     */
+    public void register(MybatisTypeHandlerConverter mybatisTypeHandlerConverter) {
+        Objects.requireNonNull(mybatisTypeHandlerConverter, "MybatisTypeHandlerConverter can not be null");
+        mybatisTypeHandlerConverterList.add(mybatisTypeHandlerConverter);
     }
 }

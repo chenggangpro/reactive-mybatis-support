@@ -66,16 +66,16 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
     /**
      * Instantiates a new Delegate R2dbc parameter handler.
      *
-     * @param r2DbcMybatisConfiguration the R2dbc mybatis configuration
+     * @param r2dbcMybatisConfiguration the R2dbc mybatis configuration
      * @param parameterHandler          the parameter handler
      * @param statement                 the statement
      * @param r2dbcStatementLog         the statement log helper
      */
-    public DelegateR2dbcParameterHandler(R2dbcMybatisConfiguration r2DbcMybatisConfiguration,
+    public DelegateR2dbcParameterHandler(R2dbcMybatisConfiguration r2dbcMybatisConfiguration,
                                          ParameterHandler parameterHandler,
                                          Statement statement,
                                          R2dbcStatementLog r2dbcStatementLog) {
-        this.configuration = r2DbcMybatisConfiguration;
+        this.configuration = r2dbcMybatisConfiguration;
         this.parameterHandler = parameterHandler;
         this.delegateStatement = statement;
         this.r2dbcStatementLog = r2dbcStatementLog;
@@ -196,7 +196,7 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
     private class DelegateR2dbcStatement implements InvocationHandler {
 
         private final Statement statement;
-        private final Map<Class<?>, R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapters;
+        private final Map<Class<?>, R2dbcTypeHandlerAdapter<?>> r2dbcTypeHandlerAdapters;
         private final Set<Class<?>> notSupportedDataTypes;
 
         /**
@@ -206,7 +206,7 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
          * @param r2dbcTypeHandlerAdapters the R2dbc type handler adapters
          * @param notSupportedDataTypes    the not supported data types
          */
-        DelegateR2dbcStatement(Statement statement, Map<Class<?>, R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapters, Set<Class<?>> notSupportedDataTypes) {
+        DelegateR2dbcStatement(Statement statement, Map<Class<?>, R2dbcTypeHandlerAdapter<?>> r2dbcTypeHandlerAdapters, Set<Class<?>> notSupportedDataTypes) {
             this.statement = statement;
             this.r2dbcTypeHandlerAdapters = r2dbcTypeHandlerAdapters;
             this.notSupportedDataTypes = notSupportedDataTypes;
@@ -232,7 +232,7 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
             // using adapter
             if (r2dbcTypeHandlerAdapters.containsKey(parameterClass)) {
                 log.debug("Found r2dbc type handler adapter for type : " + parameterClass);
-                R2dbcTypeHandlerAdapter r2dbcTypeHandlerAdapter = r2dbcTypeHandlerAdapters.get(parameterClass);
+                R2dbcTypeHandlerAdapter<Object> r2dbcTypeHandlerAdapter = (R2dbcTypeHandlerAdapter<Object>) r2dbcTypeHandlerAdapters.get(parameterClass);
                 ParameterHandlerContext parameterHandlerContext = DelegateR2dbcParameterHandler.this.parameterHandlerContextReference.get();
                 r2dbcTypeHandlerAdapter.setParameter(statement, parameterHandlerContext, parameter);
                 return null;

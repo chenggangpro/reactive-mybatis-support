@@ -72,6 +72,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.builder.R2dbcXMLMapp
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.converter.MybatisTypeHandlerConverter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.annotation.R2dbcMapperScan;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.executor.SpringReactiveMybatisExecutor;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.mapper.R2dbcMapperFactoryBean;
@@ -125,14 +126,14 @@ public class R2dbcMybatisAutoConfiguration {
     /**
      * Connection factory connection pool.
      *
-     * @param r2DbcMybatisConnectionFactoryProperties    the r2dbc mybatis connection factory properties
+     * @param r2dbcMybatisConnectionFactoryProperties    the r2dbc mybatis connection factory properties
      * @param connectionFactoryOptionsCustomizerProvider the connection factory options customizer object provider
      * @return the connection pool
      */
     @ConditionalOnMissingBean(ConnectionFactory.class)
     @Bean(destroyMethod = "dispose")
-    public ConnectionPool connectionFactory(R2dbcMybatisConnectionFactoryProperties r2DbcMybatisConnectionFactoryProperties, ObjectProvider<ConnectionFactoryOptionsCustomizer> connectionFactoryOptionsCustomizerProvider) {
-        String determineConnectionFactoryUrl = r2DbcMybatisConnectionFactoryProperties.determineConnectionFactoryUrl();
+    public ConnectionPool connectionFactory(R2dbcMybatisConnectionFactoryProperties r2dbcMybatisConnectionFactoryProperties, ObjectProvider<ConnectionFactoryOptionsCustomizer> connectionFactoryOptionsCustomizerProvider) {
+        String determineConnectionFactoryUrl = r2dbcMybatisConnectionFactoryProperties.determineConnectionFactoryUrl();
         Assert.notNull(determineConnectionFactoryUrl, "R2DBC Connection URL must not be null");
         ConnectionFactoryOptions connectionFactoryOptions = ConnectionFactoryOptions.parse(determineConnectionFactoryUrl);
         //ConnectionFactoryOptionsCustomizer
@@ -148,9 +149,9 @@ public class R2dbcMybatisAutoConfiguration {
         if (connectionFactory instanceof ConnectionPool) {
             return (ConnectionPool) connectionFactory;
         }
-        R2dbcMybatisConnectionFactoryProperties.Pool pool = r2DbcMybatisConnectionFactoryProperties.getPool();
+        R2dbcMybatisConnectionFactoryProperties.Pool pool = r2dbcMybatisConnectionFactoryProperties.getPool();
         ConnectionPoolConfiguration.Builder builder = ConnectionPoolConfiguration.builder(connectionFactory)
-                .name(r2DbcMybatisConnectionFactoryProperties.determineConnectionFactoryName())
+                .name(r2dbcMybatisConnectionFactoryProperties.determineConnectionFactoryName())
                 .maxSize(pool.getMaxSize())
                 .initialSize(pool.getInitialSize())
                 .maxIdleTime(pool.getMaxIdleTime())
@@ -182,6 +183,7 @@ public class R2dbcMybatisAutoConfiguration {
                                                    ObjectProvider<TypeHandler<?>> typeHandlerProvider,
                                                    ObjectProvider<R2dbcMybatisConfigurationCustomizer> configurationCustomizerProvider,
                                                    ObjectProvider<R2dbcTypeHandlerAdapter<?>> r2dbcTypeHandlerAdapterProvider,
+                                                   ObjectProvider<MybatisTypeHandlerConverter> mybatisTypeHandlerConverterObjectProvider,
                                                    ObjectProvider<LanguageDriver> languageDriversProvider) throws Exception {
         R2dbcMybatisConfiguration r2dbcMybatisConfiguration = Optional
                 .ofNullable(r2dbcMybatisProperties.getConfiguration())
@@ -227,7 +229,7 @@ public class R2dbcMybatisAutoConfiguration {
                     .filter(clazz -> !clazz.isInterface())
                     .filter(clazz -> !Modifier.isAbstract(clazz.getModifiers()))
                     .forEach(clazz -> r2dbcMybatisConfiguration.getR2dbcTypeHandlerAdapterRegistry()
-                            .register((Class<? extends R2dbcTypeHandlerAdapter>) clazz)
+                            .register((Class<? extends R2dbcTypeHandlerAdapter<?>>) clazz)
                     );
         }
         r2dbcTypeHandlerAdapterProvider.stream()
@@ -237,6 +239,11 @@ public class R2dbcMybatisAutoConfiguration {
                 });
         //default enum type handler
         r2dbcMybatisConfiguration.setDefaultEnumTypeHandler(r2dbcMybatisProperties.getDefaultEnumTypeHandler());
+        mybatisTypeHandlerConverterObjectProvider.stream()
+                .forEach(mybatisTypeHandlerConverter -> {
+                    r2dbcMybatisConfiguration.addMybatisTypeHandlerConverter(mybatisTypeHandlerConverter);
+                    log.debug("Registered mybatis type handler converter: '" + mybatisTypeHandlerConverter + "'");
+                });
         //script language driver
         LanguageDriver[] availableLanguageDrivers = languageDriversProvider.stream().toArray(LanguageDriver[]::new);
         Class<? extends LanguageDriver> defaultLanguageDriver = r2dbcMybatisProperties.getDefaultScriptingLanguageDriver();

@@ -39,6 +39,7 @@ public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFacto
 
     private DefaultReactiveSqlSessionFactory(R2dbcMybatisConfiguration configuration, ReactiveMybatisExecutor reactiveMybatisExecutor) {
         this.configuration = configuration;
+        this.configuration.initialize();
         this.reactiveSqlSession = new DefaultReactiveSqlSession(this.configuration, reactiveMybatisExecutor);
     }
 

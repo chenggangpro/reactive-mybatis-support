@@ -212,39 +212,39 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
         }
     }
 
-    private Map.Entry<String, KeyAssigner> getAssignerForSingleParam(R2dbcMybatisConfiguration r2DbcMybatisConfiguration,
+    private Map.Entry<String, KeyAssigner> getAssignerForSingleParam(R2dbcMybatisConfiguration r2dbcMybatisConfiguration,
                                                                      int columnPosition, Map<String, ?> paramMap, String keyProperty, boolean omitParamName) {
         // Assume 'keyProperty' to be a property of the single param.
         String singleParamName = nameOfSingleParam(paramMap);
         String argParamName = omitParamName ? null : singleParamName;
-        return MapUtil.entry(singleParamName, new KeyAssigner(r2DbcMybatisConfiguration, columnPosition, argParamName, keyProperty));
+        return MapUtil.entry(singleParamName, new KeyAssigner(r2dbcMybatisConfiguration, columnPosition, argParamName, keyProperty));
     }
 
     private class KeyAssigner {
 
-        private final R2dbcMybatisConfiguration r2DbcMybatisConfiguration;
+        private final R2dbcMybatisConfiguration r2dbcMybatisConfiguration;
         private final TypeHandlerRegistry typeHandlerRegistry;
         private final int columnPosition;
         private final String paramName;
         private final String propertyName;
-        private final TypeHandler delegatedTypeHandler;
+        private final TypeHandler<?> delegatedTypeHandler;
         private TypeHandler<?> typeHandler;
 
         /**
          * Instantiates a new Key assigner.
          *
-         * @param r2DbcMybatisConfiguration the R2dbc mybatis configuration
+         * @param r2dbcMybatisConfiguration the R2dbc mybatis configuration
          * @param columnPosition            the column position
          * @param paramName                 the param name
          * @param propertyName              the property name
          */
-        protected KeyAssigner(R2dbcMybatisConfiguration r2DbcMybatisConfiguration,
+        protected KeyAssigner(R2dbcMybatisConfiguration r2dbcMybatisConfiguration,
                               int columnPosition,
                               String paramName,
                               String propertyName) {
             super();
-            this.r2DbcMybatisConfiguration = r2DbcMybatisConfiguration;
-            this.typeHandlerRegistry = r2DbcMybatisConfiguration.getTypeHandlerRegistry();
+            this.r2dbcMybatisConfiguration = r2dbcMybatisConfiguration;
+            this.typeHandlerRegistry = r2dbcMybatisConfiguration.getTypeHandlerRegistry();
             this.columnPosition = columnPosition;
             this.paramName = paramName;
             this.propertyName = propertyName;
@@ -256,12 +256,12 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
          *
          * @return TypeHandler
          */
-        private TypeHandler initDelegateTypeHandler() {
+        private TypeHandler<?> initDelegateTypeHandler() {
             return ProxyInstanceFactory.newInstanceOfInterfaces(
                     TypeHandler.class,
                     () -> new DelegateR2dbcResultRowDataHandler(
-                            this.r2DbcMybatisConfiguration.getNotSupportedDataTypes(),
-                            this.r2DbcMybatisConfiguration.getR2dbcTypeHandlerAdapterRegistry().getR2dbcTypeHandlerAdapters()
+                            this.r2dbcMybatisConfiguration.getNotSupportedDataTypes(),
+                            this.r2dbcMybatisConfiguration.getR2dbcTypeHandlerAdapterRegistry().getR2dbcTypeHandlerAdapters()
                     ),
                     TypeHandleContext.class
             );
@@ -278,11 +278,12 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
                 // If paramName is set, param is ParamMap
                 param = ((ParamMap<?>) param).get(paramName);
             }
-            MetaObject metaParam = r2DbcMybatisConfiguration.newMetaObject(param);
+            MetaObject metaParam = r2dbcMybatisConfiguration.newMetaObject(param);
             try {
+                Class<?> propertyType = null;
                 if (typeHandler == null) {
                     if (metaParam.hasSetter(propertyName)) {
-                        Class<?> propertyType = metaParam.getSetterType(propertyName);
+                        propertyType = metaParam.getSetterType(propertyName);
                         typeHandler = typeHandlerRegistry.getTypeHandler(propertyType);
                     } else {
                         throw new ExecutorException("No setter found for the keyProperty '" + propertyName + "' in '"
@@ -292,7 +293,7 @@ public class DefaultR2dbcKeyGenerator implements R2dbcKeyGenerator {
                 if (typeHandler == null) {
                     // Error?
                 } else {
-                    ((TypeHandleContext) this.delegatedTypeHandler).contextWith(typeHandler, rowResultWrapper);
+                    ((TypeHandleContext) this.delegatedTypeHandler).contextWith(propertyType, typeHandler, rowResultWrapper);
                     ResultSet resultSet = null;
                     Object value = delegatedTypeHandler.getResult(resultSet, columnPosition);
                     metaParam.setValue(propertyName, value);
