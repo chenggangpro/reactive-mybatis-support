@@ -20,6 +20,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
+import org.mybatis.generator.api.dom.java.JavaVisibility;
 import pro.chenggang.project.reactive.mybatis.support.generator.option.GeneratorType;
 import pro.chenggang.project.reactive.mybatis.support.generator.plugin.type.GeneratedJavaTypeModifier;
 
@@ -73,6 +74,16 @@ public class GeneratorProperties {
      * Whether generate column comment
      */
     private boolean generateComment = true;
+
+    /**
+     * Field is final or not
+     */
+    private boolean finalField = false;
+
+    /**
+     * Entity field's visibility
+     */
+    private JavaVisibility fieldVisibility = JavaVisibility.PROTECTED;
 
     /**
      * The table name trim regex pattern

@@ -18,6 +18,10 @@ overwrite: false
 generateReturnedKey: false
 # Whether generate column comment,default is true
 generateComment: true
+# Field is final or not, default is false
+finalField: false
+# Entity field's visibility (org.mybatis.generator.api.dom.java.JavaVisibility)
+fieldVisibility: PROTECTED
 # The table name trim regex pattern
 # Setting '^Sys' will replace the generated table name start with Sys
 tableNameTrimPattern: ""
