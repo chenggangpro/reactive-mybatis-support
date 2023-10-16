@@ -29,22 +29,29 @@ import java.util.function.Supplier;
  * The type Proxy instance factory.
  *
  * @author Gang Cheng
- * @version 1.0.0
+ * @version 2.0.0
+ * @since 1.0.0
  */
 @SuppressWarnings("unchecked")
 public class ProxyInstanceFactory {
 
     /**
-     * new instance of target class
+     * New instance of target interface
      *
      * @param <T>                       the type parameter
      * @param interfaceType             the interface type
      * @param invocationHandlerSupplier the invocation handler supplier
      * @param otherInterfaces           the other interfaces
-     * @return t
+     * @return t the interface type
      * @throws IllegalStateException when unable create target interface Proxy Class
      */
-    public static <T> T newInstanceOfInterfaces(Class<T> interfaceType, Supplier<InvocationHandler> invocationHandlerSupplier, Class<?>... otherInterfaces) {
+    public static <T> T newInstanceOfInterfaces(Class<T> interfaceType,
+                                                Supplier<InvocationHandler> invocationHandlerSupplier,
+                                                Class<?>... otherInterfaces) {
+        boolean isInterface = interfaceType.isInterface();
+        if (!isInterface) {
+            throw new IllegalStateException("Target Class's type isn't an interface, @Mapper only support interface");
+        }
         List<Class<?>> targetInterfaces = new ArrayList<>();
         targetInterfaces.add(interfaceType);
         if (null != otherInterfaces && otherInterfaces.length != 0) {
