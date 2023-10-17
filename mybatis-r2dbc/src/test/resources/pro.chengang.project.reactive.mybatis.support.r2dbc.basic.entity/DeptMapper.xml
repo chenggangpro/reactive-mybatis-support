@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pro.chenggang.project.reactive.mybatis.support.test.common.mapper.DeptMapper">
+  <resultMap id="BaseResultMap" type="pro.chenggang.project.reactive.mybatis.support.test.common.entity.Dept">
+    <id column="dept_no" jdbcType="BIGINT" property="deptNo" />
+    <result column="dept_name" jdbcType="VARCHAR" property="deptName" />
+    <result column="location" jdbcType="VARCHAR" property="location" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+  </resultMap>
+  <resultMap id="TableResultMap" type="pro.chenggang.project.reactive.mybatis.support.test.common.entity.Dept">
+    <id column="dept_dept_no" jdbcType="BIGINT" property="deptNo" />
+    <result column="dept_dept_name" jdbcType="VARCHAR" property="deptName" />
+    <result column="dept_location" jdbcType="VARCHAR" property="location" />
+    <result column="dept_create_time" jdbcType="TIMESTAMP" property="createTime" />
+  </resultMap>
+  <sql id="columnNameWithTable">
+    dept.dept_no AS dept_dept_no, 
+    dept.dept_name AS dept_dept_name, 
+    dept.location AS dept_location, 
+    dept.create_time AS dept_create_time
+  </sql>
+</mapper>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+    <property scope="context" name="log_dir" value="./logs" />
+    <property scope="context" name="app_name" value="reactive-cache-support"/>
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } [%-20.20t{19}] [%-50.50logger{49}:%line] %m%n"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>  
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>  
+    </appender>
+
+    <logger name="com.mybatis" level="DEBUG" />
+    <logger name="pro.chenggang" level="DEBUG" />
+    <logger name="org.testcontainers" level="INFO" />
+    <logger name="org.testcontainers.utility.RyukResourceReaper" level="ERROR" />
+
+    <!-- 日志输出级别 -->
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration> 

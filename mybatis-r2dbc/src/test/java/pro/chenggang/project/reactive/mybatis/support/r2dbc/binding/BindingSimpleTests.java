@@ -69,13 +69,15 @@ public class BindingSimpleTests {
     }
 
     @Test
-    void testOkInterfaceMethod(){
+    void testOkInterfaceMethod() {
         MapperProxyFactory<OkInterface> interfaceMapperProxyFactory = new MapperProxyFactory<>(
                 OkInterface.class
         );
         assertEquals(interfaceMapperProxyFactory.getMapperInterface(), OkInterface.class);
         OkInterface okInterface = interfaceMapperProxyFactory.newInstance(mockReactiveSqlSession);
-        R2dbcMapperAnnotationBuilder parser = new R2dbcMapperAnnotationBuilder(r2dbcMybatisConfiguration, OkInterface.class);
+        R2dbcMapperAnnotationBuilder parser = new R2dbcMapperAnnotationBuilder(r2dbcMybatisConfiguration,
+                OkInterface.class
+        );
         parser.parse();
         okInterface.returnMonoWithInteger()
                 .as(StepVerifier::create)
@@ -102,7 +104,7 @@ public class BindingSimpleTests {
                 .expectError(Throwable.class)
                 .verify();
         Map<Method, MapperProxy.MapperMethodInvoker> methodCache = interfaceMapperProxyFactory.getMethodCache();
-        assertEquals(methodCache.size(),6);
+        assertEquals(methodCache.size(), 6);
     }
 
     @Mapper

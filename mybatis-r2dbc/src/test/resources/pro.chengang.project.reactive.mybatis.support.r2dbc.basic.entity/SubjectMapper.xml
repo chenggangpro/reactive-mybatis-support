@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pro.chenggang.project.reactive.mybatis.support.test.common.mapper.SubjectMapper">
+  <resultMap id="BaseResultMap" type="pro.chenggang.project.reactive.mybatis.support.test.common.entity.Subject">
+    <result column="id" jdbcType="INTEGER" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="age" jdbcType="INTEGER" property="age" />
+    <result column="height" jdbcType="INTEGER" property="height" />
+    <result column="weight" jdbcType="INTEGER" property="weight" />
+    <result column="active" jdbcType="BIT" property="active" />
+    <result column="dt" jdbcType="TIMESTAMP" property="dt" />
+    <result column="length" jdbcType="BIGINT" property="length" />
+  </resultMap>
+  <resultMap id="TableResultMap" type="pro.chenggang.project.reactive.mybatis.support.test.common.entity.Subject">
+    <result column="subject_id" jdbcType="INTEGER" property="id" />
+    <result column="subject_name" jdbcType="VARCHAR" property="name" />
+    <result column="subject_age" jdbcType="INTEGER" property="age" />
+    <result column="subject_height" jdbcType="INTEGER" property="height" />
+    <result column="subject_weight" jdbcType="INTEGER" property="weight" />
+    <result column="subject_active" jdbcType="BIT" property="active" />
+    <result column="subject_dt" jdbcType="TIMESTAMP" property="dt" />
+    <result column="subject_length" jdbcType="BIGINT" property="length" />
+  </resultMap>
+  <sql id="columnNameWithTable">
+    subject.id AS subject_id, 
+    subject.name AS subject_name, 
+    subject.age AS subject_age, 
+    subject.height AS subject_height, 
+    subject.weight AS subject_weight, 
+    subject.active AS subject_active, 
+    subject.dt AS subject_dt, 
+    subject.length AS subject_length
+  </sql>
+</mapper>
