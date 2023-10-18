@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.query.simple.SimpleQueryMapper">
+
+  <resultMap id="Dept" type="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
+    <id column="dept_no" jdbcType="BIGINT" property="deptNo" />
+    <result column="dept_name" jdbcType="VARCHAR" property="deptName" />
+    <result column="location" jdbcType="VARCHAR" property="location" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+  </resultMap>
+
+  <select id="countAll" resultType="java.lang.Long">
+    SELECT COUNT(*) FROM dept
+  </select>
+
+  <select id="selectOne" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
+    SELECT * FROM dept ORDER BY dept_no LIMIT 1
+  </select>
+
+  <select id="selectByDeptNo" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
+    SELECT * FROM dept WHERE dept_no = #{deptNo}
+  </select>
+
+  <select id="selectByDeptNoWithResultMap" resultMap="Dept">
+    SELECT * FROM dept WHERE dept_no = #{deptNo}
+  </select>
+
+</mapper>

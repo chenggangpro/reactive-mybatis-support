@@ -21,7 +21,6 @@ import org.apache.ibatis.builder.IncompleteElementException;
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.apache.ibatis.builder.ResultMapResolver;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
-import org.apache.ibatis.builder.xml.XMLMapperEntityResolver;
 import org.apache.ibatis.builder.xml.XMLStatementBuilder;
 import org.apache.ibatis.cache.Cache;
 import org.apache.ibatis.executor.ErrorContext;
@@ -35,11 +34,13 @@ import org.apache.ibatis.mapping.ResultMapping;
 import org.apache.ibatis.parsing.XNode;
 import org.apache.ibatis.parsing.XPathParser;
 import org.apache.ibatis.reflection.MetaClass;
+import org.apache.ibatis.reflection.invoker.GetFieldInvoker;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
 
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -49,6 +50,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Clinton Begin
@@ -74,10 +78,21 @@ public class R2dbcXMLMapperBuilder extends XMLMapperBuilder {
                                String resource,
                                Map<String, XNode> sqlFragments) {
     super(inputStream, configuration, resource, sqlFragments);
-    this.builderAssistant = new MapperBuilderAssistant(configuration, resource);
-    this.parser = new XPathParser(inputStream, true, configuration.getVariables(), new XMLMapperEntityResolver());
-    this.sqlFragments = sqlFragments;
-    this.resource = resource;
+    Map<? extends Class<?>, Field> fieldMap = Stream.of(XMLMapperBuilder.class.getDeclaredFields())
+            .collect(Collectors.toMap(Field::getType, Function.identity()));
+    this.parser = this.getFieldValue(fieldMap.get(XPathParser.class));
+    this.builderAssistant = this.getFieldValue(fieldMap.get(MapperBuilderAssistant.class));
+    this.sqlFragments = this.getFieldValue(fieldMap.get(Map.class));
+    this.resource = this.getFieldValue(fieldMap.get(String.class));
+  }
+
+  private <T> T getFieldValue(Field field){
+    GetFieldInvoker getFieldInvoker = new GetFieldInvoker(field);
+    try {
+      return (T) getFieldInvoker.invoke(this,null);
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public void parse() {

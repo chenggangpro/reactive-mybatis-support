@@ -27,7 +27,6 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 
 import java.io.IOException;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Stream;
 
@@ -103,8 +102,13 @@ public class R2dbcMybatisProperties {
     private R2dbcMybatisConfiguration configuration;
 
     public Resource[] resolveMapperLocations() {
-        return Stream.of(Optional.ofNullable(this.mapperLocations).orElse(new String[0]))
-                .flatMap(location -> Stream.of(getResources(location))).toArray(Resource[]::new);
+        //#149
+        if (this.mapperLocations == null) {
+            return null;
+        }
+        return Stream.of(this.mapperLocations)
+                .flatMap(location -> Stream.of(getResources(location)))
+                .toArray(Resource[]::new);
     }
 
     private Resource[] getResources(String location) {

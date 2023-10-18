@@ -17,6 +17,7 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate;
 
 import org.apache.ibatis.binding.BindingException;
 import org.apache.ibatis.binding.MapperRegistry;
+import org.apache.ibatis.io.ResolverUtil;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.binding.MapperProxyFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.builder.R2dbcMapperAnnotationBuilder;
@@ -25,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The type R2dbc mapper registry.
@@ -91,6 +93,33 @@ public class R2dbcMapperRegistry extends MapperRegistry {
                 }
             }
         }
+    }
+
+    /**
+     * Adds the mappers.
+     *
+     * @param packageName
+     *          the package name
+     * @param superType
+     *          the super type
+     */
+    public void addMappers(String packageName, Class<?> superType) {
+        ResolverUtil<Class<?>> resolverUtil = new ResolverUtil<>();
+        resolverUtil.find(new ResolverUtil.IsA(superType), packageName);
+        Set<Class<? extends Class<?>>> mapperSet = resolverUtil.getClasses();
+        for (Class<?> mapperClass : mapperSet) {
+            addMapper(mapperClass);
+        }
+    }
+
+    /**
+     * Adds the mappers.
+     *
+     * @param packageName
+     *          the package name
+     */
+    public void addMappers(String packageName) {
+        addMappers(packageName, Object.class);
     }
 
     @Override

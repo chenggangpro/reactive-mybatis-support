@@ -102,12 +102,6 @@
             <version>${r2dbc-mysql.version}</version>
             <scope>test</scope>
         </dependency>
-        <!--TODO remove spring related dependency-->
-        <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-r2dbc</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

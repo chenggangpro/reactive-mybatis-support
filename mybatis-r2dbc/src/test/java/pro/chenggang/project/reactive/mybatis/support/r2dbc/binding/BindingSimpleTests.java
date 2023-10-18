@@ -44,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @since 1.0.0
  */
 public class BindingSimpleTests {
+
     R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
     ReactiveSqlSession mockReactiveSqlSession = new DefaultReactiveSqlSession(r2dbcMybatisConfiguration,
             new DefaultReactiveMybatisExecutor(r2dbcMybatisConfiguration)
