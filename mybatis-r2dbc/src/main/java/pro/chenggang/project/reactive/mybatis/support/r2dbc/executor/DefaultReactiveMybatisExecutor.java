@@ -164,12 +164,12 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                     )
                                     .filter(data -> !Objects.equals(data, DEFERRED))
                                     .doOnCancel(() -> {
-                                        //clean up remain results whether it exists or not
+                                        //clean up reactiveResultHandler
                                         reactiveResultHandler.cleanup();
                                         r2dbcStatementLog.logTotal(reactiveResultHandler.getResultRowTotalCount());
                                     })
                                     .doOnComplete(() -> {
-                                        //clean up remain results whether it exists or not
+                                        //clean up reactiveResultHandler
                                         reactiveResultHandler.cleanup();
                                         r2dbcStatementLog.logTotal(reactiveResultHandler.getResultRowTotalCount());
                                     });
