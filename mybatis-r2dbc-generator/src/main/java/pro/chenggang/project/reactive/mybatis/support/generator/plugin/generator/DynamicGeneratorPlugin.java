@@ -70,6 +70,7 @@ public class DynamicGeneratorPlugin extends PluginAdapter {
     @Override
     public boolean clientGenerated(Interface interfaze, IntrospectedTable introspectedTable) {
         if ((introspectedTable.getTargetRuntime() == IntrospectedTable.TargetRuntime.MYBATIS3)) {
+            generatedModelCustomizer.customizeLombokGeneratedIfConfigured(interfaze, introspectedTable);
             interfaze.addImportedType(new FullyQualifiedJavaType("org.apache.ibatis.annotations.Mapper"));
             interfaze.addAnnotation("@Mapper");
         }
