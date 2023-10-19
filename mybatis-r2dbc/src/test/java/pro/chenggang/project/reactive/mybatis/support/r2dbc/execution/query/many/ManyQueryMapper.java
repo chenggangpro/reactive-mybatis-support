@@ -15,6 +15,7 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.query.many;
 
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.Dept;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.Emp;
@@ -27,6 +28,7 @@ import reactor.core.publisher.Flux;
  * @version 1.0.0
  * @since 1.0.0
  */
+@Mapper
 public interface ManyQueryMapper {
 
     Flux<Dept> selectAllDept(@Param("deptName") String deptName);
