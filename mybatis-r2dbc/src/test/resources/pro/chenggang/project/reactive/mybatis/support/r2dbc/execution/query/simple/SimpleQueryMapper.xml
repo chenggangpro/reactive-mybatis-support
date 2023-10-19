@@ -2,13 +2,6 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.query.simple.SimpleQueryMapper">
 
-  <resultMap id="Dept" type="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
-    <id column="dept_no" jdbcType="BIGINT" property="deptNo" />
-    <result column="dept_name" jdbcType="VARCHAR" property="deptName" />
-    <result column="location" jdbcType="VARCHAR" property="location" />
-    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
-  </resultMap>
-
   <select id="countAll" resultType="java.lang.Long">
     SELECT COUNT(*) FROM dept
   </select>
@@ -21,20 +14,11 @@
     SELECT * FROM dept WHERE dept_no = #{deptNo}
   </select>
 
-  <select id="selectByDeptNoWithResultMap" resultMap="Dept">
+  <select id="selectByDeptNoWithResultMap" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.DeptMapper.BaseResultMap">
     SELECT * FROM dept WHERE dept_no = #{deptNo}
   </select>
 
-  <resultMap id="DeptFromConstruct" type="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
-    <constructor>
-      <idArg column="dept_no" jdbcType="BIGINT" name="deptNo" javaType="java.lang.Long" />
-      <arg column="dept_name" jdbcType="VARCHAR" name="deptName" javaType="java.lang.String" />
-      <arg column="location" jdbcType="VARCHAR" name="location" javaType="java.lang.String" />
-      <arg column="create_time" jdbcType="TIMESTAMP" name="createTime" javaType="java.time.LocalDateTime"/>
-    </constructor>
-  </resultMap>
-
-  <select id="selectByDeptNoWithConstructMap" resultMap="DeptFromConstruct">
+  <select id="selectByDeptNoWithConstructorResultMap" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.DeptMapper.DeptConstructorResultMap">
     SELECT * FROM dept WHERE dept_no = #{deptNo}
   </select>
 

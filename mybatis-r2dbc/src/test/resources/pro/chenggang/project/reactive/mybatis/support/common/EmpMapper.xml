@@ -23,6 +23,19 @@
     <result column="emp_dept_no" jdbcType="BIGINT" property="deptNo" />
     <result column="emp_create_time" jdbcType="TIMESTAMP" property="createTime" />
   </resultMap>
+  <resultMap id="EmpConstructorResultMap" type="pro.chenggang.project.reactive.mybatis.support.common.entity.Emp">
+    <constructor>
+      <idArg column="emp_emp_no" jdbcType="BIGINT" name="empNo" javaType="java.lang.Long" />
+      <arg column="emp_emp_name" jdbcType="VARCHAR" name="empName" javaType="java.lang.String" />
+      <arg column="emp_job" jdbcType="VARCHAR" name="job" javaType="java.lang.String" />
+      <arg column="emp_manager" jdbcType="VARCHAR" name="manager" javaType="java.lang.String" />
+      <arg column="emp_hire_date" jdbcType="DATE" name="hireDate" javaType="java.time.LocalDate" />
+      <arg column="emp_salary" jdbcType="INTEGER" name="salary" javaType="java.lang.Integer" />
+      <arg column="emp_kpi" jdbcType="DECIMAL" name="kpi" javaType="java.math.BigDecimal" />
+      <arg column="emp_dept_no" jdbcType="BIGINT" name="deptNo" javaType="java.lang.Long" />
+      <arg column="emp_create_time" jdbcType="TIMESTAMP" name="createTime"  javaType="java.time.LocalDateTime" />
+    </constructor>
+  </resultMap>
   <resultMap id="EmpWithDept" type="pro.chenggang.project.reactive.mybatis.support.common.entity.extend.EmpWithDept" >
     <id column="emp_no" jdbcType="BIGINT" property="empNo" />
     <result column="emp_name" jdbcType="VARCHAR" property="empName" />

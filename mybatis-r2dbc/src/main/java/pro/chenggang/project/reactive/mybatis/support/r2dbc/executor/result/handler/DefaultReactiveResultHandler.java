@@ -85,7 +85,6 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
     private final List<Object> resultHolder = new ArrayList<>();
     // temporary marking flag that indicate using constructor mapping (use field to reduce memory usage)
     private boolean useConstructorMappings;
-    private Object previousRowValue;
 
     /**
      * Instantiates a new Default reactive result handler.
@@ -142,6 +141,16 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         return (List<T>) this.resultHolder;
     }
 
+    @Override
+    public void cleanup() {
+        pendingRelations.clear();
+        autoMappingsCache.clear();
+        constructorAutoMappingColumns.clear();
+        nestedResultObjects.clear();
+        ancestorObjects.clear();
+        resultHolder.clear();
+    }
+
     /**
      * get row value for simple result map
      *
@@ -181,9 +190,6 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         Object rowValue = getRowValueForNestedResultMap(rowResultWrapper, discriminatedResultMap, rowKey, null, partialObject);
         if (partialObject == null) {
             storeObject(resultHandler, resultContext, rowValue, null, rowResultWrapper);
-        }
-        if (rowValue != null) {
-            previousRowValue = rowValue;
         }
         List<Object> resultList = resultHandler.getResultList();
         if(resultList == null || resultList.isEmpty()){

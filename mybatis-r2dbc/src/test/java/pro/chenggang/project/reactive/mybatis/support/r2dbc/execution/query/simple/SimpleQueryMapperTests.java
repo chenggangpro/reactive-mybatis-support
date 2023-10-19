@@ -28,14 +28,14 @@ import reactor.test.StepVerifier;
 public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
 
     @Test
-    void testCount() {
+    void countAll() {
         runAllDatabases(
                 r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(SimpleQueryMapper.class);
                 },
                 (type, reactiveSqlSession) -> {
-                    SimpleQueryMapper reactiveSqlSessionMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
-                    reactiveSqlSessionMapper.countAll()
+                    SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
+                    simpleQueryMapper.countAll()
                             .as(StepVerifier::create)
                             .expectNext(4L)
                             .verifyComplete();
@@ -51,10 +51,10 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
                     r2dbcMybatisConfiguration.setMapUnderscoreToCamelCase(true);
                 },
                 (type, reactiveSqlSession) -> {
-                    SimpleQueryMapper reactiveSqlSessionMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
-                    reactiveSqlSessionMapper.selectOne()
+                    SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
+                    simpleQueryMapper.selectOne()
                             .as(StepVerifier::create)
-                            .consumeNextWith(dept -> {
+                            .assertNext(dept -> {
                                 Assertions.assertEquals(dept.getDeptNo(), 1L);
                             })
                             .verifyComplete();
@@ -70,10 +70,10 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
                     r2dbcMybatisConfiguration.setMapUnderscoreToCamelCase(true);
                 },
                 (type, reactiveSqlSession) -> {
-                    SimpleQueryMapper reactiveSqlSessionMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
-                    reactiveSqlSessionMapper.selectByDeptNo(1L)
+                    SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
+                    simpleQueryMapper.selectByDeptNo(1L)
                             .as(StepVerifier::create)
-                            .consumeNextWith(dept -> {
+                            .assertNext(dept -> {
                                 Assertions.assertEquals(dept.getDeptNo(), 1L);
                             })
                             .verifyComplete();
@@ -88,10 +88,10 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
                     r2dbcMybatisConfiguration.addMapper(SimpleQueryMapper.class);
                 },
                 (type, reactiveSqlSession) -> {
-                    SimpleQueryMapper reactiveSqlSessionMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
-                    reactiveSqlSessionMapper.selectByDeptNoWithAnnotatedResult(1L)
+                    SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
+                    simpleQueryMapper.selectByDeptNoWithAnnotatedResult(1L)
                             .as(StepVerifier::create)
-                            .consumeNextWith(dept -> {
+                            .assertNext(dept -> {
                                 Assertions.assertEquals(dept.getDeptNo(), 1L);
                             })
                             .verifyComplete();
@@ -106,10 +106,10 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
                     r2dbcMybatisConfiguration.addMapper(SimpleQueryMapper.class);
                 },
                 (type, reactiveSqlSession) -> {
-                    SimpleQueryMapper reactiveSqlSessionMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
-                    reactiveSqlSessionMapper.selectByDeptNoWithResultMap(1L)
+                    SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
+                    simpleQueryMapper.selectByDeptNoWithResultMap(1L)
                             .as(StepVerifier::create)
-                            .consumeNextWith(dept -> {
+                            .assertNext(dept -> {
                                 Assertions.assertEquals(dept.getDeptNo(), 1L);
                             })
                             .verifyComplete();
@@ -124,10 +124,10 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
                     r2dbcMybatisConfiguration.addMapper(SimpleQueryMapper.class);
                 },
                 (type, reactiveSqlSession) -> {
-                    SimpleQueryMapper reactiveSqlSessionMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
-                    reactiveSqlSessionMapper.selectByDeptNoWithConstructMap(1L)
+                    SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
+                    simpleQueryMapper.selectByDeptNoWithConstructorResultMap(1L)
                             .as(StepVerifier::create)
-                            .consumeNextWith(dept -> {
+                            .assertNext(dept -> {
                                 Assertions.assertEquals(dept.getDeptNo(), 1L);
                             })
                             .verifyComplete();
@@ -142,10 +142,10 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
                     r2dbcMybatisConfiguration.addMapper(SimpleQueryMapper.class);
                 },
                 (type, reactiveSqlSession) -> {
-                    SimpleQueryMapper reactiveSqlSessionMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
-                    reactiveSqlSessionMapper.selectByDeptNoWithAnnotatedConstruct(1L)
+                    SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
+                    simpleQueryMapper.selectByDeptNoWithAnnotatedConstructor(1L)
                             .as(StepVerifier::create)
-                            .consumeNextWith(dept -> {
+                            .assertNext(dept -> {
                                 Assertions.assertEquals(dept.getDeptNo(), 1L);
                             })
                             .verifyComplete();
@@ -158,16 +158,12 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
         runAllDatabases(
                 r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(SimpleQueryMapper.class);
-                    String deptMapperXmlLocation = "pro/chenggang/project/reactive/mybatis/support/common/DeptMapper.xml";
-                    String empMapperXmlLocation = "pro/chenggang/project/reactive/mybatis/support/common/EmpMapper.xml";
-                    super.loadXmlMapper(deptMapperXmlLocation, r2dbcMybatisConfiguration);
-                    super.loadXmlMapper(empMapperXmlLocation, r2dbcMybatisConfiguration);
                 },
                 (type, reactiveSqlSession) -> {
-                    SimpleQueryMapper reactiveSqlSessionMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
-                    reactiveSqlSessionMapper.selectDeptWithEmpList(1L)
+                    SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
+                    simpleQueryMapper.selectDeptWithEmpList(1L)
                             .as(StepVerifier::create)
-                            .consumeNextWith(dept -> {
+                            .assertNext(dept -> {
                                 Assertions.assertEquals(dept.getDeptNo(), 1L);
                                 Assertions.assertNotNull(dept.getEmpList());
                                 Assertions.assertEquals(dept.getEmpList().size(), 3);
@@ -182,16 +178,12 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
         runAllDatabases(
                 r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(SimpleQueryMapper.class);
-                    String deptMapperXmlLocation = "pro/chenggang/project/reactive/mybatis/support/common/DeptMapper.xml";
-                    String empMapperXmlLocation = "pro/chenggang/project/reactive/mybatis/support/common/EmpMapper.xml";
-                    super.loadXmlMapper(deptMapperXmlLocation, r2dbcMybatisConfiguration);
-                    super.loadXmlMapper(empMapperXmlLocation, r2dbcMybatisConfiguration);
                 },
                 (type, reactiveSqlSession) -> {
-                    SimpleQueryMapper reactiveSqlSessionMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
-                    reactiveSqlSessionMapper.selectEmpWithDept(1L)
+                    SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
+                    simpleQueryMapper.selectEmpWithDept(1L)
                             .as(StepVerifier::create)
-                            .consumeNextWith(emp -> {
+                            .assertNext(emp -> {
                                 Assertions.assertEquals(emp.getEmpNo(), 1L);
                                 Assertions.assertNotNull(emp.getDept());
                                 Assertions.assertEquals(emp.getDept().getDeptNo(), 2L);

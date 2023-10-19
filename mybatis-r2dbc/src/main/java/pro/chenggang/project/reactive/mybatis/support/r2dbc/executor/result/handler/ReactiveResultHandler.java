@@ -56,4 +56,9 @@ public interface ReactiveResultHandler {
      * @return remained results
      */
     <T> List<T> getRemainedResults();
+
+    /**
+     * Clean up
+     */
+    void cleanup();
 }

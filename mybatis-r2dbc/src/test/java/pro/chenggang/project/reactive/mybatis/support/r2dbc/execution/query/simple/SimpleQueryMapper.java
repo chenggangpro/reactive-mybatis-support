@@ -55,7 +55,7 @@ public interface SimpleQueryMapper {
 
     Mono<Dept> selectByDeptNoWithResultMap(@Param("deptNo") Long deptNo);
 
-    Mono<Dept> selectByDeptNoWithConstructMap(@Param("deptNo") Long deptNo);
+    Mono<Dept> selectByDeptNoWithConstructorResultMap(@Param("deptNo") Long deptNo);
 
     @ConstructorArgs({
             @Arg(column = "dept_no", name = "deptNo", javaType = Long.class, id = true),
@@ -64,7 +64,7 @@ public interface SimpleQueryMapper {
             @Arg(column = "create_time", name = "createTime", javaType = LocalDateTime.class)
     })
     @Select("SELECT * FROM dept WHERE dept_no = #{deptNo}")
-    Mono<Dept> selectByDeptNoWithAnnotatedConstruct(@Param("deptNo") Long deptNo);
+    Mono<Dept> selectByDeptNoWithAnnotatedConstructor(@Param("deptNo") Long deptNo);
     
     Mono<DeptWithEmpList> selectDeptWithEmpList(@Param("deptNo") Long deptNo);
 

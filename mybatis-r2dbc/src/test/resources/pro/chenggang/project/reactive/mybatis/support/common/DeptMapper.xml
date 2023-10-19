@@ -13,6 +13,14 @@
     <result column="dept_location" jdbcType="VARCHAR" property="location" />
     <result column="dept_create_time" jdbcType="TIMESTAMP" property="createTime" />
   </resultMap>
+  <resultMap id="DeptConstructorResultMap" type="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
+    <constructor>
+      <idArg column="dept_no" jdbcType="BIGINT" name="deptNo" javaType="java.lang.Long" />
+      <arg column="dept_name" jdbcType="VARCHAR" name="deptName" javaType="java.lang.String" />
+      <arg column="location" jdbcType="VARCHAR" name="location" javaType="java.lang.String" />
+      <arg column="create_time" jdbcType="TIMESTAMP" name="createTime" javaType="java.time.LocalDateTime"/>
+    </constructor>
+  </resultMap>
   <resultMap id="DeptWithEmpList" type="pro.chenggang.project.reactive.mybatis.support.common.entity.extend.DeptWithEmpList" >
     <id column="dept_no" jdbcType="BIGINT" property="deptNo" />
     <result column="dept_name" jdbcType="VARCHAR" property="deptName" />

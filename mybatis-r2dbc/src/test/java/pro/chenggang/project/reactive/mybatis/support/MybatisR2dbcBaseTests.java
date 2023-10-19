@@ -45,7 +45,9 @@ import reactor.core.scheduler.Schedulers;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -67,12 +69,20 @@ import static org.hamcrest.Matchers.notNullValue;
 public class MybatisR2dbcBaseTests {
 
     protected static final Map<Class<?>, DatabaseInitialization> databaseInitializationContainer;
+    protected static final List<String> commonXmlMapperLocations = new ArrayList<>();
 
     static {
         databaseInitializationContainer = new HashMap<>();
         databaseInitializationContainer.put(MySQLContainer.class, new MysqlTestContainerInitialization());
         databaseInitializationContainer.put(MariaDBContainer.class, new MariadbTestContainerInitialization());
         databaseInitializationContainer.put(PostgreSQLContainer.class, new PostgresqlTestContainerInitialization());
+    }
+
+    static {
+        commonXmlMapperLocations.add("pro/chenggang/project/reactive/mybatis/support/common/DeptMapper.xml");
+        commonXmlMapperLocations.add("pro/chenggang/project/reactive/mybatis/support/common/EmpMapper.xml");
+        commonXmlMapperLocations.add("pro/chenggang/project/reactive/mybatis/support/common/SubjectMapper.xml");
+        commonXmlMapperLocations.add("pro/chenggang/project/reactive/mybatis/support/common/SubjectDataMapper.xml");
     }
 
     protected static final String DB_NAME = "mybatis_r2dbc_test";
@@ -179,6 +189,9 @@ public class MybatisR2dbcBaseTests {
             log.info("⬇⬇⬇⬇⬇⬇ {} ----------------", aClass.getSimpleName());
             ReactiveSqlSessionFactory reactiveSqlSessionFactory = setUp(aClass, false, r2dbcProtocol -> {
                 R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
+                for (String commonXmlMapperLocation : commonXmlMapperLocations) {
+                    loadXmlMapper(commonXmlMapperLocation, r2dbcMybatisConfiguration);
+                }
                 r2dbcMybatisConfigurationInitialization.accept(r2dbcMybatisConfiguration);
                 return r2dbcMybatisConfiguration;
             });
