@@ -13,6 +13,13 @@
     <result column="dept_location" jdbcType="VARCHAR" property="location" />
     <result column="dept_create_time" jdbcType="TIMESTAMP" property="createTime" />
   </resultMap>
+  <resultMap id="DeptWithEmpList" type="pro.chenggang.project.reactive.mybatis.support.common.entity.extend.DeptWithEmpList" >
+    <id column="dept_no" jdbcType="BIGINT" property="deptNo" />
+    <result column="dept_name" jdbcType="VARCHAR" property="deptName" />
+    <result column="location" jdbcType="VARCHAR" property="location" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <collection property="empList" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.EmpMapper.TableResultMap" />
+  </resultMap>
   <sql id="columnNameWithTable">
     dept.dept_no AS dept_dept_no, 
     dept.dept_name AS dept_dept_name, 

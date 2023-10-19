@@ -21,6 +21,7 @@ import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ValidationDepth;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.io.Resources;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MariaDBContainer;
@@ -35,11 +36,14 @@ import pro.chenggang.project.reactive.mybatis.support.common.testcontainers.Mysq
 import pro.chenggang.project.reactive.mybatis.support.common.testcontainers.PostgresqlTestContainerInitialization;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFactory;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.builder.R2dbcXMLMapperBuilder;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import reactor.core.publisher.Hooks;
 import reactor.core.scheduler.Schedulers;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -153,6 +157,20 @@ public class MybatisR2dbcBaseTests {
                 .withConnectionFactory(connectionFactory)
                 .withR2dbcMybatisConfiguration(configuration)
                 .build();
+    }
+
+    protected void loadXmlMapper(String xmlMapperLocation, R2dbcMybatisConfiguration r2dbcMybatisConfiguration) {
+        try (InputStream inputStream = Resources.getResourceAsStream(
+                xmlMapperLocation)) {
+            R2dbcXMLMapperBuilder r2dbcXMLMapperBuilder = new R2dbcXMLMapperBuilder(inputStream,
+                    r2dbcMybatisConfiguration,
+                    xmlMapperLocation,
+                    r2dbcMybatisConfiguration.getSqlFragments()
+            );
+            r2dbcXMLMapperBuilder.parse();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     protected void runAllDatabases(Consumer<R2dbcMybatisConfiguration> r2dbcMybatisConfigurationInitialization,

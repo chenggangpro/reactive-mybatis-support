@@ -25,4 +25,36 @@
     SELECT * FROM dept WHERE dept_no = #{deptNo}
   </select>
 
+  <resultMap id="DeptFromConstruct" type="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
+    <constructor>
+      <idArg column="dept_no" jdbcType="BIGINT" name="deptNo" javaType="java.lang.Long" />
+      <arg column="dept_name" jdbcType="VARCHAR" name="deptName" javaType="java.lang.String" />
+      <arg column="location" jdbcType="VARCHAR" name="location" javaType="java.lang.String" />
+      <arg column="create_time" jdbcType="TIMESTAMP" name="createTime" javaType="java.time.LocalDateTime"/>
+    </constructor>
+  </resultMap>
+
+  <select id="selectByDeptNoWithConstructMap" resultMap="DeptFromConstruct">
+    SELECT * FROM dept WHERE dept_no = #{deptNo}
+  </select>
+
+
+  <select id="selectDeptWithEmpList" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.DeptMapper.DeptWithEmpList">
+    SELECT dept.*,
+           <include refid="pro.chenggang.project.reactive.mybatis.support.common.mapper.EmpMapper.columnNameWithTable" />
+    FROM dept
+        LEFT JOIN emp
+            ON dept.dept_no = emp.dept_no
+    WHERE dept.dept_no = #{deptNo}
+  </select>
+
+  <select id="selectEmpWithDept" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.EmpMapper.EmpWithDept">
+    SELECT emp.*,
+           <include refid="pro.chenggang.project.reactive.mybatis.support.common.mapper.DeptMapper.columnNameWithTable" />
+    FROM emp
+           LEFT JOIN dept
+                     ON emp.dept_no = dept.dept_no
+    WHERE emp.emp_no = #{empNo}
+  </select>
+
 </mapper>
