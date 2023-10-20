@@ -20,12 +20,14 @@ import pro.chenggang.project.reactive.mybatis.support.MybatisR2dbcBaseTests;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.Subject;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectData;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectDataAEnum;
+import pro.chenggang.project.reactive.mybatis.support.common.entity.extend.SubjectWithSubjectData;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -94,6 +96,51 @@ public class BasicTypeMapperTests extends MybatisR2dbcBaseTests {
                             assertEquals(subjectData.getAdatetime(), LocalDateTime.of(2023, 1, 1, 1, 1, 1));
                         })
                         .expectNextCount(1)
+                        .verifyComplete()
+                )
+                .run();
+    }
+
+    @Test
+    void selectAllSubjectWithSubjectData() {
+        super.<SubjectWithSubjectData>newTestRunner()
+                .allDatabases()
+                .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
+                    r2dbcMybatisConfiguration.addMapper(BasicTypeMapper.class);
+                    r2dbcMybatisConfiguration.setMapUnderscoreToCamelCase(true);
+                })
+                .runWith((type, reactiveSqlSession) -> {
+                    BasicTypeMapper basicTypeMapper = reactiveSqlSession.getMapper(BasicTypeMapper.class);
+                    return basicTypeMapper.selectAllSubjectWithSubjectData();
+                })
+                .verifyWith(firstStep -> firstStep
+                        .assertNext(subject -> {
+                            assertEquals(subject.getId(), 1);
+                            assertEquals(subject.getName(), "a");
+                            assertEquals(subject.getAge(), 10);
+                            assertEquals(subject.getHeight(), 100);
+                            assertEquals(subject.getWeight(), 45);
+                            assertTrue(subject.getActive());
+                            assertEquals(subject.getDt(), LocalDateTime.of(2023, 1, 1, 1, 1, 1));
+                            assertEquals(subject.getLength(), 22222222222L);
+                            assertNotNull(subject.getSubjectDataList());
+                            SubjectData subjectData = subject.getSubjectDataList().get(0);
+                            // 1, 1, 'a', 1, 1, 1, 1.0, 1, 'a', 'A', 10.23, CURRENT_TIMESTAMP, DATE(NOW()), NOW()
+                            assertEquals(subjectData.getAbyte(), (byte) 1);
+                            assertEquals(subjectData.getAshort(), (short) 1);
+                            assertEquals(subjectData.getAchar(), "a");
+                            assertEquals(subjectData.getAnint(), 1);
+                            assertEquals(subjectData.getAlong(), 1L);
+                            assertEquals(subjectData.getAdouble(), 1);
+                            assertEquals(subjectData.getAstring(), "a");
+                            assertEquals(subjectData.getAnenum(), SubjectDataAEnum.A);
+                            assertEquals(subjectData.getAdecimal(), new BigDecimal("10.23"));
+                            assertNotNull(subjectData.getAtimestamp());
+                            assertEquals(subjectData.getAdate(), LocalDate.now());
+                            assertNotNull(subjectData.getAdatetime());
+                            assertEquals(subjectData.getAdatetime().toLocalDate(), LocalDate.now());
+                        })
+                        .expectNextCount(3)
                         .verifyComplete()
                 )
                 .run();

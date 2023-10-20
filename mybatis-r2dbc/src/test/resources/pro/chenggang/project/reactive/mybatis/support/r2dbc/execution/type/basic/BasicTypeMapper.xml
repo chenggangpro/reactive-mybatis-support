@@ -8,8 +8,9 @@
   <select id="selectAllSubjectData" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectData">
     SELECT * FROM subject_data ORDER BY aString
   </select>
-  <select id="selectAllSubjectWithSubjectData" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.extend.SubjectWithSubjectData">
-    SELECT subject.*
+  <select id="selectAllSubjectWithSubjectData" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.SubjectMapper.SubjectWithSubjectData">
+    SELECT subject.*,
+           <include refid="pro.chenggang.project.reactive.mybatis.support.common.mapper.SubjectDataMapper.columnNameWithTable" />
     FROM subject
         LEFT JOIN subject_data
             ON subject.name = subject_data.aString

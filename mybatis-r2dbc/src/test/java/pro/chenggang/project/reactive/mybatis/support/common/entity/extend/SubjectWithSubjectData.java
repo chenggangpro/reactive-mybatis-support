@@ -20,6 +20,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectData;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -52,5 +53,5 @@ public class SubjectWithSubjectData {
 
     protected Long length;
 
-    protected List<SubjectWithSubjectData> subjectDataList;
+    protected List<SubjectData> subjectDataList;
 }
