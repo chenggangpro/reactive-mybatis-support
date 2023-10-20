@@ -21,6 +21,18 @@
     <result column="subject_dt" jdbcType="TIMESTAMP" property="dt" />
     <result column="subject_length" jdbcType="BIGINT" property="length" />
   </resultMap>
+  <resultMap id="SubjectWithSubjectData" type="pro.chenggang.project.reactive.mybatis.support.common.entity.extend.SubjectWithSubjectData">
+    <result column="id" jdbcType="INTEGER" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="age" jdbcType="INTEGER" property="age" />
+    <result column="height" jdbcType="INTEGER" property="height" />
+    <result column="weight" jdbcType="INTEGER" property="weight" />
+    <result column="active" jdbcType="BIT" property="active" />
+    <result column="dt" jdbcType="TIMESTAMP" property="dt" />
+    <result column="length" jdbcType="BIGINT" property="length" />
+    <collection property="subjectDataList" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.SubjectDataMapper.TableResultMap" />
+  </resultMap>
+
   <sql id="columnNameWithTable">
     subject.id AS subject_id, 
     subject.name AS subject_name, 

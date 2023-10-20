@@ -83,11 +83,12 @@ CREATE TABLE subject_data
 );
 
 INSERT INTO subject
-VALUES (1, 'a', 10, 100, 45, true, CURRENT_TIMESTAMP, 222222222),
-       (2, 'b', 10, NULL, 45, true, CURRENT_TIMESTAMP, 222222222),
-       (2, 'c', 10, NULL, NULL, false, CURRENT_TIMESTAMP, 222222222);
+VALUES (1, 'a', 10, 100, 45, true, '2023-01-01 01:01:01.000', 22222222222),
+       (2, 'b', 20, NULL, 45, true, CURRENT_TIMESTAMP, 22222222222),
+       (3, 'c', 30, 33, NULL, false, NULL, 22222222222),
+       (4, 'd', 40, NULL, NULL, false, CURRENT_TIMESTAMP, 22222222222);
 
 INSERT INTO subject_data
 VALUES (1, 1, 'a', 1, 1, 1, 1.0, true, 'a', 'A', 10.23, CURRENT_TIMESTAMP, DATE(NOW()), NOW()),
-       (2, 2, 'b', 2, 2, 2, 2.0, false, 'b', 'B', 10.23, CURRENT_TIMESTAMP, DATE(NOW()), NOW()),
-       (3, 3, 'c', 3, 3, 3, 3.0, true, 'c', 'C', 10.23, CURRENT_TIMESTAMP, DATE(NOW()), NOW());
+       (2, 2, 'b', 2, 2, 2, 2.0, false, 'b', 'B', 10.23, NULL, '2023-01-01', '2023-01-01 01:01:01.000'),
+       (3, 3, 'c', 3, 3, 3, 3.0, true, 'c', 'C', 10.23, CURRENT_TIMESTAMP, NULL, NOW());

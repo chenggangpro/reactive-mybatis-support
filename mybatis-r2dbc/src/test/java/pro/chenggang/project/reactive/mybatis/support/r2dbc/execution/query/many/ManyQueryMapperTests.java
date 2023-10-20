@@ -17,7 +17,10 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.query.man
 
 import org.junit.jupiter.api.Test;
 import pro.chenggang.project.reactive.mybatis.support.MybatisR2dbcBaseTests;
-import reactor.test.StepVerifier;
+import pro.chenggang.project.reactive.mybatis.support.common.entity.Dept;
+import pro.chenggang.project.reactive.mybatis.support.common.entity.Emp;
+import pro.chenggang.project.reactive.mybatis.support.common.entity.extend.DeptWithEmpList;
+import pro.chenggang.project.reactive.mybatis.support.common.entity.extend.EmpWithDept;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -31,208 +34,232 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ManyQueryMapperTests extends MybatisR2dbcBaseTests {
 
     @Test
-    void selectAllDept(){
-        runAllDatabases(
-                r2dbcMybatisConfiguration -> {
+    void selectAllDept() {
+        super.<Dept>newTestRunner()
+                .allDatabases()
+                .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(ManyQueryMapper.class);
                     r2dbcMybatisConfiguration.setMapUnderscoreToCamelCase(true);
-                },
-                (type, reactiveSqlSession) -> {
+                })
+                .runWith((type, reactiveSqlSession) -> {
                     ManyQueryMapper manyQueryMapper = reactiveSqlSession.getMapper(ManyQueryMapper.class);
-                    manyQueryMapper.selectAllDept("TI")
-                            .as(StepVerifier::create)
-                            .assertNext(dept -> {
-                                assertEquals(dept.getDeptNo(),1L);
-                            })
-                            .assertNext(dept -> {
-                                assertEquals(dept.getDeptNo(),4L);
-                            })
-                            .verifyComplete();
-                }
-        );
+                    return manyQueryMapper.selectAllDept("TI");
+                })
+                .verifyWith(firstStep -> firstStep
+                        .assertNext(dept -> {
+                            assertEquals(dept.getDeptNo(), 1L);
+                        })
+                        .assertNext(dept -> {
+                            assertEquals(dept.getDeptNo(), 4L);
+                        })
+                        .verifyComplete()
+                )
+                .run();
     }
 
     @Test
-    void selectAllDeptWithEmpList(){
-        runAllDatabases(
-                r2dbcMybatisConfiguration -> {
+    void selectAllDeptWithEmpList() {
+        super.<DeptWithEmpList>newTestRunner()
+                .allDatabases()
+                .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(ManyQueryMapper.class);
-                },
-                (type, reactiveSqlSession) -> {
+                })
+                .runWith((type, reactiveSqlSession) -> {
                     ManyQueryMapper manyQueryMapper = reactiveSqlSession.getMapper(ManyQueryMapper.class);
-                    manyQueryMapper.selectAllDeptWithEmpList()
-                            .as(StepVerifier::create)
-                            .assertNext(dept -> {
-                                assertEquals(dept.getDeptNo(),1L);
-                                assertNotNull(dept.getEmpList());
-                                assertEquals(dept.getEmpList().size(),3);
-                            })
-                            .assertNext(dept -> {
-                                assertEquals(dept.getDeptNo(),2L);
-                                assertNotNull(dept.getEmpList());
-                                assertEquals(dept.getEmpList().size(),5);
-                            })
-                            .assertNext(dept -> {
-                                assertEquals(dept.getDeptNo(),3L);
-                                assertNotNull(dept.getEmpList());
-                                assertEquals(dept.getEmpList().size(),6);
-                            })
-                            .assertNext(dept -> {
-                                assertEquals(dept.getDeptNo(),4L);
-                                assertNotNull(dept.getEmpList());
-                                assertTrue(dept.getEmpList().isEmpty());
-                            })
-                            .verifyComplete();
-                }
-        );
+                    return manyQueryMapper.selectAllDeptWithEmpList();
+                })
+                .verifyWith(firstStep -> firstStep
+                        .assertNext(dept -> {
+                            assertEquals(dept.getDeptNo(), 1L);
+                            assertNotNull(dept.getEmpList());
+                            assertEquals(dept.getEmpList()
+                                    .size(), 3);
+                        })
+                        .assertNext(dept -> {
+                            assertEquals(dept.getDeptNo(), 2L);
+                            assertNotNull(dept.getEmpList());
+                            assertEquals(dept.getEmpList()
+                                    .size(), 5);
+                        })
+                        .assertNext(dept -> {
+                            assertEquals(dept.getDeptNo(), 3L);
+                            assertNotNull(dept.getEmpList());
+                            assertEquals(dept.getEmpList()
+                                    .size(), 6);
+                        })
+                        .assertNext(dept -> {
+                            assertEquals(dept.getDeptNo(), 4L);
+                            assertNotNull(dept.getEmpList());
+                            assertTrue(dept.getEmpList()
+                                    .isEmpty());
+                        })
+                        .verifyComplete()
+                )
+                .run();
     }
 
     @Test
-    void selectAllDeptWithEmpListWithoutOrdered(){
+    void selectAllDeptWithEmpListWithoutOrdered() {
         // this should consume all rows for nested result map
         // then discard not-required data
         // the mybatis log count should be 15
-        runAllDatabases(
-                r2dbcMybatisConfiguration -> {
+        super.<DeptWithEmpList>newTestRunner()
+                .allDatabases()
+                .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(ManyQueryMapper.class);
-                },
-                (type, reactiveSqlSession) -> {
+                })
+                .runWith((type, reactiveSqlSession) -> {
                     ManyQueryMapper manyQueryMapper = reactiveSqlSession.getMapper(ManyQueryMapper.class);
-                    manyQueryMapper.selectAllDeptWithEmpList()
-                            .take(1,true)
-                            .as(StepVerifier::create)
-                            .assertNext(dept -> {
-                                assertEquals(dept.getDeptNo(),1L);
-                                assertNotNull(dept.getEmpList());
-                                assertEquals(dept.getEmpList().size(),3);
-                            })
-                            .verifyComplete();
-                }
-        );
+                    return manyQueryMapper.selectAllDeptWithEmpList()
+                            .take(1, true);
+                })
+                .verifyWith(firstStep -> firstStep
+                        .assertNext(dept -> {
+                            assertEquals(dept.getDeptNo(), 1L);
+                            assertNotNull(dept.getEmpList());
+                            assertEquals(dept.getEmpList()
+                                    .size(), 3);
+                        })
+                        .verifyComplete()
+                )
+                .run();
     }
 
     @Test
-    void selectAllDeptWithEmpListOrdered(){
+    void selectAllDeptWithEmpListOrdered() {
         // this should only take n+1 rows
         // (N represents the number of rows that need to be read to reach the maximum row count)
         // (An additional row is included to check whether the nested result map should cache the next entry )
         // then discard not-required data
         // the mybatis log count should be 4
-        runAllDatabases(
-                r2dbcMybatisConfiguration -> {
+        super.<DeptWithEmpList>newTestRunner()
+                .allDatabases()
+                .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(ManyQueryMapper.class);
-                },
-                (type, reactiveSqlSession) -> {
+                })
+                .runWith((type, reactiveSqlSession) -> {
                     ManyQueryMapper manyQueryMapper = reactiveSqlSession.getMapper(ManyQueryMapper.class);
-                    manyQueryMapper.selectAllDeptWithEmpListOrdered()
-                            .take(1,true) // take count
-                            .as(StepVerifier::create)
-                            .assertNext(dept -> {
-                                assertEquals(dept.getDeptNo(),1L);
-                                assertNotNull(dept.getEmpList());
-                                assertEquals(dept.getEmpList().size(),3);
-                            })
-                            .verifyComplete();
-                }
-        );
+                    return manyQueryMapper.selectAllDeptWithEmpListOrdered()
+                            .take(1, true);
+                })
+                .verifyWith(firstStep -> firstStep
+                        .assertNext(dept -> {
+                            assertEquals(dept.getDeptNo(), 1L);
+                            assertNotNull(dept.getEmpList());
+                            assertEquals(dept.getEmpList()
+                                    .size(), 3);
+                        })
+                        .verifyComplete()
+                )
+                .run();
     }
 
     @Test
-    void selectAllEmpWithOrdered(){
+    void selectAllEmpWithOrdered() {
         // this should only take n+1 rows
         // (N represents the number of rows that need to be read to reach the maximum row count)
         // (An additional row is included to check whether the nested result map should cache the next entry )
         // then discard not-required data
         // the mybatis log count should be 2
-        runAllDatabases(
-                r2dbcMybatisConfiguration -> {
+        super.<Emp>newTestRunner()
+                .allDatabases()
+                .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(ManyQueryMapper.class);
-                },
-                (type, reactiveSqlSession) -> {
+                })
+                .runWith((type, reactiveSqlSession) -> {
                     ManyQueryMapper manyQueryMapper = reactiveSqlSession.getMapper(ManyQueryMapper.class);
-                    manyQueryMapper.selectAllEmpWithOrdered("S")
-                            .take(1,true) // take count
-                            .as(StepVerifier::create)
-                            .assertNext(emp -> {
-                                assertEquals(emp.getEmpNo(),1L);
-                            })
-                            .verifyComplete();
-                }
-        );
+                    return manyQueryMapper.selectAllEmpWithOrdered("S")
+                            .take(1, true);
+                })
+                .verifyWith(firstStep -> firstStep
+                        .assertNext(emp -> {
+                            assertEquals(emp.getEmpNo(), 1L);
+                        })
+                        .verifyComplete()
+                )
+                .run();
     }
 
     @Test
-    void selectAllEmpWithDept(){
-        runAllDatabases(
-                r2dbcMybatisConfiguration -> {
+    void selectAllEmpWithDept() {
+        super.<EmpWithDept>newTestRunner()
+                .allDatabases()
+                .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(ManyQueryMapper.class);
-                },
-                (type, reactiveSqlSession) -> {
+                })
+                .runWith((type, reactiveSqlSession) -> {
                     ManyQueryMapper manyQueryMapper = reactiveSqlSession.getMapper(ManyQueryMapper.class);
-                    manyQueryMapper.selectAllEmpWithDept()
-                            .as(StepVerifier::create)
-                            .assertNext(emp -> {
-                                assertEquals(emp.getEmpNo(),1L);
-                                assertNotNull(emp.getDept());
-                                assertEquals(emp.getDept().getDeptNo(),2L);
-                            })
-                            .assertNext(emp -> {
-                                assertEquals(emp.getEmpNo(),2L);
-                                assertNotNull(emp.getDept());
-                                assertEquals(emp.getDept().getDeptNo(),3L);
-                            })
-                            .expectNextCount(12)
-                            .verifyComplete();
-                }
-        );
+                    return manyQueryMapper.selectAllEmpWithDept();
+                })
+                .verifyWith(firstStep -> firstStep
+                        .assertNext(emp -> {
+                            assertEquals(emp.getEmpNo(), 1L);
+                            assertNotNull(emp.getDept());
+                            assertEquals(emp.getDept()
+                                    .getDeptNo(), 2L);
+                        })
+                        .assertNext(emp -> {
+                            assertEquals(emp.getEmpNo(), 2L);
+                            assertNotNull(emp.getDept());
+                            assertEquals(emp.getDept()
+                                    .getDeptNo(), 3L);
+                        })
+                        .expectNextCount(12)
+                        .verifyComplete()
+                )
+                .run();
     }
 
     @Test
-    void selectAllEmpWithDeptWithoutOrdered(){
+    void selectAllEmpWithDeptWithoutOrdered() {
         // this should consume all rows for nested result map
         // then discard not-required data
         // the mybatis log count should be 14
-        runAllDatabases(
-                r2dbcMybatisConfiguration -> {
+        super.<EmpWithDept>newTestRunner()
+                .allDatabases()
+                .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(ManyQueryMapper.class);
-                },
-                (type, reactiveSqlSession) -> {
+                })
+                .runWith((type, reactiveSqlSession) -> {
                     ManyQueryMapper manyQueryMapper = reactiveSqlSession.getMapper(ManyQueryMapper.class);
-                    manyQueryMapper.selectAllEmpWithDept()
-                            .take(1,true) // take count
-                            .as(StepVerifier::create)
-                            .assertNext(emp -> {
-                                assertEquals(emp.getEmpNo(),1L);
-                                assertNotNull(emp.getDept());
-                            })
-                            .verifyComplete();
-                }
-        );
+                    return manyQueryMapper.selectAllEmpWithDept()
+                            .take(1, true); // take count;
+                })
+                .verifyWith(firstStep -> firstStep
+                        .assertNext(emp -> {
+                            assertEquals(emp.getEmpNo(), 1L);
+                            assertNotNull(emp.getDept());
+                        })
+                        .verifyComplete()
+                )
+                .run();
     }
 
     @Test
-    void selectAllEmpWithDeptOrdered(){
+    void selectAllEmpWithDeptOrdered() {
         // this should only take n+1 rows
         // (N represents the number of rows that need to be read to reach the maximum row count)
         // (An additional row is included to check whether the nested result map should cache the next entry )
         // then discard not-required data
         // the mybatis log count should be 2
-        runAllDatabases(
-                r2dbcMybatisConfiguration -> {
+        super.<EmpWithDept>newTestRunner()
+                .allDatabases()
+                .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(ManyQueryMapper.class);
-                },
-                (type, reactiveSqlSession) -> {
+                })
+                .runWith((type, reactiveSqlSession) -> {
                     ManyQueryMapper manyQueryMapper = reactiveSqlSession.getMapper(ManyQueryMapper.class);
-                    manyQueryMapper.selectAllEmpWithDeptOrdered()
-                            .take(1,true) // take count
-                            .as(StepVerifier::create)
-                            .assertNext(emp -> {
-                                assertEquals(emp.getEmpNo(),1L);
-                                assertNotNull(emp.getDept());
-                            })
-                            .verifyComplete();
-                }
-        );
+                    return manyQueryMapper.selectAllEmpWithDeptOrdered()
+                            .take(1, true); // take count;
+                })
+                .verifyWith(firstStep -> firstStep
+                        .assertNext(emp -> {
+                            assertEquals(emp.getEmpNo(), 1L);
+                            assertNotNull(emp.getDept());
+                        })
+                        .verifyComplete()
+                )
+                .run();
     }
 
 

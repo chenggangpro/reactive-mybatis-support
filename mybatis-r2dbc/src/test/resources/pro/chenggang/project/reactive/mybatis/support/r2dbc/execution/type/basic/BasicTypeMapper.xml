@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.type.basic.BasicTypeMapper">
+
+  <select id="selectAllSubject" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.Subject">
+    SELECT * FROM subject ORDER BY name
+  </select>
+  <select id="selectAllSubjectData" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectData">
+    SELECT * FROM subject_data ORDER BY aString
+  </select>
+  <select id="selectAllSubjectWithSubjectData" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.extend.SubjectWithSubjectData">
+    SELECT subject.*
+    FROM subject
+        LEFT JOIN subject_data
+            ON subject.name = subject_data.aString
+    ORDER BY subject.name
+  </select>
+</mapper>

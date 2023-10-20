@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.io.Resources;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.reactivestreams.Publisher;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -41,17 +42,22 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReac
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import reactor.core.publisher.Hooks;
 import reactor.core.scheduler.Schedulers;
+import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static io.r2dbc.pool.ConnectionPoolConfiguration.NO_TIMEOUT;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -218,6 +224,10 @@ public class MybatisR2dbcBaseTests {
         }
     }
 
+    protected <T> MybatisR2dbcTestRunner<T> newTestRunner() {
+        return new MybatisR2dbcTestRunner<>();
+    }
+
     @Test
     void validateTestcontainers() {
         for (Class<?> aClass : MybatisR2dbcBaseTests.databaseInitializationContainer.keySet()) {
@@ -225,6 +235,83 @@ public class MybatisR2dbcBaseTests {
             setUp(aClass, false, r2dbcProtocol -> new R2dbcMybatisConfiguration());
             destroy(aClass, false);
             log.info("⬆⬆⬆⬆⬆⬆ {} ----------------", aClass.getSimpleName());
+        }
+    }
+
+    protected class MybatisR2dbcTestRunner<T> {
+
+        private boolean dryRun;
+        private Predicate<Class<?>> databaseFilter;
+        private Set<String> xmlMapperLocations = new HashSet<>();
+        private Consumer<R2dbcMybatisConfiguration> r2dbcMybatisConfigurationCustomizer;
+        private BiFunction<Class<?>, ReactiveSqlSession, ? extends Publisher<T>> reactiveSqlSessionTestRunner;
+        private Function<StepVerifier.FirstStep<T>, Duration> stepVerifierRunner;
+
+        public MybatisR2dbcTestRunner() {
+        }
+
+        public MybatisR2dbcTestRunner<T> dryRun() {
+            this.dryRun = true;
+            return this;
+        }
+
+        public MybatisR2dbcTestRunner<T> allDatabases() {
+            this.databaseFilter = aClass -> true;
+            return this;
+        }
+
+        public MybatisR2dbcTestRunner<T> filterDatabases(Predicate<Class<?>> databaseFilter) {
+            this.databaseFilter = databaseFilter;
+            return this;
+        }
+
+        public MybatisR2dbcTestRunner<T> addXmlMapperLocation(String xmlMapperLocation) {
+            this.xmlMapperLocations.add(xmlMapperLocation);
+            return this;
+        }
+
+        public MybatisR2dbcTestRunner<T> customizeR2dbcConfiguration(Consumer<R2dbcMybatisConfiguration> r2dbcMybatisConfigurationCustomizer) {
+            this.r2dbcMybatisConfigurationCustomizer = r2dbcMybatisConfigurationCustomizer;
+            return this;
+        }
+
+        public MybatisR2dbcTestRunner<T> runWith(BiFunction<Class<?>, ReactiveSqlSession, ? extends Publisher<T>> reactiveSqlSessionTestRunner) {
+            this.reactiveSqlSessionTestRunner = reactiveSqlSessionTestRunner;
+            return this;
+        }
+
+        public MybatisR2dbcTestRunner<T> verifyWith(Function<StepVerifier.FirstStep<T>, Duration> stepVerifierRunner) {
+            this.stepVerifierRunner = stepVerifierRunner;
+            return this;
+        }
+
+        public void run() {
+            databaseInitializationContainer.keySet()
+                    .stream()
+                    .filter(databaseFilter)
+                    .forEach(databaseClass -> {
+                        log.info("⬇⬇⬇⬇⬇⬇ {} ----------------", databaseClass.getSimpleName());
+                        ReactiveSqlSessionFactory reactiveSqlSessionFactory = setUp(databaseClass,
+                                dryRun,
+                                r2dbcProtocol -> {
+                                    R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
+                                    for (String commonXmlMapperLocation : commonXmlMapperLocations) {
+                                        loadXmlMapper(commonXmlMapperLocation, r2dbcMybatisConfiguration);
+                                    }
+                                    for (String xmlMapperLocation : xmlMapperLocations) {
+                                        loadXmlMapper(xmlMapperLocation, r2dbcMybatisConfiguration);
+                                    }
+                                    r2dbcMybatisConfigurationCustomizer.accept(r2dbcMybatisConfiguration);
+                                    return r2dbcMybatisConfiguration;
+                                }
+                        );
+                        ReactiveSqlSession reactiveSqlSession = reactiveSqlSessionFactory.openSession();
+                        stepVerifierRunner.apply(StepVerifier.create(reactiveSqlSessionTestRunner.apply(databaseClass,
+                                reactiveSqlSession
+                        )));
+                        destroy(databaseClass, false);
+                        log.info("⬆⬆⬆⬆⬆⬆ {} ----------------", databaseClass.getSimpleName());
+                    });
         }
     }
 }

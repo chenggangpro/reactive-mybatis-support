@@ -91,7 +91,7 @@ public class DelegateR2dbcResultRowDataHandler implements InvocationHandler {
         }
         //using adapter
         if (r2dbcTypeHandlerAdapters.containsKey(this.targetType)) {
-            log.debug("Found r2dbc type handler adapter fro result type : " + this.targetType);
+            log.trace("Found r2dbc type handler adapter fro result type : " + this.targetType);
             R2dbcTypeHandlerAdapter<?> r2dbcTypeHandlerAdapter = r2dbcTypeHandlerAdapters.get(this.targetType);
             // T getResult(ResultSet rs, String columnName)
             if (secondArg instanceof String) {

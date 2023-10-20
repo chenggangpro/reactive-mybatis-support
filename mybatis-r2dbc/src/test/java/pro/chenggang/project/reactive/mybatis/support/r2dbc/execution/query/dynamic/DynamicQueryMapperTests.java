@@ -17,7 +17,7 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.query.dyn
 
 import org.junit.jupiter.api.Test;
 import pro.chenggang.project.reactive.mybatis.support.MybatisR2dbcBaseTests;
-import reactor.test.StepVerifier;
+import pro.chenggang.project.reactive.mybatis.support.common.entity.Dept;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -30,66 +30,72 @@ public class DynamicQueryMapperTests extends MybatisR2dbcBaseTests {
 
     @Test
     void countAllDept() {
-        runAllDatabases(
-                r2dbcMybatisConfiguration -> {
+        super.<Long>newTestRunner()
+                .allDatabases()
+                .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(DynamicQueryMapper.class);
                     r2dbcMybatisConfiguration.setMapUnderscoreToCamelCase(true);
-                },
-                (type, reactiveSqlSession) -> {
+                })
+                .runWith((type, reactiveSqlSession) -> {
                     DynamicQueryMapper dynamicQueryMapper = reactiveSqlSession.getMapper(DynamicQueryMapper.class);
-                    dynamicQueryMapper.countAllDept()
-                            .as(StepVerifier::create)
-                            .assertNext(result -> assertEquals(result,4))
-                            .verifyComplete();
-                }
-        );
+                    return dynamicQueryMapper.countAllDept();
+                })
+                .verifyWith(firstStep -> firstStep
+                        .assertNext(result -> assertEquals(result, 4))
+                        .verifyComplete()
+                )
+                .run();
     }
 
     @Test
     void selectByDeptNo() {
-        runAllDatabases(
-                r2dbcMybatisConfiguration -> {
+        super.<Dept>newTestRunner()
+                .allDatabases()
+                .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(DynamicQueryMapper.class);
                     r2dbcMybatisConfiguration.setMapUnderscoreToCamelCase(true);
-                },
-                (type, reactiveSqlSession) -> {
+                })
+                .runWith((type, reactiveSqlSession) -> {
                     DynamicQueryMapper dynamicQueryMapper = reactiveSqlSession.getMapper(DynamicQueryMapper.class);
-                    dynamicQueryMapper.selectByDeptNo(1L)
-                            .as(StepVerifier::create)
-                            .assertNext(dept -> {
-                                assertEquals(dept.getDeptNo(), 1L);
-                            })
-                            .verifyComplete();
-                }
-        );
+                    return dynamicQueryMapper.selectByDeptNo(1L);
+                })
+                .verifyWith(firstStep -> firstStep
+                        .assertNext(dept -> {
+                            assertEquals(dept.getDeptNo(), 1L);
+                        })
+                        .verifyComplete()
+                )
+                .run();
     }
 
     @Test
     void selectAllDept() {
-        runAllDatabases(
-                r2dbcMybatisConfiguration -> {
+        super.<Dept>newTestRunner()
+                .allDatabases()
+                .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(DynamicQueryMapper.class);
                     r2dbcMybatisConfiguration.setMapUnderscoreToCamelCase(true);
-                },
-                (type, reactiveSqlSession) -> {
+                })
+                .runWith((type, reactiveSqlSession) -> {
                     DynamicQueryMapper dynamicQueryMapper = reactiveSqlSession.getMapper(DynamicQueryMapper.class);
-                    dynamicQueryMapper.selectAllDept()
-                            .as(StepVerifier::create)
-                            .assertNext(dept -> {
-                                assertEquals(dept.getDeptNo(), 1L);
-                            })
-                            .assertNext(dept -> {
-                                assertEquals(dept.getDeptNo(), 2L);
-                            })
-                            .assertNext(dept -> {
-                                assertEquals(dept.getDeptNo(), 3L);
-                            })
-                            .assertNext(dept -> {
-                                assertEquals(dept.getDeptNo(), 4L);
-                            })
-                            .verifyComplete();
-                }
-        );
+                    return dynamicQueryMapper.selectAllDept();
+                })
+                .verifyWith(firstStep -> firstStep
+                        .assertNext(dept -> {
+                            assertEquals(dept.getDeptNo(), 1L);
+                        })
+                        .assertNext(dept -> {
+                            assertEquals(dept.getDeptNo(), 2L);
+                        })
+                        .assertNext(dept -> {
+                            assertEquals(dept.getDeptNo(), 3L);
+                        })
+                        .assertNext(dept -> {
+                            assertEquals(dept.getDeptNo(), 4L);
+                        })
+                        .verifyComplete()
+                )
+                .run();
     }
 
 }

@@ -17,9 +17,11 @@ package pro.chenggang.project.reactive.mybatis.support.common.mapper.dynamic;
 
 import org.mybatis.dynamic.sql.AliasableSqlTable;
 import org.mybatis.dynamic.sql.SqlColumn;
+import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectDataAEnum;
 
 import java.math.BigDecimal;
 import java.sql.JDBCType;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -49,11 +51,11 @@ public final class SubjectDataDynamicSqlSupport {
 
     public static final SqlColumn<String> astring = subjectData.astring;
 
-    public static final SqlColumn<String> anenum = subjectData.anenum;
+    public static final SqlColumn<SubjectDataAEnum> anenum = subjectData.anenum;
 
     public static final SqlColumn<BigDecimal> adecimal = subjectData.adecimal;
 
-    public static final SqlColumn<LocalDateTime> atimestamp = subjectData.atimestamp;
+    public static final SqlColumn<Timestamp> atimestamp = subjectData.atimestamp;
 
     public static final SqlColumn<LocalDate> adate = subjectData.adate;
 
@@ -78,11 +80,11 @@ public final class SubjectDataDynamicSqlSupport {
 
         public final SqlColumn<String> astring = column("aString", JDBCType.VARCHAR);
 
-        public final SqlColumn<String> anenum = column("anEnum", JDBCType.VARCHAR);
+        public final SqlColumn<SubjectDataAEnum> anenum = column("anEnum", JDBCType.VARCHAR);
 
         public final SqlColumn<BigDecimal> adecimal = column("aDecimal", JDBCType.DECIMAL);
 
-        public final SqlColumn<LocalDateTime> atimestamp = column("aTimestamp", JDBCType.TIMESTAMP);
+        public final SqlColumn<Timestamp> atimestamp = column("aTimestamp", JDBCType.TIMESTAMP);
 
         public final SqlColumn<LocalDate> adate = column("aDate", JDBCType.DATE);
 

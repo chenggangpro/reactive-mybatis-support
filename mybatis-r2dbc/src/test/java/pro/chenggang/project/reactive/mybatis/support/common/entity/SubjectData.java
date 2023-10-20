@@ -23,6 +23,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -56,11 +57,11 @@ public class SubjectData {
 
     protected String astring;
 
-    protected String anenum;
+    protected SubjectDataAEnum anenum;
 
     protected BigDecimal adecimal;
 
-    protected LocalDateTime atimestamp;
+    protected Timestamp atimestamp;
 
     protected LocalDate adate;
 
