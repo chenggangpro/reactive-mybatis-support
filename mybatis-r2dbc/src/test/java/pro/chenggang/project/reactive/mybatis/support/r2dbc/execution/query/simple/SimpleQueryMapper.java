@@ -38,9 +38,9 @@ import java.time.LocalDateTime;
 @Mapper
 public interface SimpleQueryMapper {
 
-    Mono<Long> countAll();
+    Mono<Long> countAllDept();
 
-    Mono<Dept> selectOne();
+    Mono<Dept> selectOneDept();
 
     Mono<Dept> selectByDeptNo(@Param("deptNo") Long deptNo);
 

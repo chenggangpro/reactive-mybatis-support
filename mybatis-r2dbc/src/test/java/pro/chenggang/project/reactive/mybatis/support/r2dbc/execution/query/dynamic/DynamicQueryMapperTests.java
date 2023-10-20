@@ -15,7 +15,11 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.query.dynamic;
 
+import org.junit.jupiter.api.Test;
 import pro.chenggang.project.reactive.mybatis.support.MybatisR2dbcBaseTests;
+import reactor.test.StepVerifier;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Gang Cheng
@@ -23,4 +27,69 @@ import pro.chenggang.project.reactive.mybatis.support.MybatisR2dbcBaseTests;
  * @since 1.0.0
  */
 public class DynamicQueryMapperTests extends MybatisR2dbcBaseTests {
+
+    @Test
+    void countAllDept() {
+        runAllDatabases(
+                r2dbcMybatisConfiguration -> {
+                    r2dbcMybatisConfiguration.addMapper(DynamicQueryMapper.class);
+                    r2dbcMybatisConfiguration.setMapUnderscoreToCamelCase(true);
+                },
+                (type, reactiveSqlSession) -> {
+                    DynamicQueryMapper dynamicQueryMapper = reactiveSqlSession.getMapper(DynamicQueryMapper.class);
+                    dynamicQueryMapper.countAllDept()
+                            .as(StepVerifier::create)
+                            .assertNext(result -> assertEquals(result,4))
+                            .verifyComplete();
+                }
+        );
+    }
+
+    @Test
+    void selectByDeptNo() {
+        runAllDatabases(
+                r2dbcMybatisConfiguration -> {
+                    r2dbcMybatisConfiguration.addMapper(DynamicQueryMapper.class);
+                    r2dbcMybatisConfiguration.setMapUnderscoreToCamelCase(true);
+                },
+                (type, reactiveSqlSession) -> {
+                    DynamicQueryMapper dynamicQueryMapper = reactiveSqlSession.getMapper(DynamicQueryMapper.class);
+                    dynamicQueryMapper.selectByDeptNo(1L)
+                            .as(StepVerifier::create)
+                            .assertNext(dept -> {
+                                assertEquals(dept.getDeptNo(), 1L);
+                            })
+                            .verifyComplete();
+                }
+        );
+    }
+
+    @Test
+    void selectAllDept() {
+        runAllDatabases(
+                r2dbcMybatisConfiguration -> {
+                    r2dbcMybatisConfiguration.addMapper(DynamicQueryMapper.class);
+                    r2dbcMybatisConfiguration.setMapUnderscoreToCamelCase(true);
+                },
+                (type, reactiveSqlSession) -> {
+                    DynamicQueryMapper dynamicQueryMapper = reactiveSqlSession.getMapper(DynamicQueryMapper.class);
+                    dynamicQueryMapper.selectAllDept()
+                            .as(StepVerifier::create)
+                            .assertNext(dept -> {
+                                assertEquals(dept.getDeptNo(), 1L);
+                            })
+                            .assertNext(dept -> {
+                                assertEquals(dept.getDeptNo(), 2L);
+                            })
+                            .assertNext(dept -> {
+                                assertEquals(dept.getDeptNo(), 3L);
+                            })
+                            .assertNext(dept -> {
+                                assertEquals(dept.getDeptNo(), 4L);
+                            })
+                            .verifyComplete();
+                }
+        );
+    }
+
 }

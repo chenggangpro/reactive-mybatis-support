@@ -35,7 +35,7 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
                 },
                 (type, reactiveSqlSession) -> {
                     SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
-                    simpleQueryMapper.countAll()
+                    simpleQueryMapper.countAllDept()
                             .as(StepVerifier::create)
                             .expectNext(4L)
                             .verifyComplete();
@@ -52,7 +52,7 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
                 },
                 (type, reactiveSqlSession) -> {
                     SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
-                    simpleQueryMapper.selectOne()
+                    simpleQueryMapper.selectOneDept()
                             .as(StepVerifier::create)
                             .assertNext(dept -> {
                                 Assertions.assertEquals(dept.getDeptNo(), 1L);

@@ -16,8 +16,15 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.query.dynamic;
 
 import org.apache.ibatis.annotations.Mapper;
+import pro.chenggang.project.reactive.mybatis.support.common.entity.Dept;
+import pro.chenggang.project.reactive.mybatis.support.common.mapper.dynamic.DeptDynamicMapper;
+import pro.chenggang.project.reactive.mybatis.support.common.mapper.dynamic.DeptDynamicSqlSupport;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.CommonCountMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.CommonSelectMapper;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import static org.mybatis.dynamic.sql.SqlBuilder.isEqualTo;
 
 /**
  * @author Gang Cheng
@@ -25,7 +32,20 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.CommonSelect
  * @since 1.0.0
  */
 @Mapper
-public interface DynamicQueryMapper extends CommonCountMapper, CommonSelectMapper {
+public interface DynamicQueryMapper extends CommonCountMapper, CommonSelectMapper, DeptDynamicMapper {
 
+    default Mono<Long> countAllDept() {
+        return count(dsl -> dsl);
+    }
+
+    default Mono<Dept> selectByDeptNo(Long deptNo) {
+        return selectOne(dsl -> dsl
+                .where(DeptDynamicSqlSupport.deptNo, isEqualTo(deptNo))
+        );
+    }
+
+    default Flux<Dept> selectAllDept() {
+        return select(dsl -> dsl);
+    }
 
 }

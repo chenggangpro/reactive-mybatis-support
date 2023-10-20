@@ -2,11 +2,11 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.query.simple.SimpleQueryMapper">
 
-  <select id="countAll" resultType="java.lang.Long">
+  <select id="countAllDept" resultType="java.lang.Long">
     SELECT COUNT(*) FROM dept
   </select>
 
-  <select id="selectOne" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
+  <select id="selectOneDept" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
     SELECT * FROM dept ORDER BY dept_no LIMIT 1
   </select>
 
