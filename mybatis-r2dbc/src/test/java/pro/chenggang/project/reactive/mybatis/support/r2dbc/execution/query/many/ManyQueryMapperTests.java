@@ -47,10 +47,10 @@ public class ManyQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 1L);
+                            assertEquals(1L, dept.getDeptNo());
                         })
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 4L);
+                            assertEquals(4L, dept.getDeptNo());
                         })
                         .verifyComplete()
                 )
@@ -70,25 +70,25 @@ public class ManyQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 1L);
+                            assertEquals(1L, dept.getDeptNo());
                             assertNotNull(dept.getEmpList());
-                            assertEquals(dept.getEmpList()
-                                    .size(), 3);
+                            assertEquals(3, dept.getEmpList()
+                                    .size());
                         })
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 2L);
+                            assertEquals(2L, dept.getDeptNo());
                             assertNotNull(dept.getEmpList());
-                            assertEquals(dept.getEmpList()
-                                    .size(), 5);
+                            assertEquals(5, dept.getEmpList()
+                                    .size());
                         })
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 3L);
+                            assertEquals(3L, dept.getDeptNo());
                             assertNotNull(dept.getEmpList());
-                            assertEquals(dept.getEmpList()
-                                    .size(), 6);
+                            assertEquals(6, dept.getEmpList()
+                                    .size());
                         })
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 4L);
+                            assertEquals(4L, dept.getDeptNo());
                             assertNotNull(dept.getEmpList());
                             assertTrue(dept.getEmpList()
                                     .isEmpty());
@@ -115,10 +115,10 @@ public class ManyQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 1L);
+                            assertEquals(1L, dept.getDeptNo());
                             assertNotNull(dept.getEmpList());
-                            assertEquals(dept.getEmpList()
-                                    .size(), 3);
+                            assertEquals(3, dept.getEmpList()
+                                    .size());
                         })
                         .verifyComplete()
                 )
@@ -144,10 +144,10 @@ public class ManyQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 1L);
+                            assertEquals(1L, dept.getDeptNo());
                             assertNotNull(dept.getEmpList());
-                            assertEquals(dept.getEmpList()
-                                    .size(), 3);
+                            assertEquals(3, dept.getEmpList()
+                                    .size());
                         })
                         .verifyComplete()
                 )
@@ -164,6 +164,7 @@ public class ManyQueryMapperTests extends MybatisR2dbcBaseTests {
         super.<Emp>newTestRunner()
                 .allDatabases()
                 .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
+                    r2dbcMybatisConfiguration.setMapUnderscoreToCamelCase(true);
                     r2dbcMybatisConfiguration.addMapper(ManyQueryMapper.class);
                 })
                 .runWith((type, reactiveSqlSession) -> {
@@ -173,7 +174,7 @@ public class ManyQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(emp -> {
-                            assertEquals(emp.getEmpNo(), 1L);
+                            assertEquals(1L, emp.getEmpNo());
                         })
                         .verifyComplete()
                 )
@@ -193,16 +194,16 @@ public class ManyQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(emp -> {
-                            assertEquals(emp.getEmpNo(), 1L);
+                            assertEquals(1L, emp.getEmpNo());
                             assertNotNull(emp.getDept());
-                            assertEquals(emp.getDept()
-                                    .getDeptNo(), 2L);
+                            assertEquals(2L, emp.getDept()
+                                    .getDeptNo());
                         })
                         .assertNext(emp -> {
-                            assertEquals(emp.getEmpNo(), 2L);
+                            assertEquals(2L, emp.getEmpNo());
                             assertNotNull(emp.getDept());
-                            assertEquals(emp.getDept()
-                                    .getDeptNo(), 3L);
+                            assertEquals(3L, emp.getDept()
+                                    .getDeptNo());
                         })
                         .expectNextCount(12)
                         .verifyComplete()
@@ -227,7 +228,7 @@ public class ManyQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(emp -> {
-                            assertEquals(emp.getEmpNo(), 1L);
+                            assertEquals(1L, emp.getEmpNo());
                             assertNotNull(emp.getDept());
                         })
                         .verifyComplete()
@@ -254,7 +255,7 @@ public class ManyQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(emp -> {
-                            assertEquals(emp.getEmpNo(), 1L);
+                            assertEquals(1L, emp.getEmpNo());
                             assertNotNull(emp.getDept());
                         })
                         .verifyComplete()

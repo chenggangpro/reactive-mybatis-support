@@ -888,7 +888,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
                 TypeHandler.class,
                 () -> new DelegateR2dbcResultRowDataHandler(
                         this.r2dbcMybatisConfiguration.getNotSupportedDataTypes(),
-                        this.r2dbcMybatisConfiguration.getR2dbcTypeHandlerAdapterRegistry().getR2dbcTypeHandlerAdapters()
+                        this.r2dbcMybatisConfiguration.getR2dbcTypeHandlerAdapterRegistry()
                 ),
                 TypeHandleContext.class
         );

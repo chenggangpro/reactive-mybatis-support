@@ -21,6 +21,7 @@ import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeReference;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowResultWrapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapterRegistry;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -28,7 +29,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.sql.CallableStatement;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -43,7 +43,7 @@ public class DelegateR2dbcResultRowDataHandler implements InvocationHandler {
 
     private static final Log log = LogFactory.getLog(DelegateR2dbcResultRowDataHandler.class);
     private final Set<Class<?>> notSupportedDataTypes;
-    private final Map<Class<?>, R2dbcTypeHandlerAdapter<?>> r2dbcTypeHandlerAdapters;
+    private final R2dbcTypeHandlerAdapterRegistry r2dbcTypeHandlerAdapterRegistry;
     private TypeHandler<?> delegatedTypeHandler;
     private RowResultWrapper rowResultWrapper;
     private Class<?> targetType;
@@ -52,12 +52,12 @@ public class DelegateR2dbcResultRowDataHandler implements InvocationHandler {
      * Instantiates a new Delegate R2dbc result row data handler.
      *
      * @param notSupportedDataTypes    the not supported data types
-     * @param r2dbcTypeHandlerAdapters the R2dbc type handler adapters
+     * @param r2dbcTypeHandlerAdapterRegistry the R2dbc type handler adapter registry
      */
     public DelegateR2dbcResultRowDataHandler(Set<Class<?>> notSupportedDataTypes,
-                                             Map<Class<?>, R2dbcTypeHandlerAdapter<?>> r2dbcTypeHandlerAdapters) {
+                                             R2dbcTypeHandlerAdapterRegistry r2dbcTypeHandlerAdapterRegistry) {
         this.notSupportedDataTypes = notSupportedDataTypes;
-        this.r2dbcTypeHandlerAdapters = r2dbcTypeHandlerAdapters;
+        this.r2dbcTypeHandlerAdapterRegistry = r2dbcTypeHandlerAdapterRegistry;
     }
 
     @Override
@@ -90,9 +90,9 @@ public class DelegateR2dbcResultRowDataHandler implements InvocationHandler {
             throw new IllegalArgumentException("Unsupported Result Data type : " + targetType);
         }
         //using adapter
-        if (r2dbcTypeHandlerAdapters.containsKey(this.targetType)) {
+        if (r2dbcTypeHandlerAdapterRegistry.hasR2dbcTypeHandlerAdapter(this.targetType)) {
             log.trace("Found r2dbc type handler adapter fro result type : " + this.targetType);
-            R2dbcTypeHandlerAdapter<?> r2dbcTypeHandlerAdapter = r2dbcTypeHandlerAdapters.get(this.targetType);
+            R2dbcTypeHandlerAdapter<?> r2dbcTypeHandlerAdapter = r2dbcTypeHandlerAdapterRegistry.getR2dbcTypeHandlerAdapter(this.targetType);
             // T getResult(ResultSet rs, String columnName)
             if (secondArg instanceof String) {
                 return r2dbcTypeHandlerAdapter.getResult(rowResultWrapper.getRow(), rowResultWrapper.getRowMetadata(), (String) secondArg);

@@ -30,6 +30,7 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.R2dbcStatementLog;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapterRegistry;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
 
 import java.lang.reflect.Field;
@@ -142,6 +143,7 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
     public void setParameters(PreparedStatement ps) {
         BoundSql boundSql = this.getField(this.parameterHandler, BoundSql.class);
         TypeHandlerRegistry typeHandlerRegistry = this.getField(this.parameterHandler, TypeHandlerRegistry.class);
+        R2dbcTypeHandlerAdapterRegistry r2dbcTypeHandlerAdapterRegistry = configuration.getR2dbcTypeHandlerAdapterRegistry();
         Object parameterObject = parameterHandler.getParameterObject();
         List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
         ParameterHandlerContext parameterHandlerContext = new ParameterHandlerContext();
@@ -164,24 +166,32 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
                         MetaObject metaObject = configuration.newMetaObject(parameterObject);
                         value = metaObject.getValue(propertyName);
                     }
-                    TypeHandler typeHandler = parameterMapping.getTypeHandler();
                     JdbcType jdbcType = parameterMapping.getJdbcType();
                     if (value == null && jdbcType == null) {
                         jdbcType = configuration.getJdbcTypeForNull();
                     }
                     try {
-                        if (value == null && jdbcType != null) {
+                        if (value == null) {
                             this.delegateStatement.bindNull(i, parameterMapping.getJavaType());
                             columnValues.add(null);
                         } else {
                             parameterHandlerContext.setIndex(i);
                             parameterHandlerContext.setJavaType(parameterMapping.getJavaType());
                             parameterHandlerContext.setJdbcType(jdbcType);
-                            typeHandler.setParameter(ps, i, value, jdbcType);
+                            if (r2dbcTypeHandlerAdapterRegistry.hasR2dbcTypeHandlerAdapter(value.getClass())) {
+                                R2dbcTypeHandlerAdapter r2dbcTypeHandlerAdapter = r2dbcTypeHandlerAdapterRegistry.getR2dbcTypeHandlerAdapter(
+                                        value.getClass());
+                                r2dbcTypeHandlerAdapter.setParameter(delegateStatement, parameterHandlerContext, value);
+                            } else {
+                                TypeHandler typeHandler = parameterMapping.getTypeHandler();
+                                typeHandler.setParameter(ps, i, value, jdbcType);
+                            }
                             columnValues.add(value);
                         }
                     } catch (TypeException | SQLException e) {
-                        throw new TypeException("Could not set parameters for mapping: " + parameterMapping + ". Cause: " + e, e);
+                        throw new TypeException("Could not set parameters for mapping: " + parameterMapping + ". Cause: " + e,
+                                e
+                        );
                     }
                 }
             }

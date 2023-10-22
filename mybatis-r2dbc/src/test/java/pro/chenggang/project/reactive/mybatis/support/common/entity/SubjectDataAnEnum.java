@@ -20,11 +20,14 @@ package pro.chenggang.project.reactive.mybatis.support.common.entity;
  * @version 1.0.0
  * @since 1.0.0
  */
-public enum SubjectDataAEnum {
+public enum SubjectDataAnEnum {
 
     A,
 
     B,
 
-    C
+    C,
+
+    ;
+
 }

@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import pro.chenggang.project.reactive.mybatis.support.MybatisR2dbcBaseTests;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.Subject;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectData;
-import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectDataAEnum;
+import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectDataAnEnum;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.extend.SubjectWithSubjectData;
 
 import java.math.BigDecimal;
@@ -52,14 +52,14 @@ public class BasicTypeMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(subject -> {
-                            assertEquals(subject.getId(), 1);
-                            assertEquals(subject.getName(), "a");
-                            assertEquals(subject.getAge(), 10);
-                            assertEquals(subject.getHeight(), 100);
-                            assertEquals(subject.getWeight(), 45);
+                            assertEquals(1, subject.getId());
+                            assertEquals("a", subject.getName());
+                            assertEquals(10, subject.getAge());
+                            assertEquals(100, subject.getHeight());
+                            assertEquals(45, subject.getWeight());
                             assertTrue(subject.getActive());
-                            assertEquals(subject.getDt(), LocalDateTime.of(2023, 1, 1, 1, 1, 1));
-                            assertEquals(subject.getLength(), 22222222222L);
+                            assertEquals(LocalDateTime.of(2023, 1, 1, 1, 1, 1), subject.getDt());
+                            assertEquals(22222222222L, subject.getLength());
                         })
                         .expectNextCount(3)
                         .verifyComplete()
@@ -82,18 +82,18 @@ public class BasicTypeMapperTests extends MybatisR2dbcBaseTests {
                 .verifyWith(firstStep -> firstStep
                         .expectNextCount(1)
                         .assertNext(subjectData -> {
-                            assertEquals(subjectData.getAbyte(), (byte) 2);
-                            assertEquals(subjectData.getAshort(), (short) 2);
-                            assertEquals(subjectData.getAchar(), "b");
-                            assertEquals(subjectData.getAnint(), 2);
-                            assertEquals(subjectData.getAlong(), 2L);
-                            assertEquals(subjectData.getAdouble(), 2);
-                            assertEquals(subjectData.getAstring(), "b");
-                            assertEquals(subjectData.getAnenum(), SubjectDataAEnum.B);
-                            assertEquals(subjectData.getAdecimal(), new BigDecimal("10.23"));
+                            assertEquals((byte) 2, subjectData.getAbyte());
+                            assertEquals((short) 2, subjectData.getAshort());
+                            assertEquals("b", subjectData.getAchar());
+                            assertEquals(2, subjectData.getAnint());
+                            assertEquals(2L, subjectData.getAlong());
+                            assertEquals(2, subjectData.getAdouble());
+                            assertEquals("b", subjectData.getAstring());
+                            assertEquals(SubjectDataAnEnum.B, subjectData.getAnenum());
+                            assertEquals(new BigDecimal("10.23"), subjectData.getAdecimal());
                             assertNull(subjectData.getAtimestamp());
-                            assertEquals(subjectData.getAdate(), LocalDate.of(2023, 1, 1));
-                            assertEquals(subjectData.getAdatetime(), LocalDateTime.of(2023, 1, 1, 1, 1, 1));
+                            assertEquals(LocalDate.of(2023, 1, 1), subjectData.getAdate());
+                            assertEquals(LocalDateTime.of(2023, 1, 1, 1, 1, 1), subjectData.getAdatetime());
                         })
                         .expectNextCount(1)
                         .verifyComplete()
@@ -115,30 +115,29 @@ public class BasicTypeMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(subject -> {
-                            assertEquals(subject.getId(), 1);
-                            assertEquals(subject.getName(), "a");
-                            assertEquals(subject.getAge(), 10);
-                            assertEquals(subject.getHeight(), 100);
-                            assertEquals(subject.getWeight(), 45);
+                            assertEquals(1, subject.getId());
+                            assertEquals("a", subject.getName());
+                            assertEquals(10, subject.getAge());
+                            assertEquals(100, subject.getHeight());
+                            assertEquals(45, subject.getWeight());
                             assertTrue(subject.getActive());
-                            assertEquals(subject.getDt(), LocalDateTime.of(2023, 1, 1, 1, 1, 1));
-                            assertEquals(subject.getLength(), 22222222222L);
+                            assertEquals(LocalDateTime.of(2023, 1, 1, 1, 1, 1), subject.getDt());
+                            assertEquals(22222222222L, subject.getLength());
                             assertNotNull(subject.getSubjectDataList());
                             SubjectData subjectData = subject.getSubjectDataList().get(0);
                             // 1, 1, 'a', 1, 1, 1, 1.0, 1, 'a', 'A', 10.23, CURRENT_TIMESTAMP, DATE(NOW()), NOW()
-                            assertEquals(subjectData.getAbyte(), (byte) 1);
-                            assertEquals(subjectData.getAshort(), (short) 1);
-                            assertEquals(subjectData.getAchar(), "a");
-                            assertEquals(subjectData.getAnint(), 1);
-                            assertEquals(subjectData.getAlong(), 1L);
-                            assertEquals(subjectData.getAdouble(), 1);
-                            assertEquals(subjectData.getAstring(), "a");
-                            assertEquals(subjectData.getAnenum(), SubjectDataAEnum.A);
-                            assertEquals(subjectData.getAdecimal(), new BigDecimal("10.23"));
+                            assertEquals((byte) 1, subjectData.getAbyte());
+                            assertEquals((short) 1, subjectData.getAshort());
+                            assertEquals("a", subjectData.getAchar());
+                            assertEquals(1, subjectData.getAnint());
+                            assertEquals(1L, subjectData.getAlong());
+                            assertEquals(1.0, subjectData.getAdouble());
+                            assertEquals("a", subjectData.getAstring());
+                            assertEquals(SubjectDataAnEnum.A, subjectData.getAnenum());
+                            assertEquals(new BigDecimal("10.23"), subjectData.getAdecimal());
                             assertNotNull(subjectData.getAtimestamp());
-                            assertEquals(subjectData.getAdate(), LocalDate.now());
-                            assertNotNull(subjectData.getAdatetime());
-                            assertEquals(subjectData.getAdatetime().toLocalDate(), LocalDate.now());
+                            assertEquals(LocalDate.now(), subjectData.getAdate());
+                            assertEquals(LocalDate.now(), subjectData.getAdatetime().toLocalDate());
                         })
                         .expectNextCount(3)
                         .verifyComplete()

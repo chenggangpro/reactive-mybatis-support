@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.type.enums.EnumRelatedMapper">
+
+    <select id="selectByAnEnum" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectData">
+        SELECT * FROM subject_data WHERE anEnum = #{anEnum}
+    </select>
+    <resultMap id="anIntToEnumResultMap" type="pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectData">
+        <result column="aByte" jdbcType="TINYINT" property="abyte" />
+        <result column="aShort" jdbcType="SMALLINT" property="ashort" />
+        <result column="aChar" jdbcType="CHAR" property="achar" />
+        <!--Specific the test case anInt to anEnum-->
+        <result column="anInt" jdbcType="INTEGER" property="anenum" />
+        <result column="aLong" jdbcType="BIGINT" property="along" />
+        <result column="aFloat" jdbcType="REAL" property="afloat" />
+        <result column="aDouble" jdbcType="DOUBLE" property="adouble" />
+        <result column="aBoolean" jdbcType="BIT" property="aboolean" />
+        <result column="aString" jdbcType="VARCHAR" property="astring" />
+        <result column="aDecimal" jdbcType="DECIMAL" property="adecimal" />
+        <result column="aTimestamp" jdbcType="TIMESTAMP" property="atimestamp" />
+        <result column="aDate" jdbcType="DATE" property="adate" />
+        <result column="aDateTime" jdbcType="TIMESTAMP" property="adatetime" />
+    </resultMap>
+    <select id="selectByAnEnumOrdinal" resultMap="anIntToEnumResultMap">
+        SELECT * FROM subject_data WHERE anInt = #{anEnum}
+    </select>
+    <select id="selectAllAnEnum" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectDataAnEnum" >
+        SELECT anEnum FROM subject_data ORDER BY aByte
+    </select>
+    <select id="selectAllAnIntAsAnEnumOrdinal" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectDataAnEnum">
+        SELECT anInt FROM subject_data WHERE anInt IN (0, 1, 2) ORDER BY aByte
+    </select>
+
+    <select id="selectByAnEnumOrdinalSpecificEnumType" resultType="pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.type.enums.SpecificEnumType">
+        SELECT anInt FROM subject_data WHERE anInt = #{anEnum}
+    </select>
+</mapper>

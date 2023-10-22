@@ -63,7 +63,7 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 1L);
+                            assertEquals(1L, dept.getDeptNo());
                         })
                         .verifyComplete()
                 )
@@ -84,7 +84,7 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 1L);
+                            assertEquals(1L, dept.getDeptNo());
                         })
                         .verifyComplete()
                 )
@@ -104,7 +104,7 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 1L);
+                            assertEquals(1L, dept.getDeptNo());
                         })
                         .verifyComplete()
                 )
@@ -124,7 +124,7 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 1L);
+                            assertEquals(1L, dept.getDeptNo());
                         })
                         .verifyComplete()
                 )
@@ -144,7 +144,7 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 1L);
+                            assertEquals(1L, dept.getDeptNo());
                         })
                         .verifyComplete()
                 )
@@ -164,7 +164,7 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 1L);
+                            assertEquals(1L, dept.getDeptNo());
                         })
                         .verifyComplete()
                 )
@@ -184,10 +184,10 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 1L);
+                            assertEquals(1L, dept.getDeptNo());
                             Assertions.assertNotNull(dept.getEmpList());
-                            assertEquals(dept.getEmpList()
-                                    .size(), 3);
+                            assertEquals(3, dept.getEmpList()
+                                    .size());
                         })
                         .verifyComplete()
                 )
@@ -207,10 +207,10 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(emp -> {
-                            assertEquals(emp.getEmpNo(), 1L);
+                            assertEquals(1L, emp.getEmpNo(), 1L);
                             Assertions.assertNotNull(emp.getDept());
-                            assertEquals(emp.getDept()
-                                    .getDeptNo(), 2L);
+                            assertEquals(2L, emp.getDept()
+                                    .getDeptNo());
                         })
                         .verifyComplete()
                 )

@@ -17,7 +17,7 @@ package pro.chenggang.project.reactive.mybatis.support.common.mapper.dynamic;
 
 import org.mybatis.dynamic.sql.AliasableSqlTable;
 import org.mybatis.dynamic.sql.SqlColumn;
-import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectDataAEnum;
+import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectDataAnEnum;
 
 import java.math.BigDecimal;
 import java.sql.JDBCType;
@@ -51,7 +51,7 @@ public final class SubjectDataDynamicSqlSupport {
 
     public static final SqlColumn<String> astring = subjectData.astring;
 
-    public static final SqlColumn<SubjectDataAEnum> anenum = subjectData.anenum;
+    public static final SqlColumn<SubjectDataAnEnum> anenum = subjectData.anenum;
 
     public static final SqlColumn<BigDecimal> adecimal = subjectData.adecimal;
 
@@ -80,7 +80,7 @@ public final class SubjectDataDynamicSqlSupport {
 
         public final SqlColumn<String> astring = column("aString", JDBCType.VARCHAR);
 
-        public final SqlColumn<SubjectDataAEnum> anenum = column("anEnum", JDBCType.VARCHAR);
+        public final SqlColumn<SubjectDataAnEnum> anenum = column("anEnum", JDBCType.VARCHAR);
 
         public final SqlColumn<BigDecimal> adecimal = column("aDecimal", JDBCType.DECIMAL);
 

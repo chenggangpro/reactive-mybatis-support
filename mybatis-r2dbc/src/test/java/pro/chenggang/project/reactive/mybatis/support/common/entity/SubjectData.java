@@ -57,7 +57,7 @@ public class SubjectData {
 
     protected String astring;
 
-    protected SubjectDataAEnum anenum;
+    protected SubjectDataAnEnum anenum;
 
     protected BigDecimal adecimal;
 

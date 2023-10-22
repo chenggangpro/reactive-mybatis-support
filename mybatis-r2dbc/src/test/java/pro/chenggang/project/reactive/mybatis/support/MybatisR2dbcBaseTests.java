@@ -48,8 +48,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,7 +78,7 @@ public class MybatisR2dbcBaseTests {
     protected static final List<String> commonXmlMapperLocations = new ArrayList<>();
 
     static {
-        databaseInitializationContainer = new HashMap<>();
+        databaseInitializationContainer = new LinkedHashMap<>();
         databaseInitializationContainer.put(MySQLContainer.class, new MysqlTestContainerInitialization());
         databaseInitializationContainer.put(MariaDBContainer.class, new MariadbTestContainerInitialization());
         databaseInitializationContainer.put(PostgreSQLContainer.class, new PostgresqlTestContainerInitialization());
@@ -295,13 +295,13 @@ public class MybatisR2dbcBaseTests {
                                 dryRun,
                                 r2dbcProtocol -> {
                                     R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
+                                    r2dbcMybatisConfigurationCustomizer.accept(r2dbcMybatisConfiguration);
                                     for (String commonXmlMapperLocation : commonXmlMapperLocations) {
                                         loadXmlMapper(commonXmlMapperLocation, r2dbcMybatisConfiguration);
                                     }
                                     for (String xmlMapperLocation : xmlMapperLocations) {
                                         loadXmlMapper(xmlMapperLocation, r2dbcMybatisConfiguration);
                                     }
-                                    r2dbcMybatisConfigurationCustomizer.accept(r2dbcMybatisConfiguration);
                                     return r2dbcMybatisConfiguration;
                                 }
                         );

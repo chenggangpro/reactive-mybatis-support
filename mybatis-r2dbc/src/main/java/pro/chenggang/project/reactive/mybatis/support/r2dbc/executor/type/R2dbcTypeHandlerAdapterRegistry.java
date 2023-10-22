@@ -80,7 +80,7 @@ public class R2dbcTypeHandlerAdapterRegistry {
      *
      * @return the list
      */
-    public List<MybatisTypeHandlerConverter> getMybatisTypeHandlerConverters(){
+    public List<MybatisTypeHandlerConverter> getMybatisTypeHandlerConverters() {
         return this.mybatisTypeHandlerConverterList;
     }
 
@@ -112,11 +112,12 @@ public class R2dbcTypeHandlerAdapterRegistry {
     public void register(String packageName) {
         ResolverUtil<R2dbcTypeHandlerAdapter<?>> resolverUtil = new ResolverUtil<>();
         resolverUtil.find(new ResolverUtil.IsA(R2dbcTypeHandlerAdapter.class), packageName);
-        resolverUtil.getClasses().forEach(clazz -> {
-            ObjectFactory objectFactory = r2dbcMybatisConfiguration.getObjectFactory();
-            R2dbcTypeHandlerAdapter<?> r2dbcTypeHandlerAdapter = objectFactory.create(clazz);
-            this.register(r2dbcTypeHandlerAdapter);
-        });
+        resolverUtil.getClasses()
+                .forEach(clazz -> {
+                    ObjectFactory objectFactory = r2dbcMybatisConfiguration.getObjectFactory();
+                    R2dbcTypeHandlerAdapter<?> r2dbcTypeHandlerAdapter = objectFactory.create(clazz);
+                    this.register(r2dbcTypeHandlerAdapter);
+                });
     }
 
     /**
@@ -128,4 +129,27 @@ public class R2dbcTypeHandlerAdapterRegistry {
         Objects.requireNonNull(mybatisTypeHandlerConverter, "MybatisTypeHandlerConverter can not be null");
         mybatisTypeHandlerConverterList.add(mybatisTypeHandlerConverter);
     }
+
+    /**
+     * Has type handler adapter.
+     *
+     * @param adaptedClass the adapted class
+     * @return the true or false
+     */
+    public boolean hasR2dbcTypeHandlerAdapter(Class<?> adaptedClass) {
+        Objects.requireNonNull(adaptedClass, "Adapted class can not be null");
+        return r2dbcTypeHandlerAdapterContainer.containsKey(adaptedClass);
+    }
+
+    /**
+     * Get r2dbc type handler adapter.
+     *
+     * @param adaptedClass the adapted class
+     * @return the r2dbc type handler adapter
+     */
+    public R2dbcTypeHandlerAdapter<?> getR2dbcTypeHandlerAdapter(Class<?> adaptedClass) {
+        Objects.requireNonNull(adaptedClass, "Adapted class can not be null");
+        return r2dbcTypeHandlerAdapterContainer.get(adaptedClass);
+    }
+
 }
