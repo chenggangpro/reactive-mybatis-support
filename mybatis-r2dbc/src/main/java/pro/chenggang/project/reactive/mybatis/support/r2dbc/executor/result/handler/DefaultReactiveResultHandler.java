@@ -162,7 +162,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
      */
     private Object getRowValueForSimpleResultMap(RowResultWrapper rowResultWrapper, ResultMap resultMap, String columnPrefix) throws SQLException {
         Object rowValue = createResultObject(rowResultWrapper, resultMap, columnPrefix);
-        if (rowValue != null && !hasTypeHandlerForResultObject(resultMap.getType())) {
+        if (rowValue != null && !hasTypeHandlerForResultObject(resultMap.getType()) && !hasR2dbcTypeHandlerAdapterForResultObject(resultMap.getType())) {
             final MetaObject metaObject = r2dbcMybatisConfiguration.newMetaObject(rowValue);
             boolean foundValues = this.useConstructorMappings;
             if (shouldApplyAutomaticMappings(resultMap, false)) {
@@ -410,7 +410,9 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         final List<ResultMapping> constructorMappings = resultMap.getConstructorResultMappings();
         if (hasTypeHandlerForResultObject(resultType)) {
             return createPrimitiveResultObject(rowResultWrapper, resultMap, columnPrefix);
-        } else if (!constructorMappings.isEmpty()) {
+        } else if(hasR2dbcTypeHandlerAdapterForResultObject(resultType)){
+            return createResultObjectFromR2dbcTypeHandlerAdapter(rowResultWrapper, resultMap, columnPrefix);
+        } if (!constructorMappings.isEmpty()) {
             return createParameterizedResultObject(rowResultWrapper, resultType, constructorMappings, constructorArgTypes, constructorArgs, columnPrefix);
         } else if (resultType.isInterface() || metaType.hasDefaultConstructor()) {
             return objectFactory.create(resultType);
@@ -593,6 +595,21 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         return delegatedTypeHandler.getResult(null, columnName);
     }
 
+    private Object createResultObjectFromR2dbcTypeHandlerAdapter(RowResultWrapper rowResultWrapper, ResultMap resultMap, String columnPrefix) {
+        final Class<?> resultType = resultMap.getType();
+        final String columnName;
+        if (!resultMap.getResultMappings().isEmpty()) {
+            final List<ResultMapping> resultMappingList = resultMap.getResultMappings();
+            final ResultMapping mapping = resultMappingList.get(0);
+            columnName = prependPrefix(mapping.getColumn(), columnPrefix);
+        } else {
+            columnName = rowResultWrapper.getColumnNames().get(0);
+        }
+        return r2dbcMybatisConfiguration.getR2dbcTypeHandlerAdapterRegistry()
+                .getR2dbcTypeHandlerAdapter(resultType)
+                .getResult(rowResultWrapper.getRow(), rowResultWrapper.getRowMetadata(), columnName);
+    }
+
     /**
      * resolve Discriminated ResultMap
      *
@@ -659,6 +676,10 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
 
     private boolean hasTypeHandlerForResultObject(Class<?> resultType) {
         return typeHandlerRegistry.hasTypeHandler(resultType);
+    }
+
+    private boolean hasR2dbcTypeHandlerAdapterForResultObject(Class<?> resultType){
+        return r2dbcMybatisConfiguration.getR2dbcTypeHandlerAdapterRegistry().hasR2dbcTypeHandlerAdapter(resultType);
     }
 
     private void linkToParents(RowResultWrapper rowResultWrapper, ResultMapping parentMapping, Object rowValue) {

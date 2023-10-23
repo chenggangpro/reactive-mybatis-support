@@ -25,6 +25,8 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaul
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaults.ByteObjectArrayR2dbcTypeHandlerAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaults.OffsetDateTimeR2dbcTypeHandlerAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaults.OffsetTimeR2dbcTypeHandlerAdapter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaults.R2dbcBlobTypeHandlerAdapter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaults.R2dbcClobTypeHandlerAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaults.SqlDateR2dbcTypeHandlerAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaults.SqlTimeR2dbcTypeHandlerAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaults.TimestampR2dbcTypeHandlerAdapter;
@@ -62,6 +64,8 @@ public class R2dbcTypeHandlerAdapterRegistry {
         register(new SqlTimeR2dbcTypeHandlerAdapter());
         register(new TimestampR2dbcTypeHandlerAdapter());
         register(new ZonedDateTimeR2dbcTypeHandlerAdapter());
+        register(new R2dbcBlobTypeHandlerAdapter());
+        register(new R2dbcClobTypeHandlerAdapter());
         register(new EnumMybatisTypeHandlerConverter());
         register(new EnumOrdinalMybatisTypeHandlerConverter());
     }

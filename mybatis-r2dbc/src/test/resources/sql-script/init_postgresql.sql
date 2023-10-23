@@ -92,3 +92,14 @@ INSERT INTO subject_data
 VALUES (1, 1, 'a', 1, 1, 1, 1.0, true, 'a', 'A', 10.23, CURRENT_TIMESTAMP, DATE(NOW()), NOW()),
        (2, 2, 'b', 2, 2, 2, 2.0, false, 'b', 'B', 10.23, NULL, '2023-01-01', '2023-01-01 01:01:01.000'),
        (3, 3, 'c', 3, 3, 3, 3.0, true, 'c', 'C', 10.23, CURRENT_TIMESTAMP, NULL, NOW());
+
+CREATE TABLE subject_content
+(
+    id  INT,
+    blob_content bytea,
+    clob_content TEXT
+);
+
+
+INSERT INTO subject_content VALUES (1,'This is a blob content1'::bytea,'This is a clob content1');
+INSERT INTO subject_content VALUES (2,'This is a blob content2'::bytea,'This is a clob content2');

@@ -101,3 +101,13 @@ INSERT INTO `subject_data`
 VALUES (1, 1, 'a', 1, 1, 1, 1.0, 1, 'a', 'A', 10.23, CURRENT_TIMESTAMP, DATE(NOW()), NOW()),
        (2, 2, 'b', 2, 2, 2, 2.0, 0, 'b', 'B', 10.23, NULL, '2023-01-01', '2023-01-01 01:01:01.000'),
        (3, 3, 'c', 3, 3, 3, 3.0, 1, 'c', 'C', 10.23, CURRENT_TIMESTAMP, NULL, NOW());
+
+CREATE TABLE `subject_content`
+(
+  `id`  INT,
+  `blob_content` BLOB,
+  `clob_content` TEXT
+);
+
+INSERT INTO `subject_content` VALUES (1, BINARY 'This is a blob content1','This is a clob content1');
+INSERT INTO `subject_content` VALUES (2, BINARY 'This is a blob content2','This is a clob content2');

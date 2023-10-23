@@ -22,6 +22,7 @@ import org.apache.ibatis.type.TypeReference;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowResultWrapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapterRegistry;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.support.ForceToUseR2dbcTypeHandlerAdapter;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -47,6 +48,7 @@ public class DelegateR2dbcResultRowDataHandler implements InvocationHandler {
     private TypeHandler<?> delegatedTypeHandler;
     private RowResultWrapper rowResultWrapper;
     private Class<?> targetType;
+    private boolean forceToUseR2dbcTypeHandlerAdapter = false;
 
     /**
      * Instantiates a new Delegate R2dbc result row data handler.
@@ -65,10 +67,14 @@ public class DelegateR2dbcResultRowDataHandler implements InvocationHandler {
         if ("contextWith".equals(method.getName())) {
             this.delegatedTypeHandler = (TypeHandler<?>) args[1];
             this.rowResultWrapper = (RowResultWrapper) args[2];
+            this.forceToUseR2dbcTypeHandlerAdapter = false;
             Optional<Class<?>> typeHandlerArgumentType = this.getTypeHandlerArgumentType(delegatedTypeHandler);
-            if(!typeHandlerArgumentType.isPresent()){
+            if (!typeHandlerArgumentType.isPresent()) {
                 this.targetType = (Class<?>) args[0];
-            }else {
+            } else if (this.delegatedTypeHandler != null && ForceToUseR2dbcTypeHandlerAdapter.class.equals(this.delegatedTypeHandler.getClass())) {
+                this.targetType = (Class<?>) args[0];
+                this.forceToUseR2dbcTypeHandlerAdapter = true;
+            } else {
                 this.targetType = typeHandlerArgumentType.get();
             }
             return null;
@@ -101,6 +107,14 @@ public class DelegateR2dbcResultRowDataHandler implements InvocationHandler {
             if (secondArg instanceof Integer) {
                 return r2dbcTypeHandlerAdapter.getResult(rowResultWrapper.getRow(), rowResultWrapper.getRowMetadata(), (Integer) secondArg - 1);
             }
+        }
+        if(forceToUseR2dbcTypeHandlerAdapter){
+            throw new IllegalStateException(
+                    "The original TypeHandler is set to be ForceToUseR2dbcTypeHandlerAdapter, " +
+                            "but no R2dbcTypeHandlerAdapter found in R2dbcConfiguration, " +
+                            "consider to register a R2dbcTypeHandlerAdapter for "
+                            + this.targetType
+                            + " into R2dbcConfiguration");
         }
         // T getResult(ResultSet rs, String columnName)
         if (secondArg instanceof String) {

@@ -243,7 +243,7 @@ public class MybatisR2dbcBaseTests {
 
         private boolean runParallel;
         private boolean dryRun;
-        private Predicate<Class<?>> databaseFilter;
+        private Predicate<Class<?>> databaseFilter = __ -> true;
         private Set<String> xmlMapperLocations = new HashSet<>();
         private Consumer<R2dbcMybatisConfiguration> r2dbcMybatisConfigurationCustomizer;
         private BiFunction<Class<?>, ReactiveSqlSession, ? extends Publisher<T>> reactiveSqlSessionTestRunner;
