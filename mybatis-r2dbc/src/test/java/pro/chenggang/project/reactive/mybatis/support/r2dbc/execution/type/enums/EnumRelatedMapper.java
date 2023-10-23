@@ -17,7 +17,7 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.type.enum
 
 import org.apache.ibatis.annotations.Param;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectData;
-import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectDataAnEnum;
+import pro.chenggang.project.reactive.mybatis.support.common.option.SubjectDataAnEnum;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

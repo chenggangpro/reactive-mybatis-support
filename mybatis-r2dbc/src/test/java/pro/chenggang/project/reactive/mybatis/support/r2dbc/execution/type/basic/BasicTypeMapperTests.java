@@ -19,8 +19,8 @@ import org.junit.jupiter.api.Test;
 import pro.chenggang.project.reactive.mybatis.support.MybatisR2dbcBaseTests;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.Subject;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectData;
-import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectDataAnEnum;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.extend.SubjectWithSubjectData;
+import pro.chenggang.project.reactive.mybatis.support.common.option.SubjectDataAnEnum;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

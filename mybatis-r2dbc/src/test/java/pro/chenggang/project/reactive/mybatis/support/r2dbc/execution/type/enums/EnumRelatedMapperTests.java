@@ -20,7 +20,7 @@ import org.apache.ibatis.type.EnumTypeHandler;
 import org.junit.jupiter.api.Test;
 import pro.chenggang.project.reactive.mybatis.support.MybatisR2dbcBaseTests;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectData;
-import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectDataAnEnum;
+import pro.chenggang.project.reactive.mybatis.support.common.option.SubjectDataAnEnum;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -165,8 +165,8 @@ public class EnumRelatedMapperTests extends MybatisR2dbcBaseTests {
         super.<SpecificEnumType>newTestRunner()
                 .allDatabases()
                 .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
-                    r2dbcMybatisConfiguration.setDefaultEnumTypeHandler(EnumOrdinalTypeHandler.class);
-                    r2dbcMybatisConfiguration.getR2dbcTypeHandlerAdapterRegistry().register(SpecificEnumTypeR2dbcTypeHandlerAdapter.class);
+                    r2dbcMybatisConfiguration.getR2dbcTypeHandlerAdapterRegistry()
+                            .register(SpecificEnumTypeR2dbcTypeHandlerAdapter.class);
                     r2dbcMybatisConfiguration.setMapUnderscoreToCamelCase(true);
                     r2dbcMybatisConfiguration.addMapper(EnumRelatedMapper.class);
                 })

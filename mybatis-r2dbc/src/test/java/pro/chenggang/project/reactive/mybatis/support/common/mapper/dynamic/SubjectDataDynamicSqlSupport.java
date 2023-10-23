@@ -17,7 +17,7 @@ package pro.chenggang.project.reactive.mybatis.support.common.mapper.dynamic;
 
 import org.mybatis.dynamic.sql.AliasableSqlTable;
 import org.mybatis.dynamic.sql.SqlColumn;
-import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectDataAnEnum;
+import pro.chenggang.project.reactive.mybatis.support.common.option.SubjectDataAnEnum;
 
 import java.math.BigDecimal;
 import java.sql.JDBCType;

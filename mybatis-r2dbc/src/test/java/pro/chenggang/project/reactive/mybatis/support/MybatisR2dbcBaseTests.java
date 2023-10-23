@@ -58,6 +58,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static io.r2dbc.pool.ConnectionPoolConfiguration.NO_TIMEOUT;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -240,6 +241,7 @@ public class MybatisR2dbcBaseTests {
 
     protected class MybatisR2dbcTestRunner<T> {
 
+        private boolean runParallel;
         private boolean dryRun;
         private Predicate<Class<?>> databaseFilter;
         private Set<String> xmlMapperLocations = new HashSet<>();
@@ -248,6 +250,11 @@ public class MybatisR2dbcBaseTests {
         private Function<StepVerifier.FirstStep<T>, Duration> stepVerifierRunner;
 
         public MybatisR2dbcTestRunner() {
+        }
+
+        public MybatisR2dbcTestRunner<T> runParallel(){
+            this.runParallel = true;
+            return this;
         }
 
         public MybatisR2dbcTestRunner<T> dryRun() {
@@ -286,10 +293,13 @@ public class MybatisR2dbcBaseTests {
         }
 
         public void run() {
-            databaseInitializationContainer.keySet()
+            Stream<Class<?>> databaseClassStream = databaseInitializationContainer.keySet()
                     .stream()
-                    .filter(databaseFilter)
-                    .forEach(databaseClass -> {
+                    .filter(databaseFilter);
+            if(runParallel){
+                databaseClassStream = databaseClassStream.parallel();
+            }
+            databaseClassStream.forEach(databaseClass -> {
                         log.info("⬇⬇⬇⬇⬇⬇ {} ----------------", databaseClass.getSimpleName());
                         ReactiveSqlSessionFactory reactiveSqlSessionFactory = setUp(databaseClass,
                                 dryRun,

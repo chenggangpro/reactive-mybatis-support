@@ -13,7 +13,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package pro.chenggang.project.reactive.mybatis.support.common.entity;
+package pro.chenggang.project.reactive.mybatis.support.common.option;
 
 /**
  * @author Gang Cheng

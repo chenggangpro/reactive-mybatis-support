@@ -24,10 +24,10 @@
     <select id="selectByAnEnumOrdinal" resultMap="anIntToEnumResultMap">
         SELECT * FROM subject_data WHERE anInt = #{anEnum}
     </select>
-    <select id="selectAllAnEnum" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectDataAnEnum" >
+    <select id="selectAllAnEnum" resultType="pro.chenggang.project.reactive.mybatis.support.common.option.SubjectDataAnEnum" >
         SELECT anEnum FROM subject_data ORDER BY aByte
     </select>
-    <select id="selectAllAnIntAsAnEnumOrdinal" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectDataAnEnum">
+    <select id="selectAllAnIntAsAnEnumOrdinal" resultType="pro.chenggang.project.reactive.mybatis.support.common.option.SubjectDataAnEnum">
         SELECT anInt FROM subject_data WHERE anInt IN (0, 1, 2) ORDER BY aByte
     </select>
 
