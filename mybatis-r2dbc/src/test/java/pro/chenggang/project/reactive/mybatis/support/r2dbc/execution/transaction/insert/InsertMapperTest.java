@@ -249,7 +249,7 @@ class InsertMapperTest extends MybatisR2dbcBaseTests {
                     deptList.add(dept);
                     deptList.add(dept);
                     deptList.add(dept);
-                    return insertMapper.insertMultipleDept(deptList);
+                    return insertMapper.insertMultipleDeptWithAnnotation(deptList);
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
