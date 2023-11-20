@@ -22,7 +22,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import static org.testcontainers.containers.MySQLContainer.MYSQL_PORT;
-import static org.testcontainers.containers.PostgreSQLContainer.DEFAULT_TAG;
 import static org.testcontainers.containers.PostgreSQLContainer.IMAGE;
 import static org.testcontainers.containers.PostgreSQLContainer.POSTGRESQL_PORT;
 
@@ -56,7 +55,7 @@ public class PostgresqlTestContainerInitialization implements DatabaseInitializa
             return r2dbcProtocol;
         }
         JdbcDatabaseContainer<?> jdbcDatabaseContainer = new PostgreSQLContainer<>(DockerImageName.parse(IMAGE)
-                .withTag(DEFAULT_TAG))
+                .withTag("10.21"))
                 .withDatabaseName(databaseConfig.getDatabaseName())
                 .withUsername(databaseConfig.getUsername())
                 .withPassword(databaseConfig.getPassword())

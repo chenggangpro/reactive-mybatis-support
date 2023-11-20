@@ -101,35 +101,32 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                     R2dbcKeyGenerator r2dbcKeyGenerator = this.getR2dbcKeyGenerator(mappedStatement);
                     return MybatisReactiveContextManager.currentContextAttribute()
                             .flatMap(attribute -> r2dbcKeyGenerator.processSelectKey(SELECT_KEY_BEFORE, mappedStatement, parameter)
-                                    .flatMap(ignoreResult -> {
+                                    .flatMapMany(ignoreResult -> {
                                         String boundSql = mappedStatement.getBoundSql(parameter).getSql();
                                         boolean isReturnedGeneratedKeys = SIMPLE_RETURN.equals(r2dbcKeyGenerator.keyGeneratorType());
                                         Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameter, RowBounds.DEFAULT, isReturnedGeneratedKeys, attribute, r2dbcStatementLog);
-                                        return Mono.just(isReturnedGeneratedKeys)
-                                                .filter(Boolean::booleanValue)
-                                                .flatMapMany(returnGeneratedKeys -> Flux
-                                                        .from(statement
-                                                                .fetchSize(mappedStatement.getKeyProperties().length)
-                                                                .execute()
-                                                        )
-                                                        .checkpoint("[DefaultReactiveExecutor] SQL: \"" + boundSql+ "\" ")
-                                                        .concatMap(result -> result.map((row, rowMetadata) -> {
-                                                            RowResultWrapper rowResultWrapper = new RowResultWrapper(row, rowMetadata, configuration);
-                                                            return r2dbcKeyGenerator.processGeneratedKeyResult(rowResultWrapper, parameter);
-                                                        }))
-                                                )
-                                                .switchIfEmpty(Flux
-                                                        .from(statement.execute())
-                                                        .checkpoint("[DefaultReactiveExecutor]SQL: \"" + boundSql + "\" ")
-                                                        .concatMap(result -> Mono.from(result.getRowsUpdated()))
-                                                )
-                                                .collect(Collectors.summingInt(Integer::intValue))
-                                                .defaultIfEmpty(0)
-                                                .doOnNext(r2dbcStatementLog::logUpdates)
-                                                .flatMap(totalUpdateRowCount -> r2dbcKeyGenerator.processSelectKey(SELECT_KEY_AFTER, mappedStatement, parameter)
-                                                        .flatMap(ignore -> Mono.just(totalUpdateRowCount))
-                                                );
-                                    }));
+                                        if(isReturnedGeneratedKeys){
+                                            return Flux.from(statement
+                                                                  .fetchSize(mappedStatement.getKeyProperties().length)
+                                                                  .execute()
+                                                    )
+                                                    .checkpoint("[DefaultReactiveExecutor] SQL: \"" + boundSql + "\" ")
+                                                    .concatMap(result -> result.map((row, rowMetadata) -> {
+                                                        RowResultWrapper rowResultWrapper = new RowResultWrapper(row, rowMetadata, configuration);
+                                                        return r2dbcKeyGenerator.processGeneratedKeyResult(rowResultWrapper, parameter);
+                                                    }));
+                                        }
+                                        return Flux.from(statement.execute())
+                                                .checkpoint("[DefaultReactiveExecutor]SQL: \"" + boundSql + "\" ")
+                                                .concatMap(result -> Mono.from(result.getRowsUpdated()));
+                                    })
+                                    .collect(Collectors.summingInt(Integer::intValue))
+                                    .defaultIfEmpty(0)
+                                    .doOnNext(r2dbcStatementLog::logUpdates)
+                                    .flatMap(totalUpdateRowCount -> r2dbcKeyGenerator.processSelectKey(SELECT_KEY_AFTER, mappedStatement, parameter)
+                                            .flatMap(ignore -> Mono.just(totalUpdateRowCount))
+                                    )
+                            );
                 });
     }
 

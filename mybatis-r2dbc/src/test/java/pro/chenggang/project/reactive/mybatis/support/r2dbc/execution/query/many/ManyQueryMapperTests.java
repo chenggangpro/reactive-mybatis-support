@@ -90,8 +90,7 @@ public class ManyQueryMapperTests extends MybatisR2dbcBaseTests {
                         .assertNext(dept -> {
                             assertEquals(4L, dept.getDeptNo());
                             assertNotNull(dept.getEmpList());
-                            assertTrue(dept.getEmpList()
-                                    .isEmpty());
+                            assertTrue(dept.getEmpList().isEmpty());
                         })
                         .verifyComplete()
                 )

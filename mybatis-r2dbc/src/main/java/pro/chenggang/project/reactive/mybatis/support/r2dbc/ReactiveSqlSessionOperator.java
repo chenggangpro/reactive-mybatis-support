@@ -18,6 +18,8 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.function.Function;
+
 /**
  * The interface Reactive sql session operator.
  *
@@ -33,7 +35,7 @@ public interface ReactiveSqlSessionOperator {
      * @param monoExecution the mono execution
      * @return mono
      */
-    <T> Mono<T> execute(Mono<T> monoExecution);
+    <T> Mono<T> execute(Function<ReactiveSqlSession, Mono<T>> monoExecution);
 
     /**
      * execute with Mono then commit
@@ -42,7 +44,7 @@ public interface ReactiveSqlSessionOperator {
      * @param monoExecution the mono execution
      * @return mono
      */
-    <T> Mono<T> executeAndCommit(Mono<T> monoExecution);
+    <T> Mono<T> executeAndCommit(Function<ReactiveSqlSession, Mono<T>> monoExecution);
 
     /**
      * execute with Mono then rollback
@@ -51,7 +53,7 @@ public interface ReactiveSqlSessionOperator {
      * @param monoExecution the mono execution
      * @return mono
      */
-    <T> Mono<T> executeAndRollback(Mono<T> monoExecution);
+    <T> Mono<T> executeAndRollback(Function<ReactiveSqlSession, Mono<T>> monoExecution);
 
     /**
      * execute with Mono then commit
@@ -60,7 +62,7 @@ public interface ReactiveSqlSessionOperator {
      * @param fluxExecution the flux execution
      * @return flux
      */
-    <T> Flux<T> executeMany(Flux<T> fluxExecution);
+    <T> Flux<T> executeMany(Function<ReactiveSqlSession, Flux<T>> fluxExecution);
 
     /**
      * execute with Flux
@@ -69,7 +71,7 @@ public interface ReactiveSqlSessionOperator {
      * @param fluxExecution the flux execution
      * @return flux
      */
-    <T> Flux<T> executeManyAndCommit(Flux<T> fluxExecution);
+    <T> Flux<T> executeManyAndCommit(Function<ReactiveSqlSession, Flux<T>> fluxExecution);
 
     /**
      * execute with Flux then rollback
@@ -78,6 +80,6 @@ public interface ReactiveSqlSessionOperator {
      * @param fluxExecution the flux execution
      * @return flux
      */
-    <T> Flux<T> executeManyAndRollback(Flux<T> fluxExecution);
+    <T> Flux<T> executeManyAndRollback(Function<ReactiveSqlSession, Flux<T>> fluxExecution);
 
 }
