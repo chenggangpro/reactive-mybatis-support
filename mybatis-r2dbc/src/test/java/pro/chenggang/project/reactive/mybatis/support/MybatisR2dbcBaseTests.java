@@ -309,25 +309,25 @@ public class MybatisR2dbcBaseTests {
                     .forEach(databaseClass -> {
                         log.info("⬇⬇⬇⬇⬇⬇ {} ----------------", databaseClass.getSimpleName());
                         ReactiveSqlSessionFactory reactiveSqlSessionFactory = setUp(databaseClass,
-                                                                                    dryRun,
-                                                                                    r2dbcProtocol -> {
-                                                                                        R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
-                                                                                        r2dbcMybatisConfigurationCustomizer.accept(
-                                                                                                r2dbcMybatisConfiguration);
-                                                                                        for (String commonXmlMapperLocation : commonXmlMapperLocations) {
-                                                                                            loadXmlMapper(
-                                                                                                    commonXmlMapperLocation,
-                                                                                                    r2dbcMybatisConfiguration
-                                                                                            );
-                                                                                        }
-                                                                                        for (String xmlMapperLocation : xmlMapperLocations) {
-                                                                                            loadXmlMapper(
-                                                                                                    xmlMapperLocation,
-                                                                                                    r2dbcMybatisConfiguration
-                                                                                            );
-                                                                                        }
-                                                                                        return r2dbcMybatisConfiguration;
-                                                                                    }
+                                dryRun,
+                                r2dbcProtocol -> {
+                                    R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
+                                    r2dbcMybatisConfigurationCustomizer.accept(
+                                            r2dbcMybatisConfiguration);
+                                    for (String commonXmlMapperLocation : commonXmlMapperLocations) {
+                                        loadXmlMapper(
+                                                commonXmlMapperLocation,
+                                                r2dbcMybatisConfiguration
+                                        );
+                                    }
+                                    for (String xmlMapperLocation : xmlMapperLocations) {
+                                        loadXmlMapper(
+                                                xmlMapperLocation,
+                                                r2dbcMybatisConfiguration
+                                        );
+                                    }
+                                    return r2dbcMybatisConfiguration;
+                                }
                         );
                         if (Objects.nonNull(this.reactiveSqlSessionTestRunner)) {
                             ReactiveSqlSession reactiveSqlSession = reactiveSqlSessionFactory.openSession();

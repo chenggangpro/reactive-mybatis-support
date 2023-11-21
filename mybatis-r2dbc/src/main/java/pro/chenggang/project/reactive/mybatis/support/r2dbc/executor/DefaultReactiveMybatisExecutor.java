@@ -103,9 +103,9 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                             .flatMap(attribute -> r2dbcKeyGenerator.processSelectKey(SELECT_KEY_BEFORE, mappedStatement, parameter)
                                     .flatMapMany(ignoreResult -> {
                                         String boundSql = mappedStatement.getBoundSql(parameter).getSql();
-                                        boolean isReturnedGeneratedKeys = SIMPLE_RETURN.equals(r2dbcKeyGenerator.keyGeneratorType());
-                                        Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameter, RowBounds.DEFAULT, isReturnedGeneratedKeys, attribute, r2dbcStatementLog);
-                                        if(isReturnedGeneratedKeys){
+                                        boolean isSimpleReturnedGeneratedKeys = SIMPLE_RETURN.equals(r2dbcKeyGenerator.keyGeneratorType());
+                                        Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameter, RowBounds.DEFAULT, isSimpleReturnedGeneratedKeys, attribute, r2dbcStatementLog);
+                                        if(isSimpleReturnedGeneratedKeys){
                                             return Flux.from(statement
                                                                   .fetchSize(mappedStatement.getKeyProperties().length)
                                                                   .execute()
@@ -161,6 +161,11 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                     )
                                     .filter(data -> !Objects.equals(data, DEFERRED))
                                     .doOnCancel(() -> {
+                                        //clean up reactiveResultHandler
+                                        reactiveResultHandler.cleanup();
+                                        r2dbcStatementLog.logTotal(reactiveResultHandler.getResultRowTotalCount());
+                                    })
+                                    .doOnError(throwable -> {
                                         //clean up reactiveResultHandler
                                         reactiveResultHandler.cleanup();
                                         r2dbcStatementLog.logTotal(reactiveResultHandler.getResultRowTotalCount());
