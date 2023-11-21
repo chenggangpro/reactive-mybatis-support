@@ -1,12 +1,18 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.transaction.insert;
 
+import io.r2dbc.spi.Blob;
+import io.r2dbc.spi.Clob;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import pro.chenggang.project.reactive.mybatis.support.MybatisR2dbcBaseTests;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.Dept;
+import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectContent;
+import reactor.core.publisher.Mono;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -323,6 +329,34 @@ class InsertMapperTest extends MybatisR2dbcBaseTests {
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
                             assertEquals(effectRowCount, 3);
+                        })
+                        .verifyComplete()
+                )
+                .run();
+    }
+
+    @Test
+    void insertWithBlobAndClod() {
+        super.<Integer>newTestRunner()
+                .allDatabases()
+                .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
+                    r2dbcMybatisConfiguration.addMapper(InsertMapper.class);
+                })
+                .runWithThenRollback((type, reactiveSqlSession) -> {
+                    InsertMapper insertMapper = reactiveSqlSession.getMapper(InsertMapper.class);
+                    SubjectContent subjectContent = new SubjectContent();
+                    subjectContent.setId(3);
+                    subjectContent.setBlobContent(Blob.from(
+                            Mono.just(ByteBuffer.wrap("This is a test blob content".getBytes(StandardCharsets.UTF_8)))
+                    ));
+                    subjectContent.setClobContent(
+                            Clob.from(Mono.just("This is a test clob content"))
+                    );
+                    return insertMapper.insertWithBlobAndClod(subjectContent);
+                })
+                .verifyWith(firstStep -> firstStep
+                        .consumeNextWith(effectRowCount -> {
+                            assertEquals(effectRowCount, 1);
                         })
                         .verifyComplete()
                 )

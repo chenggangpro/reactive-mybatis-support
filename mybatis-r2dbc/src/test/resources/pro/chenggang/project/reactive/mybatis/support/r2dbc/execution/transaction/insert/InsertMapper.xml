@@ -31,5 +31,15 @@
     INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})
   </insert>
 
+  <parameterMap id="SubjectContent" type="pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectContent">
+    <parameter property="id" jdbcType="INTEGER" />
+    <parameter property="blobContent" jdbcType="BLOB" typeHandler="pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.support.ForceToUseR2dbcTypeHandlerAdapter"/>
+    <parameter property="clobContent" jdbcType="CLOB" typeHandler="pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.support.ForceToUseR2dbcTypeHandlerAdapter"/>
+  </parameterMap>
+
+  <insert id="insertWithBlobAndClod" parameterMap="SubjectContent">
+    INSERT INTO subject_content VALUES (#{id},#{blobContent},#{clobContent})
+  </insert>
+
 
 </mapper>

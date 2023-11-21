@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.SelectKey;
 import org.mybatis.dynamic.sql.insert.render.InsertStatementProvider;
 import org.mybatis.dynamic.sql.util.SqlProviderAdapter;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.Dept;
+import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectContent;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.CommonInsertMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.dynamic.ReactiveMyBatis3Utils;
 import reactor.core.publisher.Mono;
@@ -91,4 +92,5 @@ public interface InsertMapper extends CommonInsertMapper<Dept> {
         );
     }
 
+    Mono<Integer> insertWithBlobAndClod(SubjectContent subjectContent);
 }
