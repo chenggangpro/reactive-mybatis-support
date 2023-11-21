@@ -35,6 +35,6 @@ public class ForceToUseR2dbcTypeHandlerAdapter extends BaseTypeHandler<Object> {
 
     @Override
     public Object getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
-        return null;
+        throw new UnsupportedOperationException("Use r2dbc type handler adapter (TypeHandler) should not doing anything");
     }
 }
