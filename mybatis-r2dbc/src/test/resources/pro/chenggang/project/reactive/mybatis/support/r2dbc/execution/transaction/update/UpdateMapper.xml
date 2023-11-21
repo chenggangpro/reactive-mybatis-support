@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.transaction.update.UpdateMapper">
+
+  <update id="updateDeptByDeptNo" parameterType="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
+    UPDATE dept SET dept_name = #{deptName}, location = #{location} , create_time = #{createTime} WHERE dept_no = #{deptNo}
+  </update>
+
+  <parameterMap id="SubjectContent" type="pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectContent">
+    <parameter property="id" jdbcType="INTEGER" />
+    <parameter property="blobContent" jdbcType="BLOB" typeHandler="pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.support.ForceToUseR2dbcTypeHandlerAdapter"/>
+    <parameter property="clobContent" jdbcType="CLOB" typeHandler="pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.support.ForceToUseR2dbcTypeHandlerAdapter"/>
+  </parameterMap>
+
+  <update id="updateBlobAndClodById" parameterMap="SubjectContent">
+    UPDATE subject_content SET blob_content = #{blobContent} , clob_content = #{clobContent} WHERE id = #{id}
+  </update>
+
+</mapper>
