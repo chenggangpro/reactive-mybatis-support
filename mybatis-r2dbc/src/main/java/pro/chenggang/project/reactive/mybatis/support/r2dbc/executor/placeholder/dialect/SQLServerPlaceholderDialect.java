@@ -15,6 +15,9 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.dialect;
 
+import java.util.Objects;
+import java.util.regex.Pattern;
+
 /**
  * Microsoft SQL Server placeholder dialect
  *
@@ -29,6 +32,8 @@ public class SQLServerPlaceholderDialect implements NamePlaceholderDialect {
      */
     public static final String DIALECT_NAME = "Microsoft SQL Server";
 
+    private static final Pattern PROPERTY_PATTERN = Pattern.compile("\\.|[^@$\\d\\w_]");
+
     @Override
     public String name() {
         return DIALECT_NAME;
@@ -36,7 +41,17 @@ public class SQLServerPlaceholderDialect implements NamePlaceholderDialect {
 
     @Override
     public String getMarker() {
-        return "@";
+        // see io.r2dbc.mssql.ParametrizedMssqlStatement$PARAMETER_MATCHER
+        // the parameter pattern is "@([\\p{Alpha}@][@$\\d\\w_]{0,127})"
+        // in order to adapt original mybatis's parameters like "__frch_item_0.xxx" which pared from <foreach> label
+        return "@Ms_";
     }
 
+    @Override
+    public String propertyNamePostProcess(String propertyName) {
+        if (Objects.isNull(propertyName) || propertyName.length() == 0) {
+            return propertyName;
+        }
+        return PROPERTY_PATTERN.matcher(propertyName).replaceAll("_");
+    }
 }

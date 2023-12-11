@@ -66,7 +66,7 @@ public interface DatabaseInitialization {
     /**
      * The database config.
      */
-    @Builder
+    @Builder(toBuilder = true)
     @Value(staticConstructor = "of")
     class DatabaseConfig {
 
@@ -139,8 +139,7 @@ public interface DatabaseInitialization {
                 encodedPassword = databaseConfigPassword;
             }
             String credential = encodedUsername + (databaseConfigPassword.isEmpty() ? "" : ":" + encodedPassword);
-            return this.getProtocolUrl()
-                    .replace("//", "//" + credential + "@");
+            return this.getProtocolUrl().replace("//", "//" + credential + "@");
         }
     }
 }

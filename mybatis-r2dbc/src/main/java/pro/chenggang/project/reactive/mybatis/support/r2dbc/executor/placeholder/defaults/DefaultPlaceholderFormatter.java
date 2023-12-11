@@ -123,8 +123,9 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
             if (placeholderDialect.usingIndexMarker()) {
                 builder.append(sql, begin, i).append(marker).append(identifierIndex);
             } else {
-                String parameterProperty = parameterMappings.get(identifierIndex).getProperty()
-                        .replaceAll("\\.", "_");
+                String parameterProperty = placeholderDialect.propertyNamePostProcess(
+                        parameterMappings.get(identifierIndex).getProperty()
+                );
                 builder.append(sql, begin, i).append(marker).append(parameterProperty);
             }
             identifierIndex++;

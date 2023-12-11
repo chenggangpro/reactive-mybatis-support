@@ -10,6 +10,10 @@
     SELECT * FROM dept ORDER BY dept_no LIMIT 1
   </select>
 
+  <select id="selectOneDeptMssql" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
+    SELECT * FROM dept ORDER BY dept_no OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+  </select>
+
   <select id="selectByDeptNo" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
     SELECT * FROM dept WHERE dept_no = #{deptNo}
   </select>

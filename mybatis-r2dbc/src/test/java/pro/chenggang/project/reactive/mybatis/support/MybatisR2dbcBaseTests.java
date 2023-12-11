@@ -25,6 +25,7 @@ import org.apache.ibatis.io.Resources;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
+import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -35,6 +36,7 @@ import pro.chenggang.project.reactive.mybatis.support.common.testcontainers.Data
 import pro.chenggang.project.reactive.mybatis.support.common.testcontainers.MariadbTestContainerInitialization;
 import pro.chenggang.project.reactive.mybatis.support.common.testcontainers.MysqlTestContainerInitialization;
 import pro.chenggang.project.reactive.mybatis.support.common.testcontainers.PostgresqlTestContainerInitialization;
+import pro.chenggang.project.reactive.mybatis.support.common.testcontainers.SqlServerTestContainerInitialization;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionOperator;
@@ -58,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -81,12 +84,16 @@ public class MybatisR2dbcBaseTests {
 
     protected static final Map<Class<?>, DatabaseInitialization> databaseInitializationContainer;
     protected static final List<String> commonXmlMapperLocations = new ArrayList<>();
+    private static final AtomicBoolean validateTestcontainersFlag = new AtomicBoolean(false);
 
     static {
         databaseInitializationContainer = new LinkedHashMap<>();
         databaseInitializationContainer.put(MySQLContainer.class, new MysqlTestContainerInitialization());
         databaseInitializationContainer.put(MariaDBContainer.class, new MariadbTestContainerInitialization());
         databaseInitializationContainer.put(PostgreSQLContainer.class, new PostgresqlTestContainerInitialization());
+        databaseInitializationContainer.put(MSSQLServerContainer.class, new SqlServerTestContainerInitialization());
+        // Oracle R2DBC can only interoperate with libraries that support the 1.0.0.RELEASE version of the R2DBC SPI.
+//        databaseInitializationContainer.put(OracleContainer.class,new OracleTestContainerInitialization());
     }
 
     static {
@@ -184,9 +191,9 @@ public class MybatisR2dbcBaseTests {
         try (InputStream inputStream = Resources.getResourceAsStream(
                 xmlMapperLocation)) {
             R2dbcXMLMapperBuilder r2dbcXMLMapperBuilder = new R2dbcXMLMapperBuilder(inputStream,
-                                                                                    r2dbcMybatisConfiguration,
-                                                                                    xmlMapperLocation,
-                                                                                    r2dbcMybatisConfiguration.getSqlFragments()
+                    r2dbcMybatisConfiguration,
+                    xmlMapperLocation,
+                    r2dbcMybatisConfiguration.getSqlFragments()
             );
             r2dbcXMLMapperBuilder.parse();
         } catch (IOException e) {
@@ -235,6 +242,10 @@ public class MybatisR2dbcBaseTests {
 
     @Test
     void validateTestcontainers() {
+        if (!validateTestcontainersFlag.compareAndSet(false, true)) {
+            log.info("All testcontainers have already been validated.");
+            return;
+        }
         for (Class<?> aClass : MybatisR2dbcBaseTests.databaseInitializationContainer.keySet()) {
             log.info("⬇⬇⬇⬇⬇⬇ {} ----------------", aClass.getSimpleName());
             setUp(aClass, false, r2dbcProtocol -> new R2dbcMybatisConfiguration());
@@ -342,7 +353,7 @@ public class MybatisR2dbcBaseTests {
                             );
                             stepVerifierRunner.apply(StepVerifier.create(reactiveSqlSessionOperator.executeAndRollback(
                                     reactiveSession -> reactiveSqlSessionTestRollbackMonoRunner.apply(databaseClass,
-                                                                                                      reactiveSession
+                                            reactiveSession
                                     ))
                             ));
                         } else if (Objects.nonNull(this.reactiveSqlSessionTestRollbackFluxRunner)) {
@@ -358,7 +369,7 @@ public class MybatisR2dbcBaseTests {
                                             ))
                                     ));
                         } else {
-                            log.info("No test runner is configured");
+                            log.info("None test runner configured");
                         }
                         destroy(databaseClass, false);
                         log.info("⬆⬆⬆⬆⬆⬆ {} ----------------", databaseClass.getSimpleName());

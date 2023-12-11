@@ -17,6 +17,9 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholde
 
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderDialect;
 
+import java.util.Objects;
+import java.util.regex.Pattern;
+
 /**
  * Name placeholder dialect
  *
@@ -26,8 +29,18 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder
  */
 public interface NamePlaceholderDialect extends PlaceholderDialect {
 
+    Pattern DEFAULT_PROPERTY_NAME_PROCESS_PATTERN = Pattern.compile("\\.");
+
     @Override
     default boolean usingIndexMarker() {
         return false;
+    }
+
+    @Override
+    default String propertyNamePostProcess(String propertyName) {
+        if (Objects.isNull(propertyName) || propertyName.length() == 0) {
+            return propertyName;
+        }
+        return DEFAULT_PROPERTY_NAME_PROCESS_PATTERN.matcher(propertyName).replaceAll("_");
     }
 }

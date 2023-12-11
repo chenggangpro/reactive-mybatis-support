@@ -17,6 +17,7 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.query.sim
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.MSSQLServerContainer;
 import pro.chenggang.project.reactive.mybatis.support.MybatisR2dbcBaseTests;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.Dept;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.extend.DeptWithEmpList;
@@ -59,6 +60,9 @@ public class SimpleQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .runWith((type, reactiveSqlSession) -> {
                     SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(SimpleQueryMapper.class);
+                    if(MSSQLServerContainer.class.equals(type)){
+                        return simpleQueryMapper.selectOneDeptMssql();
+                    }
                     return simpleQueryMapper.selectOneDept();
                 })
                 .verifyWith(firstStep -> firstStep

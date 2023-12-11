@@ -50,11 +50,12 @@ public interface PlaceholderDialect {
     /**
      * Supported boolean.
      *
-     * @param connectionMetadata                the connection metadata
+     * @param connectionMetadata               the connection metadata
      * @param reactiveExecutorContextAttribute the reactive executor context attribute
      * @return the boolean
      */
-    default boolean supported(ConnectionMetadata connectionMetadata, ReactiveExecutorContextAttribute reactiveExecutorContextAttribute) {
+    default boolean supported(ConnectionMetadata connectionMetadata,
+                              ReactiveExecutorContextAttribute reactiveExecutorContextAttribute) {
         String name = Optional.ofNullable(reactiveExecutorContextAttribute
                         .getAttribute()
                         .get(PLACEHOLDER_DIALECT_NAME_ATTRIBUTE_KEY)
@@ -91,5 +92,15 @@ public interface PlaceholderDialect {
      */
     default int startIndex() {
         return 0;
+    }
+
+    /**
+     * Property name post process .
+     *
+     * @param propertyName the property name
+     * @return the processed property name
+     */
+    default String propertyNamePostProcess(String propertyName) {
+        return propertyName;
     }
 }

@@ -91,6 +91,7 @@
         <postgresql.version>42.6.0</postgresql.version>
         <mysql-connector-j.version>8.1.0</mysql-connector-j.version>
         <mariadb-java-client.version>2.1.2</mariadb-java-client.version>
+        <mssql-jdbc.version>12.5.0.jre8-preview</mssql-jdbc.version>
     </properties>
 
     <dependencyManagement>
