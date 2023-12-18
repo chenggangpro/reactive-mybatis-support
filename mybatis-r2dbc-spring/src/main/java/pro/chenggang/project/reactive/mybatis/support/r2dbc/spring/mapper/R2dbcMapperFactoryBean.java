@@ -20,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFactory;
 
 import static org.springframework.util.Assert.notNull;
@@ -31,13 +33,15 @@ import static org.springframework.util.Assert.notNull;
  * @author Gang Cheng
  * @version 1.0.0
  */
-public class R2dbcMapperFactoryBean<T> implements FactoryBean<T>, InitializingBean {
+public class R2dbcMapperFactoryBean<T> implements FactoryBean<T>, InitializingBean, ApplicationListener<ContextRefreshedEvent> {
 
     private static final Logger log = LoggerFactory.getLogger(R2dbcMapperFactoryBean.class);
 
     protected Class<T> mapperInterface;
 
     protected ReactiveSqlSessionFactory reactiveSqlSessionFactory;
+
+    private boolean failFast;
 
     /**
      * Instantiates a new r2dbc mapper factory bean.
@@ -89,6 +93,16 @@ public class R2dbcMapperFactoryBean<T> implements FactoryBean<T>, InitializingBe
         this.reactiveSqlSessionFactory = reactiveSqlSessionFactory;
     }
 
+    /**
+     * If true, a final check is done on Configuration to assure that all mapped statements are fully loaded and there is
+     * no one still pending to resolve includes. Defaults to false.
+     *
+     * @param failFast enable failFast
+     */
+    public void setFailFast(boolean failFast) {
+        this.failFast = failFast;
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
         notNull(this.reactiveSqlSessionFactory, "Property 'sqlSessionFactory' are required...");
@@ -101,6 +115,14 @@ public class R2dbcMapperFactoryBean<T> implements FactoryBean<T>, InitializingBe
             } finally {
                 ErrorContext.instance().reset();
             }
+        }
+    }
+
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        if (failFast) {
+            // fail-fast -> check all statements are completed
+            this.reactiveSqlSessionFactory.getConfiguration().getMappedStatementNames();
         }
     }
 }
