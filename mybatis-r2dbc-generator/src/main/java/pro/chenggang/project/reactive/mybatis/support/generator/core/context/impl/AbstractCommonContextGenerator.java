@@ -88,7 +88,9 @@ public abstract class AbstractCommonContextGenerator implements ContextGenerator
     protected void configureGeneratorPlugin(Context context, GeneratorProperties generatorProperties) {
         PluginConfiguration pluginConfiguration = new PluginConfiguration();
         pluginConfiguration.setConfigurationType(CustomGeneratorPlugin.class.getCanonicalName());
-        pluginConfiguration.addProperty("extendDynamicMapper", String.valueOf(generatorProperties.isExtendDynamicMapper()));
+        pluginConfiguration.addProperty("extendDynamicMapper",
+                String.valueOf(generatorProperties.isExtendDynamicMapper())
+        );
         context.addPluginConfiguration(pluginConfiguration);
         PluginConfiguration unMergeablePlugin = new PluginConfiguration();
         unMergeablePlugin.setConfigurationType(UnmergeableXmlMappersPlugin.class.getCanonicalName());
@@ -173,13 +175,12 @@ public abstract class AbstractCommonContextGenerator implements ContextGenerator
         boolean shouldTrimTableName = StringUtils.isNotBlank(tableNameTrimPattern);
         String columnNameTrimPattern = generatorProperties.getColumnNameTrimPattern();
         boolean shouldTrimColumnName = StringUtils.isNotBlank(columnNameTrimPattern);
-        if(generatorProperties.getTableNames().size() == 1){
-            String tableName = generatorProperties.getTableNames()
-                    .toArray(new String[0])[0];
-            if("%".equals(tableName)){
+        if (generatorProperties.getTableNames().size() == 1) {
+            String tableName = generatorProperties.getTableNames().toArray(new String[0])[0];
+            if ("%".equals(tableName)) {
                 TableConfiguration tableConfiguration = new TableConfiguration(context);
                 tableConfiguration.setTableName(tableName);
-                tableConfiguration.addProperty("useActualColumnNames",Boolean.TRUE.toString());
+                tableConfiguration.addProperty("useActualColumnNames", Boolean.TRUE.toString());
                 if (shouldTrimTableName) {
                     DomainObjectRenamingRule domainObjectRenamingRule = new DomainObjectRenamingRule();
                     domainObjectRenamingRule.setSearchString(tableNameTrimPattern);
@@ -198,6 +199,7 @@ public abstract class AbstractCommonContextGenerator implements ContextGenerator
         }
         generatorProperties.getTableNames()
                 .stream()
+                .filter(item -> !"%".equals(item))
                 .map(item -> {
                             TableConfiguration tableConfiguration = new TableConfiguration(context);
                             tableConfiguration.setTableName(item);
@@ -231,7 +233,9 @@ public abstract class AbstractCommonContextGenerator implements ContextGenerator
         javaTypeResolverConfiguration.addProperty("useJSR310Types", "true");
         javaTypeResolverConfiguration.addProperty("forceBigDecimals", "true");
         if (Objects.nonNull(generatorProperties.getGeneratedJavaTypeModifierClass())) {
-            javaTypeResolverConfiguration.addProperty("generatedJavaTypeModifierType", generatorProperties.getGeneratedJavaTypeModifierClass().getCanonicalName());
+            javaTypeResolverConfiguration.addProperty("generatedJavaTypeModifierType",
+                    generatorProperties.getGeneratedJavaTypeModifierClass().getCanonicalName()
+            );
         }
         context.setJavaTypeResolverConfiguration(javaTypeResolverConfiguration);
     }

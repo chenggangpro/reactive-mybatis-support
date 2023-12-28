@@ -125,7 +125,7 @@ public class GeneratorProperties {
     private Set<String> lombokAnnotations;
 
     /**
-     * The target table names,if empty then generate all tables
+     * The target table names
      */
     private Set<String> tableNames = new HashSet<>();
 
@@ -157,6 +157,9 @@ public class GeneratorProperties {
         if (generatorTypes.contains(SIMPLE)) {
             generatorTypes.remove(MODEL);
             generatorTypes.remove(MODEL_XML);
+        }
+        if(this.tableNames.isEmpty()){
+            throw new IllegalArgumentException("No table name is configured, using '%' instead if you wanna generate all tables");
         }
     }
 
