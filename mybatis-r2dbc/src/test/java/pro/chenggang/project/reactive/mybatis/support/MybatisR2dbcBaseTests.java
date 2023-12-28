@@ -260,6 +260,7 @@ public class MybatisR2dbcBaseTests {
         private Predicate<Class<?>> databaseFilter = __ -> true;
         private Set<String> xmlMapperLocations = new HashSet<>();
         private Consumer<R2dbcMybatisConfiguration> r2dbcMybatisConfigurationCustomizer;
+        private BiConsumer<Class<?>, ReactiveSqlSessionFactory> reactiveSqlSessionFactoryTestRunner;
         private BiFunction<Class<?>, ReactiveSqlSession, ? extends Publisher<T>> reactiveSqlSessionTestRunner;
         private Function<StepVerifier.FirstStep<T>, Duration> stepVerifierRunner;
         private BiFunction<Class<?>, ReactiveSqlSession, ? extends Mono<T>> reactiveSqlSessionTestRollbackMonoRunner;
@@ -308,6 +309,11 @@ public class MybatisR2dbcBaseTests {
             return this;
         }
 
+        public MybatisR2dbcTestRunner<T> runWithReactiveSqlSessionFactory(BiConsumer<Class<?>, ReactiveSqlSessionFactory> reactiveSqlSessionFactoryTestRunner) {
+            this.reactiveSqlSessionFactoryTestRunner = reactiveSqlSessionFactoryTestRunner;
+            return this;
+        }
+
         public MybatisR2dbcTestRunner<T> verifyWith(Function<StepVerifier.FirstStep<T>, Duration> stepVerifierRunner) {
             this.stepVerifierRunner = stepVerifierRunner;
             return this;
@@ -340,7 +346,12 @@ public class MybatisR2dbcBaseTests {
                                     return r2dbcMybatisConfiguration;
                                 }
                         );
-                        if (Objects.nonNull(this.reactiveSqlSessionTestRunner)) {
+                        if (Objects.nonNull(this.reactiveSqlSessionFactoryTestRunner)) {
+                            reactiveSqlSessionFactoryTestRunner.accept(
+                                    databaseClass,
+                                    reactiveSqlSessionFactory
+                            );
+                        } else if (Objects.nonNull(this.reactiveSqlSessionTestRunner)) {
                             ReactiveSqlSession reactiveSqlSession = reactiveSqlSessionFactory.openSession();
                             stepVerifierRunner.apply(StepVerifier.create(reactiveSqlSessionTestRunner.apply(
                                     databaseClass,
@@ -348,8 +359,7 @@ public class MybatisR2dbcBaseTests {
                             )));
                         } else if (Objects.nonNull(this.reactiveSqlSessionTestRollbackMonoRunner)) {
                             ReactiveSqlSessionOperator reactiveSqlSessionOperator = new DefaultReactiveSqlSessionOperator(
-                                    reactiveSqlSessionFactory,
-                                    true
+                                    reactiveSqlSessionFactory
                             );
                             stepVerifierRunner.apply(StepVerifier.create(reactiveSqlSessionOperator.executeAndRollback(
                                     reactiveSession -> reactiveSqlSessionTestRollbackMonoRunner.apply(databaseClass,
@@ -358,8 +368,7 @@ public class MybatisR2dbcBaseTests {
                             ));
                         } else if (Objects.nonNull(this.reactiveSqlSessionTestRollbackFluxRunner)) {
                             ReactiveSqlSessionOperator reactiveSqlSessionOperator = new DefaultReactiveSqlSessionOperator(
-                                    reactiveSqlSessionFactory,
-                                    true
+                                    reactiveSqlSessionFactory
                             );
                             stepVerifierRunner.apply(
                                     StepVerifier.create(reactiveSqlSessionOperator.executeManyAndRollback(

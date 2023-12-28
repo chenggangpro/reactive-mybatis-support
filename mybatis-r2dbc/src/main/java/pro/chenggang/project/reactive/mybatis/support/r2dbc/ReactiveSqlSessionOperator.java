@@ -15,18 +15,32 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc;
 
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.ReactiveSqlSessionProfile;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.function.Function;
 
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession.DEFAULT_PROFILE;
+
 /**
  * The interface Reactive sql session operator.
  *
  * @author Gang Cheng
- * @version 1.0.0
+ * @version 2.0.0
  */
 public interface ReactiveSqlSessionOperator {
+
+    /**
+     * execute with Mono
+     *
+     * @param <T>                       the type parameter
+     * @param reactiveSqlSessionProfile the reactive sql session profile
+     * @param monoExecution             the mono execution
+     * @return mono
+     */
+    <T> Mono<T> execute(ReactiveSqlSessionProfile reactiveSqlSessionProfile,
+                        Function<ReactiveSqlSession, Mono<T>> monoExecution);
 
     /**
      * execute with Mono
@@ -35,7 +49,20 @@ public interface ReactiveSqlSessionOperator {
      * @param monoExecution the mono execution
      * @return mono
      */
-    <T> Mono<T> execute(Function<ReactiveSqlSession, Mono<T>> monoExecution);
+    default <T> Mono<T> execute(Function<ReactiveSqlSession, Mono<T>> monoExecution) {
+        return execute(DEFAULT_PROFILE, monoExecution);
+    }
+
+    /**
+     * execute with Mono then commit
+     *
+     * @param <T>                       the type parameter
+     * @param reactiveSqlSessionProfile the reactive sql session profile
+     * @param monoExecution             the mono execution
+     * @return mono
+     */
+    <T> Mono<T> executeAndCommit(ReactiveSqlSessionProfile reactiveSqlSessionProfile,
+                                 Function<ReactiveSqlSession, Mono<T>> monoExecution);
 
     /**
      * execute with Mono then commit
@@ -44,16 +71,42 @@ public interface ReactiveSqlSessionOperator {
      * @param monoExecution the mono execution
      * @return mono
      */
-    <T> Mono<T> executeAndCommit(Function<ReactiveSqlSession, Mono<T>> monoExecution);
+    default <T> Mono<T> executeAndCommit(Function<ReactiveSqlSession, Mono<T>> monoExecution) {
+        return executeAndCommit(DEFAULT_PROFILE, monoExecution);
+    }
+
+    /**
+     * execute with Mono then rollback
+     *
+     * @param <T>                       the type parameter
+     * @param reactiveSqlSessionProfile the reactive sql session profile
+     * @param monoExecution             the mono execution
+     * @return mono
+     */
+    <T> Mono<T> executeAndRollback(ReactiveSqlSessionProfile reactiveSqlSessionProfile,
+                                   Function<ReactiveSqlSession, Mono<T>> monoExecution);
 
     /**
      * execute with Mono then rollback
      *
      * @param <T>           the type parameter
      * @param monoExecution the mono execution
-     * @return mono
+     * @return the mono
      */
-    <T> Mono<T> executeAndRollback(Function<ReactiveSqlSession, Mono<T>> monoExecution);
+    default <T> Mono<T> executeAndRollback(Function<ReactiveSqlSession, Mono<T>> monoExecution) {
+        return executeAndRollback(DEFAULT_PROFILE, monoExecution);
+    }
+
+    /**
+     * execute with Mono then commit
+     *
+     * @param <T>                       the type parameter
+     * @param reactiveSqlSessionProfile the reactive sql session profile
+     * @param fluxExecution             the flux execution
+     * @return flux
+     */
+    <T> Flux<T> executeMany(ReactiveSqlSessionProfile reactiveSqlSessionProfile,
+                            Function<ReactiveSqlSession, Flux<T>> fluxExecution);
 
     /**
      * execute with Mono then commit
@@ -62,7 +115,20 @@ public interface ReactiveSqlSessionOperator {
      * @param fluxExecution the flux execution
      * @return flux
      */
-    <T> Flux<T> executeMany(Function<ReactiveSqlSession, Flux<T>> fluxExecution);
+    default <T> Flux<T> executeMany(Function<ReactiveSqlSession, Flux<T>> fluxExecution) {
+        return executeMany(DEFAULT_PROFILE, fluxExecution);
+    }
+
+    /**
+     * execute with Flux
+     *
+     * @param <T>                       the type parameter
+     * @param reactiveSqlSessionProfile the reactive sql session profile
+     * @param fluxExecution             the flux execution
+     * @return flux
+     */
+    <T> Flux<T> executeManyAndCommit(ReactiveSqlSessionProfile reactiveSqlSessionProfile,
+                                     Function<ReactiveSqlSession, Flux<T>> fluxExecution);
 
     /**
      * execute with Flux
@@ -71,7 +137,20 @@ public interface ReactiveSqlSessionOperator {
      * @param fluxExecution the flux execution
      * @return flux
      */
-    <T> Flux<T> executeManyAndCommit(Function<ReactiveSqlSession, Flux<T>> fluxExecution);
+    default <T> Flux<T> executeManyAndCommit(Function<ReactiveSqlSession, Flux<T>> fluxExecution) {
+        return executeManyAndCommit(DEFAULT_PROFILE, fluxExecution);
+    }
+
+    /**
+     * execute with Flux then rollback
+     *
+     * @param <T>                       the type parameter
+     * @param reactiveSqlSessionProfile the reactive sql session profile
+     * @param fluxExecution             the flux execution
+     * @return flux
+     */
+    <T> Flux<T> executeManyAndRollback(ReactiveSqlSessionProfile reactiveSqlSessionProfile,
+                                       Function<ReactiveSqlSession, Flux<T>> fluxExecution);
 
     /**
      * execute with Flux then rollback
@@ -80,6 +159,8 @@ public interface ReactiveSqlSessionOperator {
      * @param fluxExecution the flux execution
      * @return flux
      */
-    <T> Flux<T> executeManyAndRollback(Function<ReactiveSqlSession, Flux<T>> fluxExecution);
+    default <T> Flux<T> executeManyAndRollback(Function<ReactiveSqlSession, Flux<T>> fluxExecution) {
+        return executeManyAndRollback(DEFAULT_PROFILE, fluxExecution);
+    }
 
 }

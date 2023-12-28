@@ -47,7 +47,8 @@ public class BindingSimpleTests {
 
     R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
     ReactiveSqlSession mockReactiveSqlSession = new DefaultReactiveSqlSession(r2dbcMybatisConfiguration,
-            new DefaultReactiveMybatisExecutor(r2dbcMybatisConfiguration)
+            new DefaultReactiveMybatisExecutor(r2dbcMybatisConfiguration),
+            ReactiveSqlSession.DEFAULT_PROFILE
     );
 
     @Test

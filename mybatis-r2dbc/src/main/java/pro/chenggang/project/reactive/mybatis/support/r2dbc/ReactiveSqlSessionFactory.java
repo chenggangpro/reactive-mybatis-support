@@ -15,27 +15,38 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc;
 
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.ReactiveSqlSessionProfile;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 
 /**
  * The interface Reactive sql session factory.
  *
  * @author Gang Cheng
- * @version 1.0.0
+ * @version 2.0.0
  */
 public interface ReactiveSqlSessionFactory extends AutoCloseable {
 
     /**
      * open session
      *
+     * @param reactiveSqlSessionProfile the reactive sql session profile
      * @return reactive sql session
      */
-    ReactiveSqlSession openSession();
+    ReactiveSqlSession openSession(ReactiveSqlSessionProfile reactiveSqlSessionProfile);
+
+    /**
+     * Open session.
+     *
+     * @return the reactive sql session
+     */
+    default ReactiveSqlSession openSession() {
+        return openSession(ReactiveSqlSession.DEFAULT_PROFILE);
+    }
 
     /**
      * get R2dbcMybatisConfiguration
      *
-     * @return configuration
+     * @return configuration configuration
      */
     R2dbcMybatisConfiguration getConfiguration();
 }

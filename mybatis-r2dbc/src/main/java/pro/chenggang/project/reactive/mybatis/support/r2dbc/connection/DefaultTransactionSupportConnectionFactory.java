@@ -101,23 +101,19 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
                             reactiveExecutorContext.bindConnection(transactionConnection);
                         })
                         //if using transaction then force set auto commit to false
-                        .flatMap(newConnection -> Mono.justOrEmpty(reactiveExecutorContext.getIsolationLevel())
-                                .flatMap(isolationLevel -> {
-                                    log.debug("[Get connection]Transaction isolation level exist : " + isolationLevel);
-                                    return Mono.from(newConnection.setTransactionIsolationLevel(isolationLevel))
-                                            .then(Mono.defer(() -> {
-                                                log.debug("[Get connection]Force set autocommit to false");
-                                                return Mono.from(newConnection.setAutoCommit(reactiveExecutorContext.isAutoCommit()));
-                                            }));
-                                })
-                                .switchIfEmpty(Mono.from(newConnection.setAutoCommit(reactiveExecutorContext.isAutoCommit())))
-                                .then(Mono.defer(() -> {
-                                    if (reactiveExecutorContext.setActiveTransaction()) {
-                                        return Mono.from(newConnection.beginTransaction())
-                                                .then(Mono.defer(() -> Mono.just(newConnection)));
-                                    }
-                                    return Mono.just(newConnection);
-                                })))
+                        .flatMap(newConnection -> {
+                            if (reactiveExecutorContext.setActiveTransaction()) {
+                                return Mono.justOrEmpty(reactiveExecutorContext.getIsolationLevel())
+                                        .flatMap(isolationLevel -> {
+                                            log.debug("[Get connection]Transaction isolation level exist : " + isolationLevel);
+                                            return Mono.from(newConnection.setTransactionIsolationLevel(isolationLevel));
+                                        })
+                                        .then(Mono.from(newConnection.setAutoCommit(reactiveExecutorContext.isAutoCommit())))
+                                        .then(Mono.from(newConnection.beginTransaction()))
+                                        .thenReturn(newConnection);
+                            }
+                            return Mono.just(newConnection);
+                        })
                 );
     }
 

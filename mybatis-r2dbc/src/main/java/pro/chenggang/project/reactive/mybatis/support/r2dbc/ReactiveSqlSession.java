@@ -15,8 +15,8 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc;
 
-import io.r2dbc.spi.IsolationLevel;
 import org.apache.ibatis.session.RowBounds;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.ReactiveSqlSessionProfile;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -25,33 +25,14 @@ import reactor.core.publisher.Mono;
  * The interface Reactive sql session.
  *
  * @author Gang Cheng
- * @version 1.0.0
+ * @version 2.0.0
  */
 public interface ReactiveSqlSession {
 
     /**
-     * set auto commit
-     *
-     * @param autoCommit the auto commit
-     * @return current ReactiveSqlSession
+     * The constant DEFAULT_PROFILE of ReactiveSqlSessionProfile.
      */
-    ReactiveSqlSession setAutoCommit(boolean autoCommit);
-
-    /**
-     * set isolation level
-     *
-     * @param isolationLevel the isolation level
-     * @return current ReactiveSqlSession
-     */
-    ReactiveSqlSession setIsolationLevel(IsolationLevel isolationLevel);
-
-    /**
-     * set transaction or not
-     *
-     * @param usingTransactionSupport the using transaction support
-     * @return current ReactiveSqlSession
-     */
-    ReactiveSqlSession usingTransaction(boolean usingTransactionSupport);
+    ReactiveSqlSessionProfile DEFAULT_PROFILE = ReactiveSqlSessionProfile.of(false, null, true);
 
     /**
      * Retrieve a single row mapped from the statement key.

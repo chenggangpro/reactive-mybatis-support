@@ -135,7 +135,7 @@ public class ReactiveExecutorContext {
     }
 
     /**
-     * Is with transaction boolean.
+     * Is with transaction.
      *
      * @return the boolean
      */
@@ -144,12 +144,21 @@ public class ReactiveExecutorContext {
     }
 
     /**
-     * Set active transaction boolean.
+     * Set active transaction.
      *
      * @return the boolean
      */
     public boolean setActiveTransaction() {
         return this.activeTransaction.compareAndSet(false, true);
+    }
+
+    /**
+     * Is in active transaction.
+     *
+     * @return the boolean
+     */
+    public boolean isInActiveTransaction(){
+        return this.activeTransaction.get();
     }
 
     /**

@@ -21,7 +21,6 @@ import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
-import static org.testcontainers.containers.MySQLContainer.MYSQL_PORT;
 import static org.testcontainers.containers.PostgreSQLContainer.IMAGE;
 import static org.testcontainers.containers.PostgreSQLContainer.POSTGRESQL_PORT;
 
@@ -49,7 +48,7 @@ public class PostgresqlTestContainerInitialization implements DatabaseInitializa
                     .databaseConfig(databaseConfig)
                     .protocolSymbol("postgresql")
                     .host("127.0.0.1")
-                    .port(MYSQL_PORT)
+                    .port(POSTGRESQL_PORT)
                     .build();
             log.info("[DryRun] Start up test container success : {}", r2dbcProtocol);
             return r2dbcProtocol;
