@@ -20,7 +20,6 @@ import io.r2dbc.spi.ValidationDepth;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.springframework.util.ClassUtils;
 import reactor.pool.PoolMetricsRecorder;
 import reactor.util.annotation.Nullable;
 
@@ -121,11 +120,6 @@ public class R2dbcMybatisConnectionFactoryProperties {
             encodedPassword = password;
         }
         String credential = encodedUsername + (password == null || password.isEmpty() ? "" : ":" + encodedPassword);
-        //only replace 'r2dbc:mysql:' with 'r2dbc:mariadb' when using 'MariadbConnectionFactory'
-        boolean isMariadbConnectionfactoryPresent = ClassUtils.isPresent("org.mariadb.r2dbc.MariadbConnectionFactory", this.getClass().getClassLoader());
-        if (isMariadbConnectionfactoryPresent && r2dbcUrl.startsWith("r2dbc:mysql:")) {
-            r2dbcUrl = r2dbcUrl.replace("r2dbc:mysql:", "r2dbc:mariadb:");
-        }
         r2dbcUrl = r2dbcUrl.replace("//", "//" + credential + "@");
         return r2dbcUrl;
     }
