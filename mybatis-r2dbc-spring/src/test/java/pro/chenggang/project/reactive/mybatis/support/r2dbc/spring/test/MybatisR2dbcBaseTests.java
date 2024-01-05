@@ -68,7 +68,7 @@ public class MybatisR2dbcBaseTests {
     protected static R2dbcProtocol r2dbcProtocol;
     protected static Class<?> currentContainerType;
 
-    protected static void setUp(Class<?> testContainerClass, boolean dryRun) {
+    protected static R2dbcProtocol setUp(Class<?> testContainerClass, boolean dryRun) {
         Hooks.onOperatorDebug();
         Hooks.enableContextLossTracking();
         DatabaseInitialization databaseInitialization = databaseInitializationContainer.get(testContainerClass);
@@ -77,8 +77,10 @@ public class MybatisR2dbcBaseTests {
                 .username(USERNAME)
                 .password(PASSWORD)
                 .build();
-        r2dbcProtocol = databaseInitialization.startup(databaseConfig, dryRun);
+        R2dbcProtocol startedR2dbcProtocol = databaseInitialization.startup(databaseConfig, dryRun);
         currentContainerType = testContainerClass;
+        r2dbcProtocol = startedR2dbcProtocol;
+        return r2dbcProtocol;
     }
 
     protected static void destroy(Class<?> testContainerClass, boolean dryRun) {

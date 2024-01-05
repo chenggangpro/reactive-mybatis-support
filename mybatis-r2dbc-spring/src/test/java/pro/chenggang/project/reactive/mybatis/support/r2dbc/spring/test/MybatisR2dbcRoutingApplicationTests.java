@@ -1,3 +1,4 @@
+
 /*
  *    Copyright 2009-2023 the original author or authors.
  *
@@ -24,7 +25,11 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.ReactiveTransactionManager;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
+import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.testcontainers.DatabaseInitialization.R2dbcProtocol;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -35,18 +40,31 @@ import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
 @TestInstance(PER_CLASS)
-public class MybatisR2dbcApplicationTests extends MybatisR2dbcBaseTests {
+public class MybatisR2dbcRoutingApplicationTests extends MybatisR2dbcBaseTests {
 
     @DynamicPropertySource
     static void postgresqlProperties(DynamicPropertyRegistry registry) {
-        // FIXME setup target testcontainer that worked around current test
-        setUp(MySQLContainer.class, false);
-//        setUp(MariaDBContainer.class, false);
-//        setUp(PostgreSQLContainer.class, false);
-//        setUp(MSSQLServerContainer.class, false);
-        registry.add("spring.r2dbc.mybatis.r2dbc-url", r2dbcProtocol::getProtocolUrl);
-        registry.add("spring.r2dbc.mybatis.password", r2dbcProtocol.getDatabaseConfig()::getPassword);
-        registry.add("spring.r2dbc.mybatis.username", r2dbcProtocol.getDatabaseConfig()::getUsername);
+        R2dbcProtocol mysqlR2dbcProtocol = setUp(MySQLContainer.class, false);
+        registry.add("spring.r2dbc.mybatis.routing.definitions[0].name", MySQLContainer.class::getSimpleName);
+        registry.add("spring.r2dbc.mybatis.routing.definitions[0].as-default", () -> Boolean.TRUE);
+        registry.add("spring.r2dbc.mybatis.routing.definitions[0].r2dbc-url", mysqlR2dbcProtocol::getProtocolUrl);
+        registry.add("spring.r2dbc.mybatis.routing.definitions[0].username", mysqlR2dbcProtocol.getDatabaseConfig()::getUsername);
+        registry.add("spring.r2dbc.mybatis.routing.definitions[0].password", mysqlR2dbcProtocol.getDatabaseConfig()::getPassword);
+        R2dbcProtocol mariadbR2dbcProtocol = setUp(MariaDBContainer.class, false);
+        registry.add("spring.r2dbc.mybatis.routing.definitions[1].name", MariaDBContainer.class::getSimpleName);
+        registry.add("spring.r2dbc.mybatis.routing.definitions[1].r2dbc-url", mariadbR2dbcProtocol::getProtocolUrl);
+        registry.add("spring.r2dbc.mybatis.routing.definitions[1].username", mariadbR2dbcProtocol.getDatabaseConfig()::getUsername);
+        registry.add("spring.r2dbc.mybatis.routing.definitions[1].password", mariadbR2dbcProtocol.getDatabaseConfig()::getPassword);
+        R2dbcProtocol postgresr2dbcProtocol = setUp(PostgreSQLContainer.class, false);
+        registry.add("spring.r2dbc.mybatis.routing.definitions[2].name", PostgreSQLContainer.class::getSimpleName);
+        registry.add("spring.r2dbc.mybatis.routing.definitions[2].r2dbc-url", postgresr2dbcProtocol::getProtocolUrl);
+        registry.add("spring.r2dbc.mybatis.routing.definitions[2].username", postgresr2dbcProtocol.getDatabaseConfig()::getUsername);
+        registry.add("spring.r2dbc.mybatis.routing.definitions[2].password", postgresr2dbcProtocol.getDatabaseConfig()::getPassword);
+        R2dbcProtocol mssqlR2dbcProtocol = setUp(MSSQLServerContainer.class, false);
+        registry.add("spring.r2dbc.mybatis.routing.definitions[3].name", MSSQLServerContainer.class::getSimpleName);
+        registry.add("spring.r2dbc.mybatis.routing.definitions[3].r2dbc-url", mssqlR2dbcProtocol::getProtocolUrl);
+        registry.add("spring.r2dbc.mybatis.routing.definitions[3].username", mssqlR2dbcProtocol.getDatabaseConfig()::getUsername);
+        registry.add("spring.r2dbc.mybatis.routing.definitions[3].password", mssqlR2dbcProtocol.getDatabaseConfig()::getPassword);
     }
 
     @Autowired

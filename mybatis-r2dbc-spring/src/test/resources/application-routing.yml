@@ -10,11 +10,22 @@ r2dbc:
 spring:
   r2dbc:
     mybatis:
-      pool:
-        max-idle-time: PT3M
-        validation-query: SELECT 1
-        initial-size: 3
-        max-size: 16
-        acquire-retry: 3
-        validation-depth: REMOTE
-        max-create-connection-time: PT30S
+      routing:
+        enabled: true
+        definitions:
+          - pool:
+              max-idle-time: PT5M
+              validation-query: SELECT 1
+              initial-size: 16
+              max-size: 16
+              acquire-retry: 3
+              validation-depth: REMOTE
+              max-create-connection-time: PT10S
+          - pool:
+              max-idle-time: PT5M
+              validation-query: SELECT 1
+              initial-size: 16
+              max-size: 16
+              acquire-retry: 3
+              validation-depth: REMOTE
+              max-create-connection-time: PT10S

@@ -54,6 +54,11 @@ public class R2dbcMybatisConnectionFactoryProperties {
     private String name;
 
     /**
+     * Default connection factory when using routing datasource
+     */
+    private boolean asDefault;
+
+    /**
      * Whether to generate a random connection factory name.
      */
     private boolean generateUniqueName = true;

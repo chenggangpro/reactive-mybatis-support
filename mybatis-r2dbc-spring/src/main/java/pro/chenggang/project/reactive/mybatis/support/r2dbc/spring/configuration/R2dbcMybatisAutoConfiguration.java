@@ -45,7 +45,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -81,6 +80,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcMybatisProperties;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.ConnectionFactoryOptionsCustomizer;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.R2dbcMybatisConfigurationCustomizer;
+import reactor.core.publisher.Flux;
 
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
@@ -92,6 +92,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.springframework.context.ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS;
+import static org.springframework.core.io.support.ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX;
 import static org.springframework.util.StringUtils.hasText;
 import static org.springframework.util.StringUtils.tokenizeToStringArray;
 
@@ -106,7 +108,7 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
 @Configuration
 @AutoConfigureBefore(DataSourceAutoConfiguration.class)
 @AutoConfigureAfter({MybatisLanguageDriverAutoConfiguration.class})
-@ConditionalOnClass(ConnectionFactory.class)
+@ConditionalOnClass({ConnectionFactory.class, ReactiveSqlSessionFactory.class, Flux.class})
 public class R2dbcMybatisAutoConfiguration {
 
     private static final ResourcePatternResolver RESOURCE_PATTERN_RESOLVER = new PathMatchingResourcePatternResolver();
@@ -132,7 +134,8 @@ public class R2dbcMybatisAutoConfiguration {
      */
     @ConditionalOnMissingBean(ConnectionFactory.class)
     @Bean(destroyMethod = "dispose")
-    public ConnectionPool connectionFactory(R2dbcMybatisConnectionFactoryProperties r2dbcMybatisConnectionFactoryProperties, ObjectProvider<ConnectionFactoryOptionsCustomizer> connectionFactoryOptionsCustomizerProvider) {
+    public ConnectionPool connectionFactory(R2dbcMybatisConnectionFactoryProperties r2dbcMybatisConnectionFactoryProperties,
+                                            ObjectProvider<ConnectionFactoryOptionsCustomizer> connectionFactoryOptionsCustomizerProvider) {
         String determineConnectionFactoryUrl = r2dbcMybatisConnectionFactoryProperties.determineConnectionFactoryUrl();
         Assert.notNull(determineConnectionFactoryUrl, "R2DBC Connection URL must not be null");
         ConnectionFactoryOptions connectionFactoryOptions = ConnectionFactoryOptions.parse(determineConnectionFactoryUrl);
@@ -142,7 +145,8 @@ public class R2dbcMybatisAutoConfiguration {
                 .collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(connectionFactoryOptionsCustomizers)) {
             ConnectionFactoryOptions.Builder builder = connectionFactoryOptions.mutate();
-            connectionFactoryOptionsCustomizers.forEach(connectionFactoryOptionsCustomizer -> connectionFactoryOptionsCustomizer.customize(builder));
+            connectionFactoryOptionsCustomizers.forEach(connectionFactoryOptionsCustomizer -> connectionFactoryOptionsCustomizer.customize(
+                    builder));
             connectionFactoryOptions = builder.build();
         }
         ConnectionFactory connectionFactory = ConnectionFactories.get(connectionFactoryOptions);
@@ -194,7 +198,9 @@ public class R2dbcMybatisAutoConfiguration {
         }
         // type aliases
         if (StringUtils.hasLength(r2dbcMybatisProperties.getTypeAliasesPackage())) {
-            scanClasses(r2dbcMybatisProperties.getTypeAliasesPackage(), r2dbcMybatisProperties.getTypeAliasesSuperType())
+            scanClasses(r2dbcMybatisProperties.getTypeAliasesPackage(),
+                    r2dbcMybatisProperties.getTypeAliasesSuperType()
+            )
                     .stream()
                     .filter(clazz -> !clazz.isAnonymousClass())
                     .filter(clazz -> !clazz.isInterface())
@@ -272,7 +278,10 @@ public class R2dbcMybatisAutoConfiguration {
                     }
                     try {
                         R2dbcXMLMapperBuilder xmlMapperBuilder = new R2dbcXMLMapperBuilder(mapperLocation.getInputStream(),
-                                r2dbcMybatisConfiguration, mapperLocation.toString(), r2dbcMybatisConfiguration.getSqlFragments());
+                                r2dbcMybatisConfiguration,
+                                mapperLocation.toString(),
+                                r2dbcMybatisConfiguration.getSqlFragments()
+                        );
                         xmlMapperBuilder.parse();
                     } catch (Exception e) {
                         throw new IOException("Failed to parse mapping resource: '" + mapperLocation + "'", e);
@@ -288,7 +297,8 @@ public class R2dbcMybatisAutoConfiguration {
         // R2dbcMybatisConfigurationCustomizer
         configurationCustomizerProvider
                 .orderedStream()
-                .forEach(r2dbcMybatisConfigurationCustomizer -> r2dbcMybatisConfigurationCustomizer.customize(r2dbcMybatisConfiguration));
+                .forEach(r2dbcMybatisConfigurationCustomizer -> r2dbcMybatisConfigurationCustomizer.customize(
+                        r2dbcMybatisConfiguration));
         return r2dbcMybatisConfiguration;
     }
 
@@ -302,14 +312,14 @@ public class R2dbcMybatisAutoConfiguration {
      */
     private Set<Class<?>> scanClasses(String packagePatterns, Class<?> assignableType) throws IOException {
         Set<Class<?>> classes = new HashSet<>();
-        String[] packagePatternArray = tokenizeToStringArray(packagePatterns,
-                ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS);
+        String[] packagePatternArray = tokenizeToStringArray(packagePatterns, CONFIG_LOCATION_DELIMITERS);
         for (String packagePattern : packagePatternArray) {
-            Resource[] resources = RESOURCE_PATTERN_RESOLVER.getResources(ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX
+            Resource[] resources = RESOURCE_PATTERN_RESOLVER.getResources(CLASSPATH_ALL_URL_PREFIX
                     + ClassUtils.convertClassNameToResourcePath(packagePattern) + "/**/*.class");
             for (Resource resource : resources) {
                 try {
-                    ClassMetadata classMetadata = METADATA_READER_FACTORY.getMetadataReader(resource).getClassMetadata();
+                    ClassMetadata classMetadata = METADATA_READER_FACTORY.getMetadataReader(resource)
+                            .getClassMetadata();
                     Class<?> clazz = Resources.classForName(classMetadata.getClassName());
                     if (assignableType == null || assignableType.isAssignableFrom(clazz)) {
                         classes.add(clazz);
@@ -331,7 +341,8 @@ public class R2dbcMybatisAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(ReactiveSqlSessionFactory.class)
-    public ReactiveSqlSessionFactory reactiveSqlSessionFactoryWithTransaction(R2dbcMybatisConfiguration configuration, ConnectionFactory connectionFactory) {
+    public ReactiveSqlSessionFactory reactiveSqlSessionFactoryWithTransaction(R2dbcMybatisConfiguration configuration,
+                                                                              ConnectionFactory connectionFactory) {
         if (!TransactionAwareConnectionFactoryProxy.class.isAssignableFrom(connectionFactory.getClass())) {
             configuration.setConnectionFactory(new TransactionAwareConnectionFactoryProxy(connectionFactory));
         } else {
@@ -356,7 +367,8 @@ public class R2dbcMybatisAutoConfiguration {
         private Environment environment;
 
         @Override
-        public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+        public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata,
+                                            BeanDefinitionRegistry registry) {
 
             if (!AutoConfigurationPackages.has(this.beanFactory)) {
                 log.debug("Could not determine auto-configuration package, automatic mapper scanning disabled.");
@@ -387,8 +399,10 @@ public class R2dbcMybatisAutoConfiguration {
             }
 
             // for spring-native
-            boolean injectSqlSession = environment.getProperty("mybatis.inject-sql-session-on-mapper-scan", Boolean.class,
-                    Boolean.TRUE);
+            boolean injectSqlSession = environment.getProperty("mybatis.inject-sql-session-on-mapper-scan",
+                    Boolean.class,
+                    Boolean.TRUE
+            );
             if (injectSqlSession && this.beanFactory instanceof ListableBeanFactory) {
                 ListableBeanFactory listableBeanFactory = (ListableBeanFactory) this.beanFactory;
                 Optional.ofNullable(getBeanNameForType(ReactiveSqlSessionFactory.class, listableBeanFactory))
@@ -427,7 +441,8 @@ public class R2dbcMybatisAutoConfiguration {
 
         @Override
         public void afterPropertiesSet() {
-            log.debug("Not found configuration for registering mapper bean using @R2dbcMapperScan, R2dbcMapperFactoryBean and R2dbcMapperScannerConfigurer.");
+            log.debug(
+                    "Not found configuration for registering mapper bean using @R2dbcMapperScan, R2dbcMapperFactoryBean and R2dbcMapperScannerConfigurer.");
         }
 
     }

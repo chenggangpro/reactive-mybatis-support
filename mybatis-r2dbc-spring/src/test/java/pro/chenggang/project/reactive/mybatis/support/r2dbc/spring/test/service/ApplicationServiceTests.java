@@ -38,7 +38,6 @@ public class ApplicationServiceTests extends MybatisR2dbcApplicationTests {
     @Test
     void runWithTransactionRollback() {
         applicationService.runWithTransactionRollback()
-                .as(super::withRollback)
                 .as(StepVerifier::create)
                 .expectError(IllegalStateException.class)
                 .verify();
