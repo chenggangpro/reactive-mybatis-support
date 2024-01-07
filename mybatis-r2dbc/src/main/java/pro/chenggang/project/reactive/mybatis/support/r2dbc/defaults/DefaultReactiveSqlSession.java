@@ -85,12 +85,12 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
     }
 
     @Override
-    public Mono<Integer> insert(String statement, Object parameter) {
+    public Mono<Long> insert(String statement, Object parameter) {
         return this.update(statement, parameter);
     }
 
     @Override
-    public Mono<Integer> update(String statement, Object parameter) {
+    public Mono<Long> update(String statement, Object parameter) {
         MappedStatement mappedStatement = configuration.getMappedStatement(statement);
         return reactiveMybatisExecutor.update(mappedStatement, this.wrapCollection(parameter))
                 .contextWrite(context -> initReactiveExecutorContext(context, this.configuration.getR2dbcStatementLog(mappedStatement)))
@@ -98,7 +98,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
     }
 
     @Override
-    public Mono<Integer> delete(String statement, Object parameter) {
+    public Mono<Long> delete(String statement, Object parameter) {
         return this.update(statement, parameter);
     }
 

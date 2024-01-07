@@ -93,7 +93,7 @@ public class MybatisR2dbcBaseTests {
         databaseInitializationContainer.put(PostgreSQLContainer.class, new PostgresqlTestContainerInitialization());
         databaseInitializationContainer.put(MSSQLServerContainer.class, new SqlServerTestContainerInitialization());
         // Oracle R2DBC can only interoperate with libraries that support the 1.0.0.RELEASE version of the R2DBC SPI.
-//        databaseInitializationContainer.put(OracleContainer.class,new OracleTestContainerInitialization());
+//        databaseInitializationContainer.put(OracleContainer.class, new OracleTestContainerInitialization());
     }
 
     static {
@@ -135,7 +135,9 @@ public class MybatisR2dbcBaseTests {
                 .password(PASSWORD)
                 .build();
         R2dbcProtocol r2dbcProtocol = databaseInitialization.startup(databaseConfig, dryRun);
-        this.connectionFactory = this.connectionFactory(r2dbcProtocol.getProtocolUrlWithCredential());
+        this.connectionFactory = this.connectionFactory(r2dbcProtocol.getProtocolUrlWithCredential(),
+                r2dbcProtocol.getValidationQuery()
+        );
         this.reactiveSqlSessionFactory = this.reactiveSqlSessionFactory(
                 r2dbcMybatisConfigurationProvider.apply(r2dbcProtocol),
                 this.connectionFactory
@@ -159,7 +161,7 @@ public class MybatisR2dbcBaseTests {
         databaseInitialization.destroy();
     }
 
-    protected ConnectionPool connectionFactory(String r2dbcProtocolUrl) {
+    protected ConnectionPool connectionFactory(String r2dbcProtocolUrl, String validationQuery) {
         ConnectionFactory connectionFactory = ConnectionFactories.get(r2dbcProtocolUrl);
         if (connectionFactory instanceof ConnectionPool) {
             return (ConnectionPool) connectionFactory;
@@ -175,7 +177,7 @@ public class MybatisR2dbcBaseTests {
                 .maxCreateConnectionTime(NO_TIMEOUT)
                 .maxLifeTime(NO_TIMEOUT)
                 .validationDepth(ValidationDepth.REMOTE)
-                .validationQuery("SELECT 1");
+                .validationQuery(validationQuery);
         return new ConnectionPool(builder.build());
     }
 

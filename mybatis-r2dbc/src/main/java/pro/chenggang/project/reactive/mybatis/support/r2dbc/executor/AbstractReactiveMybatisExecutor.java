@@ -62,7 +62,7 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
     }
 
     @Override
-    public Mono<Integer> update(MappedStatement mappedStatement, Object parameter) {
+    public Mono<Long> update(MappedStatement mappedStatement, Object parameter) {
         return MybatisReactiveContextManager.currentContext()
                 .flatMap(reactiveExecutorContext -> {
                     reactiveExecutorContext.setDirty();
@@ -139,7 +139,7 @@ public abstract class AbstractReactiveMybatisExecutor implements ReactiveMybatis
      * @param parameter       the parameter
      * @return mono
      */
-    protected abstract Mono<Integer> doUpdateWithConnection(Connection connection, MappedStatement mappedStatement, Object parameter);
+    protected abstract Mono<Long> doUpdateWithConnection(Connection connection, MappedStatement mappedStatement, Object parameter);
 
     /**
      * do query with connection actually

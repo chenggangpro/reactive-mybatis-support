@@ -48,6 +48,7 @@ public class MysqlTestContainerInitialization implements DatabaseInitialization 
                     .protocolSymbol("mysql")
                     .host("127.0.0.1")
                     .port(MYSQL_PORT)
+                    .validationQuery("SELECT 1")
                     .build();
             log.info("[DryRun] Start up test container success : {}", r2dbcProtocol);
             return r2dbcProtocol;
@@ -66,6 +67,7 @@ public class MysqlTestContainerInitialization implements DatabaseInitialization 
                 .host(jdbcDatabaseContainer.getHost())
                 .port(jdbcDatabaseContainer.getMappedPort(MYSQL_PORT))
                 .options("sslMode=disabled")
+                .validationQuery("SELECT 1")
                 .build();
         log.info("Start up test container success : {}", r2dbcProtocol);
         return r2dbcProtocol;

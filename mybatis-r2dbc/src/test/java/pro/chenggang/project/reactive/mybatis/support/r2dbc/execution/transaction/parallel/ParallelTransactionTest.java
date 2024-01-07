@@ -18,7 +18,6 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.transacti
 import io.r2dbc.spi.IsolationLevel;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.MySQLContainer;
 import pro.chenggang.project.reactive.mybatis.support.MybatisR2dbcBaseTests;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.Dept;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionOperator;
@@ -54,7 +53,7 @@ class ParallelTransactionTest extends MybatisR2dbcBaseTests {
                 // this test doesn't work with r2dbc-mssql driver
                 // r2dbc-mssql 0.9.0 has an issue fixed in 1.0.2.RELEASE but the r2dbc-spi's baseline is 1.0.0.RELEASE
                 // issue link: https://github.com/r2dbc/r2dbc-mssql/issues/271
-                .filterDatabases(MySQLContainer.class::equals)
+//                .filterDatabases(MySQLContainer.class::equals)
                 .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(UpdateMapper.class);
                     r2dbcMybatisConfiguration.addMapper(SimpleQueryMapper.class);

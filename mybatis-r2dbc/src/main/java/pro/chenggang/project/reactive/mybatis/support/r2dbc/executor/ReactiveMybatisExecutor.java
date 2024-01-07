@@ -35,7 +35,7 @@ public interface ReactiveMybatisExecutor {
      * @param parameter       the parameter
      * @return mono
      */
-    Mono<Integer> update(MappedStatement mappedStatement, Object parameter);
+    Mono<Long> update(MappedStatement mappedStatement, Object parameter);
 
     /**
      * execute query

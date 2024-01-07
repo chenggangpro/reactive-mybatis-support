@@ -92,6 +92,7 @@ public interface DatabaseInitialization {
         int port;
         DatabaseConfig databaseConfig;
         String options;
+        String validationQuery;
 
         /**
          * Gets protocol url.

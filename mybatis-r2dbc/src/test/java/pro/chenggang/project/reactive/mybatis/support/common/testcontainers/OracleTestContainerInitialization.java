@@ -56,6 +56,7 @@ public class OracleTestContainerInitialization implements DatabaseInitialization
                     .protocolSymbol("oracle")
                     .host("127.0.0.1")
                     .port(1521)
+                    .validationQuery("SELECT 1 FROM DUAL")
                     .build();
             log.info("[DryRun] Start up test container success : {}", r2dbcProtocol);
             return r2dbcProtocol;
@@ -74,6 +75,7 @@ public class OracleTestContainerInitialization implements DatabaseInitialization
                 .protocolSymbol("oracle")
                 .host(jdbcDatabaseContainer.getHost())
                 .port(jdbcDatabaseContainer.getMappedPort(1521))
+                .validationQuery("SELECT 1 FROM DUAL")
                 .build();
         log.info("Start up test container success : {}", r2dbcProtocol);
         return r2dbcProtocol;

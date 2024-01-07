@@ -96,7 +96,7 @@ public interface ReactiveSqlSession {
      * @param statement Unique identifier matching the statement to execute.
      * @return int The number of rows affected by the insert.
      */
-    default Mono<Integer> insert(String statement) {
+    default Mono<Long> insert(String statement) {
         return insert(statement, null);
     }
 
@@ -109,7 +109,7 @@ public interface ReactiveSqlSession {
      * @param parameter A parameter object to pass to the statement.
      * @return int The number of rows affected by the insert.
      */
-    Mono<Integer> insert(String statement, Object parameter);
+    Mono<Long> insert(String statement, Object parameter);
 
     /**
      * Execute an update statement. The number of rows affected will be returned.
@@ -117,7 +117,7 @@ public interface ReactiveSqlSession {
      * @param statement Unique identifier matching the statement to execute.
      * @return int The number of rows affected by the update.
      */
-    default Mono<Integer> update(String statement) {
+    default Mono<Long> update(String statement) {
         return update(statement, null);
     }
 
@@ -128,15 +128,15 @@ public interface ReactiveSqlSession {
      * @param parameter A parameter object to pass to the statement.
      * @return int The number of rows affected by the update.
      */
-    Mono<Integer> update(String statement, Object parameter);
+    Mono<Long> update(String statement, Object parameter);
 
     /**
      * Execute a delete statement. The number of rows affected will be returned.
      *
      * @param statement Unique identifier matching the statement to execute.
-     * @return int The number of rows affected by the delete.
+     * @return int The number of rows affected by the deletion.
      */
-    default Mono<Integer> delete(String statement) {
+    default Mono<Long> delete(String statement) {
         return delete(statement, null);
     }
 
@@ -145,9 +145,9 @@ public interface ReactiveSqlSession {
      *
      * @param statement Unique identifier matching the statement to execute.
      * @param parameter A parameter object to pass to the statement.
-     * @return int The number of rows affected by the delete.
+     * @return int The number of rows affected by the deletion.
      */
-    Mono<Integer> delete(String statement, Object parameter);
+    Mono<Long> delete(String statement, Object parameter);
 
     /**
      * Perform commits database connection.

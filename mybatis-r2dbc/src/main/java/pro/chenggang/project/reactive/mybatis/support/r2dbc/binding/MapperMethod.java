@@ -152,15 +152,15 @@ public class MapperMethod {
         return result;
     }
 
-    private Object rowCountResult(Mono<Integer> rowCount) {
+    private Object rowCountResult(Mono<Long> rowCount) {
         if (method.returnsVoid()) {
             return rowCount.then();
         }
         if (Integer.class.equals(method.getReturnInferredType()) || Integer.TYPE.equals(method.getReturnInferredType())) {
-            return rowCount.defaultIfEmpty(0);
+            return rowCount.map(Long::intValue).defaultIfEmpty(0);
         }
         if (Long.class.equals(method.getReturnInferredType()) || Long.TYPE.equals(method.getReturnInferredType())) {
-            return rowCount.map(Long::valueOf).defaultIfEmpty(0L);
+            return rowCount.defaultIfEmpty(0L);
         }
         if (Boolean.class.equals(method.getReturnInferredType()) || Boolean.TYPE.equals(method.getReturnInferredType())) {
             return rowCount.map(value -> value > 0).defaultIfEmpty(false);

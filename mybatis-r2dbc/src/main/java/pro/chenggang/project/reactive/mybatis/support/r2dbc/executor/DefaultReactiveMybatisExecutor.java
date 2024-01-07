@@ -89,7 +89,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
     }
 
     @Override
-    protected Mono<Integer> doUpdateWithConnection(Connection connection, MappedStatement mappedStatement, Object parameter) {
+    protected Mono<Long> doUpdateWithConnection(Connection connection, MappedStatement mappedStatement, Object parameter) {
         return MybatisReactiveContextManager.currentContext()
                 .doOnNext(reactiveExecutorContext -> {
                     if (log.isTraceEnabled()) {
@@ -120,8 +120,8 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                                 .checkpoint("[DefaultReactiveExecutor]SQL: \"" + boundSql + "\" ")
                                                 .concatMap(result -> Mono.from(result.getRowsUpdated()));
                                     })
-                                    .collect(Collectors.summingInt(Integer::intValue))
-                                    .defaultIfEmpty(0)
+                                    .collect(Collectors.summingLong(Long::longValue))
+                                    .defaultIfEmpty(0L)
                                     .doOnNext(r2dbcStatementLog::logUpdates)
                                     .flatMap(totalUpdateRowCount -> r2dbcKeyGenerator.processSelectKey(SELECT_KEY_AFTER, mappedStatement, parameter)
                                             .flatMap(ignore -> Mono.just(totalUpdateRowCount))
