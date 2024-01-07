@@ -64,16 +64,8 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
     @Override
     public <T> Mono<T> selectOne(String statement, Object parameter) {
         return this.<T>selectList(statement, parameter)
-                .buffer(2)
-                .flatMap(results -> {
-                    if (results.isEmpty()) {
-                        return Mono.empty();
-                    }
-                    if (results.size() > 1) {
-                        return Mono.error(new TooManyResultsException("Expected one result (or null) to be returned by selectOne()"));
-                    }
-                    return Mono.justOrEmpty(results.get(0));
-                }).singleOrEmpty();
+                .singleOrEmpty()
+                .onErrorMap(IndexOutOfBoundsException.class, ex -> new TooManyResultsException("Expected one result (or null) to be returned by selectOne()"));
     }
 
     @Override
