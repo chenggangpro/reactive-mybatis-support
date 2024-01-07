@@ -1,3 +1,18 @@
+/*
+ *    Copyright 2009-2023 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults;
 
 import io.r2dbc.spi.ConnectionFactory;
@@ -20,11 +35,13 @@ import java.util.Objects;
 public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFactory {
 
     private final R2dbcMybatisConfiguration configuration;
-    private final ReactiveSqlSession reactiveSqlSession;
+    private final ReactiveMybatisExecutor reactiveMybatisExecutor;
 
-    private DefaultReactiveSqlSessionFactory(R2dbcMybatisConfiguration configuration, ReactiveMybatisExecutor reactiveMybatisExecutor) {
+    private DefaultReactiveSqlSessionFactory(R2dbcMybatisConfiguration configuration,
+                                             ReactiveMybatisExecutor reactiveMybatisExecutor) {
         this.configuration = configuration;
-        this.reactiveSqlSession = new DefaultReactiveSqlSession(this.configuration, reactiveMybatisExecutor);
+        this.configuration.initialize();
+        this.reactiveMybatisExecutor = reactiveMybatisExecutor;
     }
 
     /**
@@ -37,8 +54,8 @@ public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFacto
     }
 
     @Override
-    public ReactiveSqlSession openSession() {
-        return this.reactiveSqlSession;
+    public ReactiveSqlSession openSession(ReactiveSqlSessionProfile reactiveSqlSessionProfile) {
+        return new DefaultReactiveSqlSession(this.configuration, reactiveMybatisExecutor, reactiveSqlSessionProfile);
     }
 
     @Override
@@ -125,14 +142,21 @@ public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFacto
                 this.r2dbcMybatisConfiguration.setConnectionFactory(this.connectionFactory);
             }
             if (Objects.nonNull(this.reactiveMybatisExecutor)) {
-                return new DefaultReactiveSqlSessionFactory(this.r2dbcMybatisConfiguration, this.reactiveMybatisExecutor);
+                return new DefaultReactiveSqlSessionFactory(this.r2dbcMybatisConfiguration,
+                        this.reactiveMybatisExecutor
+                );
             }
             if (usingDefaultConnectionFactoryProxy) {
-                ConnectionFactory transactionSupportConnectionFactory = new DefaultTransactionSupportConnectionFactory(this.r2dbcMybatisConfiguration.getConnectionFactory());
+                ConnectionFactory transactionSupportConnectionFactory = new DefaultTransactionSupportConnectionFactory(
+                        this.r2dbcMybatisConfiguration.getConnectionFactory());
                 this.r2dbcMybatisConfiguration.setConnectionFactory(transactionSupportConnectionFactory);
-                return new DefaultReactiveSqlSessionFactory(this.r2dbcMybatisConfiguration, new DefaultReactiveMybatisExecutor(this.r2dbcMybatisConfiguration));
+                return new DefaultReactiveSqlSessionFactory(this.r2dbcMybatisConfiguration,
+                        new DefaultReactiveMybatisExecutor(this.r2dbcMybatisConfiguration)
+                );
             }
-            return new DefaultReactiveSqlSessionFactory(this.r2dbcMybatisConfiguration, new DefaultReactiveMybatisExecutor(this.r2dbcMybatisConfiguration));
+            return new DefaultReactiveSqlSessionFactory(this.r2dbcMybatisConfiguration,
+                    new DefaultReactiveMybatisExecutor(this.r2dbcMybatisConfiguration)
+            );
         }
     }
 }

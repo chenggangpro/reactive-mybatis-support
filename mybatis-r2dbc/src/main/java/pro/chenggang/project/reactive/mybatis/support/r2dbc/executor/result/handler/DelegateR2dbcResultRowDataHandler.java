@@ -1,16 +1,35 @@
+/*
+ *    Copyright 2009-2023 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler;
 
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.type.TypeHandler;
+import org.apache.ibatis.type.TypeReference;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowResultWrapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapterRegistry;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.support.ForceToUseR2dbcTypeHandlerAdapter;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.sql.CallableStatement;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -25,29 +44,39 @@ public class DelegateR2dbcResultRowDataHandler implements InvocationHandler {
 
     private static final Log log = LogFactory.getLog(DelegateR2dbcResultRowDataHandler.class);
     private final Set<Class<?>> notSupportedDataTypes;
-    private final Map<Class<?>, R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapters;
-    private TypeHandler delegatedTypeHandler;
+    private final R2dbcTypeHandlerAdapterRegistry r2dbcTypeHandlerAdapterRegistry;
+    private TypeHandler<?> delegatedTypeHandler;
     private RowResultWrapper rowResultWrapper;
-    private Class<?> typeHandlerArgumentType;
+    private Class<?> targetType;
+    private boolean forceToUseR2dbcTypeHandlerAdapter = false;
 
     /**
      * Instantiates a new Delegate R2dbc result row data handler.
      *
      * @param notSupportedDataTypes    the not supported data types
-     * @param r2dbcTypeHandlerAdapters the R2dbc type handler adapters
+     * @param r2dbcTypeHandlerAdapterRegistry the R2dbc type handler adapter registry
      */
     public DelegateR2dbcResultRowDataHandler(Set<Class<?>> notSupportedDataTypes,
-                                             Map<Class<?>, R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapters) {
+                                             R2dbcTypeHandlerAdapterRegistry r2dbcTypeHandlerAdapterRegistry) {
         this.notSupportedDataTypes = notSupportedDataTypes;
-        this.r2dbcTypeHandlerAdapters = r2dbcTypeHandlerAdapters;
+        this.r2dbcTypeHandlerAdapterRegistry = r2dbcTypeHandlerAdapterRegistry;
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if ("contextWith".equals(method.getName())) {
-            this.delegatedTypeHandler = (TypeHandler) args[0];
-            this.rowResultWrapper = (RowResultWrapper) args[1];
-            this.typeHandlerArgumentType = this.getTypeHandlerArgumentType(delegatedTypeHandler).orElse(Object.class);
+            this.delegatedTypeHandler = (TypeHandler<?>) args[1];
+            this.rowResultWrapper = (RowResultWrapper) args[2];
+            this.forceToUseR2dbcTypeHandlerAdapter = false;
+            Optional<Class<?>> typeHandlerArgumentType = this.getTypeHandlerArgumentType(delegatedTypeHandler);
+            if (!typeHandlerArgumentType.isPresent()) {
+                this.targetType = (Class<?>) args[0];
+            } else if (this.delegatedTypeHandler != null && ForceToUseR2dbcTypeHandlerAdapter.class.equals(this.delegatedTypeHandler.getClass())) {
+                this.targetType = (Class<?>) args[0];
+                this.forceToUseR2dbcTypeHandlerAdapter = true;
+            } else {
+                this.targetType = typeHandlerArgumentType.get();
+            }
             return null;
         }
         //not getResult() method ,return original invocation
@@ -63,13 +92,13 @@ public class DelegateR2dbcResultRowDataHandler implements InvocationHandler {
             return method.invoke(delegatedTypeHandler, args);
         }
         //not supported
-        if (notSupportedDataTypes.contains(this.typeHandlerArgumentType)) {
-            throw new IllegalArgumentException("Unsupported Result Data type : " + typeHandlerArgumentType);
+        if (notSupportedDataTypes.contains(this.targetType)) {
+            throw new IllegalArgumentException("Unsupported Result Data type : " + targetType);
         }
         //using adapter
-        if (r2dbcTypeHandlerAdapters.containsKey(this.typeHandlerArgumentType)) {
-            log.debug("Found r2dbc type handler adapter fro result type : " + this.typeHandlerArgumentType);
-            R2dbcTypeHandlerAdapter r2dbcTypeHandlerAdapter = r2dbcTypeHandlerAdapters.get(this.typeHandlerArgumentType);
+        if (r2dbcTypeHandlerAdapterRegistry.hasR2dbcTypeHandlerAdapter(this.targetType)) {
+            log.trace("Found r2dbc type handler adapter fro result type : " + this.targetType);
+            R2dbcTypeHandlerAdapter<?> r2dbcTypeHandlerAdapter = r2dbcTypeHandlerAdapterRegistry.getR2dbcTypeHandlerAdapter(this.targetType);
             // T getResult(ResultSet rs, String columnName)
             if (secondArg instanceof String) {
                 return r2dbcTypeHandlerAdapter.getResult(rowResultWrapper.getRow(), rowResultWrapper.getRowMetadata(), (String) secondArg);
@@ -79,13 +108,21 @@ public class DelegateR2dbcResultRowDataHandler implements InvocationHandler {
                 return r2dbcTypeHandlerAdapter.getResult(rowResultWrapper.getRow(), rowResultWrapper.getRowMetadata(), (Integer) secondArg - 1);
             }
         }
+        if(forceToUseR2dbcTypeHandlerAdapter){
+            throw new IllegalStateException(
+                    "The original TypeHandler is set to be ForceToUseR2dbcTypeHandlerAdapter, " +
+                            "but no R2dbcTypeHandlerAdapter found in R2dbcConfiguration, " +
+                            "consider to register a R2dbcTypeHandlerAdapter for "
+                            + this.targetType
+                            + " into R2dbcConfiguration");
+        }
         // T getResult(ResultSet rs, String columnName)
         if (secondArg instanceof String) {
-            return rowResultWrapper.getRow().get((String) secondArg, typeHandlerArgumentType);
+            return rowResultWrapper.getRow().get((String) secondArg, targetType);
         }
         // T getResult(ResultSet rs, int columnIndex)
         if (secondArg instanceof Integer) {
-            return rowResultWrapper.getRow().get((Integer) secondArg - 1, typeHandlerArgumentType);
+            return rowResultWrapper.getRow().get((Integer) secondArg - 1, targetType);
         }
         return null;
     }
@@ -93,16 +130,47 @@ public class DelegateR2dbcResultRowDataHandler implements InvocationHandler {
     /**
      * get type handler actual type argument
      *
-     * @return
+     * @return Optional class
      */
-    private Optional<Class> getTypeHandlerArgumentType(TypeHandler typeHandler) {
+    private Optional<Class<?>> getTypeHandlerArgumentType(TypeHandler<?> typeHandler) {
+        if (typeHandler instanceof TypeReference) {
+            TypeReference<?> typeReference = (TypeReference<?>) typeHandler;
+            return Optional.ofNullable(this.extraType(typeReference.getRawType()));
+        }
         return Stream.of(typeHandler.getClass().getGenericSuperclass())
                 .filter(type -> type instanceof ParameterizedType)
                 .map(ParameterizedType.class::cast)
-                .filter(parameterizedType -> TypeHandler.class.isAssignableFrom((Class) (parameterizedType.getRawType())))
+                .filter(parameterizedType -> TypeHandler.class.isAssignableFrom((Class<?>) (parameterizedType.getRawType())))
                 .flatMap(parameterizedType -> Stream.of(parameterizedType.getActualTypeArguments()))
-                .map(Class.class::cast)
-                .findFirst();
+                .findFirst()
+                .map(this::extraType);
+    }
+
+    private Class<?> extraType(Type type){
+        if(type instanceof Class){
+            return (Class<?>) type;
+        }
+        if(type instanceof TypeVariable){
+            TypeVariable<?> typeVariable = (TypeVariable<?>) type;
+            Type[] bounds = typeVariable.getBounds();
+            if(bounds.length > 0){
+                Type firstBound = bounds[0];
+                if(firstBound instanceof Class){
+                    return (Class<?>) firstBound;
+                }
+            }
+        }
+        if(type instanceof ParameterizedType){
+            ParameterizedType parameterizedType = (ParameterizedType) type;
+            Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+            if(actualTypeArguments.length > 0){
+                Type actualTypeArgument = actualTypeArguments[0];
+                if(actualTypeArgument instanceof Class){
+                    return (Class<?>) actualTypeArgument;
+                }
+            }
+        }
+        return null;
     }
 
 }

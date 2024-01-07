@@ -1,9 +1,25 @@
+/*
+ *    Copyright 2009-2023 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate;
 
 import io.r2dbc.spi.ConnectionFactory;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.Configuration;
+import org.apache.ibatis.type.TypeHandler;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderDialect;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderDialectRegistry;
@@ -12,14 +28,19 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.R2d
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.R2dbcStatementLogFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapterRegistry;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.converter.MybatisTypeHandlerConverter;
 
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.sql.SQLXML;
 import java.time.Duration;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The type R2dbc mybatis configuration.
@@ -29,13 +50,15 @@ import java.util.Set;
  */
 public class R2dbcMybatisConfiguration extends Configuration {
 
-    private final R2dbcMapperRegistry r2dbcMapperRegistry = new R2dbcMapperRegistry(this);
-    private final R2dbcTypeHandlerAdapterRegistry r2dbcTypeHandlerAdapterRegistry = new R2dbcTypeHandlerAdapterRegistry(this);
-    private final R2dbcStatementLogFactory r2dbcStatementLogFactory = new R2dbcStatementLogFactory(this);
-    private final PlaceholderDialectRegistry placeholderDialectRegistry = new DefaultPlaceholderDialectRegistry();
-    private final Set<Class<?>> notSupportedDataTypes = new HashSet<>();
-    private Integer formattedDialectSqlCacheMaxSize = 10_000;
-    private Duration formattedDialectSqlCacheExpireDuration = Duration.ofHours(6);
+    protected final R2dbcMapperRegistry r2dbcMapperRegistry = new R2dbcMapperRegistry(this);
+    protected final R2dbcTypeHandlerAdapterRegistry r2dbcTypeHandlerAdapterRegistry = new R2dbcTypeHandlerAdapterRegistry(
+            this);
+    protected final R2dbcStatementLogFactory r2dbcStatementLogFactory = new R2dbcStatementLogFactory(this);
+    protected final PlaceholderDialectRegistry placeholderDialectRegistry = new DefaultPlaceholderDialectRegistry();
+    protected final Set<Class<?>> notSupportedDataTypes = new HashSet<>();
+    protected final AtomicBoolean initializedFlag = new AtomicBoolean(false);
+    protected Integer formattedDialectSqlCacheMaxSize = 10_000;
+    protected Duration formattedDialectSqlCacheExpireDuration = Duration.ofHours(6);
 
     private ConnectionFactory connectionFactory;
 
@@ -132,6 +155,15 @@ public class R2dbcMybatisConfiguration extends Configuration {
     }
 
     /**
+     * Add mybatis type handler converter.
+     *
+     * @param mybatisTypeHandlerConverter the mybatis type handler converter
+     */
+    public void addMybatisTypeHandlerConverter(MybatisTypeHandlerConverter mybatisTypeHandlerConverter) {
+        this.r2dbcTypeHandlerAdapterRegistry.register(mybatisTypeHandlerConverter);
+    }
+
+    /**
      * Add R2dbc type handler adapter.
      *
      * @param packageName the package name
@@ -191,7 +223,7 @@ public class R2dbcMybatisConfiguration extends Configuration {
      *
      * @param placeholderDialect the placeholder dialect
      */
-    public void addPlaceholderDialect(PlaceholderDialect placeholderDialect){
+    public void addPlaceholderDialect(PlaceholderDialect placeholderDialect) {
         this.placeholderDialectRegistry.register(placeholderDialect);
     }
 
@@ -200,7 +232,7 @@ public class R2dbcMybatisConfiguration extends Configuration {
      *
      * @return the placeholder dialect registry
      */
-    public PlaceholderDialectRegistry getPlaceholderDialectRegistry(){
+    public PlaceholderDialectRegistry getPlaceholderDialectRegistry() {
         return this.placeholderDialectRegistry;
     }
 
@@ -219,7 +251,7 @@ public class R2dbcMybatisConfiguration extends Configuration {
      * @param formattedDialectSqlCacheMaxSize the formatted dialect sql cache max size
      */
     public void setFormattedDialectSqlCacheMaxSize(Integer formattedDialectSqlCacheMaxSize) {
-        if(formattedDialectSqlCacheMaxSize < 1){
+        if (formattedDialectSqlCacheMaxSize < 1) {
             throw new IllegalArgumentException("Formatted dialect sql cache's max size must greater than 0");
         }
         this.formattedDialectSqlCacheMaxSize = formattedDialectSqlCacheMaxSize;
@@ -240,9 +272,43 @@ public class R2dbcMybatisConfiguration extends Configuration {
      * @param formattedDialectSqlCacheExpireDuration the formatted dialect sql expire duration
      */
     public void setFormattedDialectSqlCacheExpireDuration(Duration formattedDialectSqlCacheExpireDuration) {
-        if(formattedDialectSqlCacheExpireDuration.isNegative() || formattedDialectSqlCacheExpireDuration.isZero()){
+        if (formattedDialectSqlCacheExpireDuration.isNegative() || formattedDialectSqlCacheExpireDuration.isZero()) {
             throw new IllegalArgumentException("Formatted dialect sql cache's expire duration must greater than 0");
         }
         this.formattedDialectSqlCacheExpireDuration = formattedDialectSqlCacheExpireDuration;
+    }
+
+    /**
+     * Convert mybatis type handler.
+     *
+     * @param mybatisTypeHandlerConverters the mybatis type handler converters
+     */
+    protected void convertMybatisTypeHandler(List<MybatisTypeHandlerConverter> mybatisTypeHandlerConverters) {
+        if (Objects.isNull(mybatisTypeHandlerConverters) || mybatisTypeHandlerConverters.isEmpty()) {
+            return;
+        }
+        Collection<TypeHandler<?>> typeHandlers = this.getTypeHandlerRegistry()
+                .getTypeHandlers();
+        for (TypeHandler<?> typeHandler : typeHandlers) {
+            for (MybatisTypeHandlerConverter mybatisTypeHandlerConverter : mybatisTypeHandlerConverters) {
+                if (Objects.isNull(mybatisTypeHandlerConverter)) {
+                    continue;
+                }
+                if (mybatisTypeHandlerConverter.shouldConvert(typeHandler)) {
+                    R2dbcTypeHandlerAdapter<?> transformedR2dbcTypeHandlerAdapter = mybatisTypeHandlerConverter.convert(
+                            typeHandler);
+                    this.addR2dbcTypeHandlerAdapter(transformedR2dbcTypeHandlerAdapter);
+                }
+            }
+        }
+    }
+
+    /**
+     * Initialize r2dbc configuration.
+     */
+    public void initialize() {
+        if (initializedFlag.compareAndSet(false, true)) {
+            this.convertMybatisTypeHandler(this.getR2dbcTypeHandlerAdapterRegistry().getMybatisTypeHandlerConverters());
+        }
     }
 }

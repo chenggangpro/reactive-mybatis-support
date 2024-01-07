@@ -1,7 +1,22 @@
+/*
+ *    Copyright 2009-2023 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc;
 
-import io.r2dbc.spi.IsolationLevel;
 import org.apache.ibatis.session.RowBounds;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.ReactiveSqlSessionProfile;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -10,33 +25,14 @@ import reactor.core.publisher.Mono;
  * The interface Reactive sql session.
  *
  * @author Gang Cheng
- * @version 1.0.0
+ * @version 2.0.0
  */
 public interface ReactiveSqlSession {
 
     /**
-     * set auto commit
-     *
-     * @param autoCommit the auto commit
-     * @return current ReactiveSqlSession
+     * The constant DEFAULT_PROFILE of ReactiveSqlSessionProfile.
      */
-    ReactiveSqlSession setAutoCommit(boolean autoCommit);
-
-    /**
-     * set isolation level
-     *
-     * @param isolationLevel the isolation level
-     * @return current ReactiveSqlSession
-     */
-    ReactiveSqlSession setIsolationLevel(IsolationLevel isolationLevel);
-
-    /**
-     * set transaction or not
-     *
-     * @param usingTransactionSupport the using transaction support
-     * @return current ReactiveSqlSession
-     */
-    ReactiveSqlSession usingTransaction(boolean usingTransactionSupport);
+    ReactiveSqlSessionProfile DEFAULT_PROFILE = ReactiveSqlSessionProfile.of(false, null, true);
 
     /**
      * Retrieve a single row mapped from the statement key.

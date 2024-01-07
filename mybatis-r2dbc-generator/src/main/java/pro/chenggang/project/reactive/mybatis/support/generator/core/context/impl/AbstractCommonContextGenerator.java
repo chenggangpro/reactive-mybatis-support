@@ -1,3 +1,18 @@
+/*
+ *    Copyright 2009-2023 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package pro.chenggang.project.reactive.mybatis.support.generator.core.context.impl;
 
 import org.apache.commons.lang3.StringUtils;
@@ -73,7 +88,9 @@ public abstract class AbstractCommonContextGenerator implements ContextGenerator
     protected void configureGeneratorPlugin(Context context, GeneratorProperties generatorProperties) {
         PluginConfiguration pluginConfiguration = new PluginConfiguration();
         pluginConfiguration.setConfigurationType(CustomGeneratorPlugin.class.getCanonicalName());
-        pluginConfiguration.addProperty("extendDynamicMapper", String.valueOf(generatorProperties.isExtendDynamicMapper()));
+        pluginConfiguration.addProperty("extendDynamicMapper",
+                String.valueOf(generatorProperties.isExtendDynamicMapper())
+        );
         context.addPluginConfiguration(pluginConfiguration);
         PluginConfiguration unMergeablePlugin = new PluginConfiguration();
         unMergeablePlugin.setConfigurationType(UnmergeableXmlMappersPlugin.class.getCanonicalName());
@@ -158,8 +175,31 @@ public abstract class AbstractCommonContextGenerator implements ContextGenerator
         boolean shouldTrimTableName = StringUtils.isNotBlank(tableNameTrimPattern);
         String columnNameTrimPattern = generatorProperties.getColumnNameTrimPattern();
         boolean shouldTrimColumnName = StringUtils.isNotBlank(columnNameTrimPattern);
+        if (generatorProperties.getTableNames().size() == 1) {
+            String tableName = generatorProperties.getTableNames().toArray(new String[0])[0];
+            if ("%".equals(tableName)) {
+                TableConfiguration tableConfiguration = new TableConfiguration(context);
+                tableConfiguration.setTableName(tableName);
+                tableConfiguration.addProperty("useActualColumnNames", Boolean.TRUE.toString());
+                if (shouldTrimTableName) {
+                    DomainObjectRenamingRule domainObjectRenamingRule = new DomainObjectRenamingRule();
+                    domainObjectRenamingRule.setSearchString(tableNameTrimPattern);
+                    domainObjectRenamingRule.setReplaceString("");
+                    tableConfiguration.setDomainObjectRenamingRule(domainObjectRenamingRule);
+                }
+                if (shouldTrimColumnName) {
+                    ColumnRenamingRule columnRenamingRule = new ColumnRenamingRule();
+                    columnRenamingRule.setSearchString(columnNameTrimPattern);
+                    columnRenamingRule.setReplaceString("");
+                    tableConfiguration.setColumnRenamingRule(columnRenamingRule);
+                }
+                context.addTableConfiguration(tableConfiguration);
+                return;
+            }
+        }
         generatorProperties.getTableNames()
                 .stream()
+                .filter(item -> !"%".equals(item))
                 .map(item -> {
                             TableConfiguration tableConfiguration = new TableConfiguration(context);
                             tableConfiguration.setTableName(item);
@@ -193,7 +233,9 @@ public abstract class AbstractCommonContextGenerator implements ContextGenerator
         javaTypeResolverConfiguration.addProperty("useJSR310Types", "true");
         javaTypeResolverConfiguration.addProperty("forceBigDecimals", "true");
         if (Objects.nonNull(generatorProperties.getGeneratedJavaTypeModifierClass())) {
-            javaTypeResolverConfiguration.addProperty("generatedJavaTypeModifierType", generatorProperties.getGeneratedJavaTypeModifierClass().getCanonicalName());
+            javaTypeResolverConfiguration.addProperty("generatedJavaTypeModifierType",
+                    generatorProperties.getGeneratedJavaTypeModifierClass().getCanonicalName()
+            );
         }
         context.setJavaTypeResolverConfiguration(javaTypeResolverConfiguration);
     }

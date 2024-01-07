@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.query.many.ManyQueryMapper">
+
+    <select id="selectAllDept" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
+        <bind name="search_dept_name" value=" '%' + deptName + '%'"/>
+        SELECT * FROM dept WHERE dept_name LIKE #{search_dept_name} ORDER BY dept_no
+    </select>
+    <select id="selectAllDeptWithEmpList" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.DeptMapper.DeptWithEmpList">
+        SELECT dept.*,
+               <include refid="pro.chenggang.project.reactive.mybatis.support.common.mapper.EmpMapper.columnNameWithTable" />
+        FROM dept
+            LEFT JOIN emp
+                ON dept.dept_no = emp.dept_no
+        ORDER BY dept.dept_no
+    </select>
+    <select id="selectAllDeptWithEmpListOrdered" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.DeptMapper.DeptWithEmpList" resultOrdered="true">
+        SELECT dept.*,
+               <include refid="pro.chenggang.project.reactive.mybatis.support.common.mapper.EmpMapper.columnNameWithTable" />
+        FROM dept
+            LEFT JOIN emp
+                ON dept.dept_no = emp.dept_no
+        ORDER BY dept.dept_no
+    </select>
+    <select id="selectAllEmpWithOrdered" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.Emp" resultOrdered="true">
+        <bind name="search_emp_name" value=" '%' + empName + '%'"/>
+        SELECT * FROM emp WHERE emp.emp_name LIKE #{search_emp_name} ORDER BY emp_no
+    </select>
+    <select id="selectAllEmpWithDept" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.EmpMapper.EmpWithDept">
+        SELECT emp.*,
+               <include refid="pro.chenggang.project.reactive.mybatis.support.common.mapper.DeptMapper.columnNameWithTable" />
+        FROM emp
+            LEFT JOIN dept
+                ON emp.dept_no = dept.dept_no
+        ORDER BY emp.emp_no
+    </select>
+    <select id="selectAllEmpWithDeptOrdered" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.EmpMapper.EmpWithDept" resultOrdered="true">
+        SELECT emp.*,
+               <include refid="pro.chenggang.project.reactive.mybatis.support.common.mapper.DeptMapper.columnNameWithTable" />
+        FROM emp
+            LEFT JOIN dept
+                ON emp.dept_no = dept.dept_no
+        ORDER BY emp.emp_no
+    </select>
+</mapper>

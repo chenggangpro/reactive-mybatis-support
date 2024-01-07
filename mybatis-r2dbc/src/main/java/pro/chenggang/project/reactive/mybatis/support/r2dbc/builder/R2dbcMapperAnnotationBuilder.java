@@ -1,3 +1,18 @@
+/*
+ *    Copyright 2009-2023 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.builder;
 
 import org.apache.ibatis.annotations.Arg;
@@ -29,7 +44,6 @@ import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.apache.ibatis.builder.annotation.MapperAnnotationBuilder;
 import org.apache.ibatis.builder.annotation.MethodResolver;
 import org.apache.ibatis.builder.annotation.ProviderSqlSource;
-import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.cursor.Cursor;
 import org.apache.ibatis.executor.keygen.Jdbc3KeyGenerator;
 import org.apache.ibatis.executor.keygen.KeyGenerator;
@@ -137,7 +151,7 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
         parsePendingMethods();
     }
 
-    private boolean canHaveStatement(Method method) {
+    private static boolean canHaveStatement(Method method) {
         // issue #237
         return !method.isBridge() && !method.isDefault();
     }
@@ -174,7 +188,7 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
                 }
             }
             if (inputStream != null) {
-                XMLMapperBuilder xmlParser = new XMLMapperBuilder(inputStream, assistant.getConfiguration(), xmlResource, configuration.getSqlFragments(), type.getName());
+                R2dbcXMLMapperBuilder xmlParser = new R2dbcXMLMapperBuilder(inputStream, assistant.getConfiguration(), xmlResource, configuration.getSqlFragments(), type.getName());
                 xmlParser.parse();
             }
         }
@@ -223,7 +237,7 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
     }
 
     private String parseResultMap(Method method) {
-        Class<?> returnType = getReturnType(method);
+        Class<?> returnType = getReturnType(method, type);
         Arg[] args = method.getAnnotationsByType(Arg.class);
         Result[] results = method.getAnnotationsByType(Result.class);
         TypeDiscriminator typeDiscriminator = method.getAnnotation(TypeDiscriminator.class);
@@ -370,7 +384,7 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
                     null,
                     parameterTypeClass,
                     resultMapId,
-                    getReturnType(method),
+                    getReturnType(method,type),
                     resultSetType,
                     flushCache,
                     useCache,
@@ -382,7 +396,7 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
                     statementAnnotation.getDatabaseId(),
                     languageDriver,
                     // ResultSets
-                    options != null ? nullOrEmpty(options.resultSets()) : null);
+                    options != null ? nullOrEmpty(options.resultSets()) : null, statementAnnotation.isDirtySelect());
         });
     }
 
@@ -411,7 +425,7 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
         return parameterType;
     }
 
-    private Class<?> getReturnType(Method method) {
+    private static Class<?> getReturnType(Method method, Class<?> type) {
         Class<?> returnType = method.getReturnType();
         Type resolvedReturnType = TypeParameterResolver.resolveReturnType(method, type);
         if (resolvedReturnType instanceof ParameterizedType) {
@@ -586,7 +600,7 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
 
         assistant.addMappedStatement(id, sqlSource, statementType, sqlCommandType, fetchSize, timeout, parameterMap, parameterTypeClass, resultMap, resultTypeClass, resultSetTypeEnum,
                 flushCache, useCache, false,
-                keyGenerator, keyProperty, keyColumn, databaseId, languageDriver, null);
+                keyGenerator, keyProperty, keyColumn, databaseId, languageDriver, null,false);
 
         id = assistant.applyCurrentNamespace(id, false);
 
@@ -654,6 +668,7 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
         private final Annotation annotation;
         private final String databaseId;
         private final SqlCommandType sqlCommandType;
+        private boolean dirtySelect;
 
         /**
          * Instantiates a new Annotation wrapper.
@@ -666,6 +681,7 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
             if (annotation instanceof Select) {
                 databaseId = ((Select) annotation).databaseId();
                 sqlCommandType = SqlCommandType.SELECT;
+                dirtySelect = ((Select) annotation).affectData();
             } else if (annotation instanceof Update) {
                 databaseId = ((Update) annotation).databaseId();
                 sqlCommandType = SqlCommandType.UPDATE;
@@ -678,6 +694,7 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
             } else if (annotation instanceof SelectProvider) {
                 databaseId = ((SelectProvider) annotation).databaseId();
                 sqlCommandType = SqlCommandType.SELECT;
+                dirtySelect = ((SelectProvider) annotation).affectData();
             } else if (annotation instanceof UpdateProvider) {
                 databaseId = ((UpdateProvider) annotation).databaseId();
                 sqlCommandType = SqlCommandType.UPDATE;
@@ -724,6 +741,10 @@ public class R2dbcMapperAnnotationBuilder extends MapperAnnotationBuilder {
          */
         String getDatabaseId() {
             return databaseId;
+        }
+
+        boolean isDirtySelect() {
+            return dirtySelect;
         }
     }
 }

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.type.adapter.AdapterMapper">
+
+    <select id="selectAllAStringAsBlob" resultType="io.r2dbc.spi.Blob">
+        SELECT blob_content FROM subject_content ORDER BY id
+    </select>
+    <select id="selectAStringAsBlobByAString" resultType="io.r2dbc.spi.Blob">
+        SELECT blob_content FROM subject_content WHERE blob_content = #{blobContent}
+    </select>
+    <select id="selectAllAStringAsClob" resultType="io.r2dbc.spi.Clob">
+        SELECT clob_content FROM subject_content ORDER BY id
+    </select>
+    <select id="selectAStringAsClobByAString" resultType="io.r2dbc.spi.Clob">
+        SELECT clob_content FROM subject_content WHERE clob_content = #{clobContent}
+    </select>
+
+    <resultMap id="SubjectContent" type="pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectContent" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="blob_content" property="blobContent" jdbcType="BLOB" typeHandler="pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.support.ForceToUseR2dbcTypeHandlerAdapter"/>
+        <result column="clob_content" property="clobContent" jdbcType="CLOB" typeHandler="pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.support.ForceToUseR2dbcTypeHandlerAdapter"/>
+    </resultMap>
+    <select id="selectAll" resultMap="SubjectContent">
+        SELECT * FROM subject_content ORDER BY id
+    </select>
+
+</mapper>

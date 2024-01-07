@@ -1,7 +1,24 @@
+/*
+ *    Copyright 2009-2023 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.binding;
 
 import org.apache.ibatis.annotations.Flush;
 import org.apache.ibatis.binding.BindingException;
+import org.apache.ibatis.logging.Log;
+import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.reflection.ParamNameResolver;
@@ -21,7 +38,7 @@ import java.util.Collection;
 import static org.apache.ibatis.mapping.SqlCommandType.FLUSH;
 
 /**
- * The type Mapper method.
+ * The Mapper method.
  *
  * @author Clinton Begin
  * @author Eduardo Macarron
@@ -30,6 +47,8 @@ import static org.apache.ibatis.mapping.SqlCommandType.FLUSH;
  * @author Gang Cheng
  */
 public class MapperMethod {
+
+    private static final Log log = LogFactory.getLog(MapperMethod.class);
 
     private final SqlCommand command;
     private final MethodSignature method;
@@ -47,7 +66,7 @@ public class MapperMethod {
     }
 
     /**
-     * Parse inferred class class.
+     * Parse inferred class.
      *
      * @param genericType the generic type
      * @return the class
@@ -74,7 +93,7 @@ public class MapperMethod {
                     try {
                         inferredClass = Class.forName(typeName);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error("MapperMethod parse inferred class error ", e);
                     }
                 }
             }
@@ -112,8 +131,7 @@ public class MapperMethod {
             }
             case SELECT:
                 if (method.returnsVoid()) {
-                    result = executeWithVoid(sqlSession, args)
-                            .then();
+                    result = executeWithVoid(sqlSession, args);
                 } else if (method.returnsMany()) {
                     result = executeForMany(sqlSession, args);
                 } else {
@@ -126,7 +144,8 @@ public class MapperMethod {
             default:
                 throw new BindingException("Unknown execution method for: " + command.getName());
         }
-        if (result == null && method.getReturnType().isPrimitive() && !method.returnsVoid()) {
+        if (result == null && method.getReturnType()
+                .isPrimitive() && !method.returnsVoid()) {
             throw new BindingException("Mapper method '" + command.getName()
                     + " attempted to return null from a method with a primitive return type (" + method.getReturnType() + ").");
         }
@@ -134,26 +153,22 @@ public class MapperMethod {
     }
 
     private Object rowCountResult(Mono<Integer> rowCount) {
-        final Object result;
         if (method.returnsVoid()) {
-            result = rowCount.then();
-        } else if (Integer.class.equals(method.getReturnInferredType()) || Integer.TYPE.equals(method.getReturnInferredType())) {
-            result = rowCount.defaultIfEmpty(0);
-        } else if (Long.class.equals(method.getReturnInferredType()) || Long.TYPE.equals(method.getReturnInferredType())) {
-            result = rowCount
-                    .map(Long::valueOf)
-                    .defaultIfEmpty(0L);
-        } else if (Boolean.class.equals(method.getReturnInferredType()) || Boolean.TYPE.equals(method.getReturnInferredType())) {
-            result = rowCount
-                    .map(value -> value > 0)
-                    .defaultIfEmpty(false);
-        } else {
-            throw new BindingException("Mapper method '" + command.getName() + "' has an unsupported return type: " + method.getReturnType());
+            return rowCount.then();
         }
-        return result;
+        if (Integer.class.equals(method.getReturnInferredType()) || Integer.TYPE.equals(method.getReturnInferredType())) {
+            return rowCount.defaultIfEmpty(0);
+        }
+        if (Long.class.equals(method.getReturnInferredType()) || Long.TYPE.equals(method.getReturnInferredType())) {
+            return rowCount.map(Long::valueOf).defaultIfEmpty(0L);
+        }
+        if (Boolean.class.equals(method.getReturnInferredType()) || Boolean.TYPE.equals(method.getReturnInferredType())) {
+            return rowCount.map(value -> value > 0).defaultIfEmpty(false);
+        }
+        throw new BindingException("Mapper method '" + command.getName() + "' has an unsupported return type: " + method.getReturnType());
     }
 
-    private Flux<Object> executeWithVoid(ReactiveSqlSession sqlSession, Object[] args) {
+    private Mono<Void> executeWithVoid(ReactiveSqlSession sqlSession, Object[] args) {
         MappedStatement ms = sqlSession.getConfiguration().getMappedStatement(command.getName());
         if (void.class.equals(ms.getResultMaps().get(0).getType())) {
             throw new BindingException("method " + command.getName()
@@ -163,9 +178,9 @@ public class MapperMethod {
         Object param = method.convertArgsToSqlCommandParam(args);
         if (method.hasRowBounds()) {
             RowBounds rowBounds = method.extractRowBounds(args);
-            return sqlSession.selectList(command.getName(), param, rowBounds);
+            return sqlSession.selectList(command.getName(), param, rowBounds).then();
         }
-        return sqlSession.selectList(command.getName(), param);
+        return sqlSession.selectList(command.getName(), param).then();
     }
 
     private <E> Flux<E> executeForMany(ReactiveSqlSession sqlSession, Object[] args) {
@@ -196,14 +211,14 @@ public class MapperMethod {
             final String methodName = method.getName();
             final Class<?> declaringClass = method.getDeclaringClass();
             MappedStatement ms = resolveMappedStatement(mapperInterface, methodName, declaringClass,
-                    configuration);
+                    configuration
+            );
             if (ms == null) {
                 if (method.getAnnotation(Flush.class) != null) {
                     throw new UnsupportedOperationException("Unsupported execution command : " + FLUSH);
-                } else {
-                    throw new BindingException("Invalid bound statement (not found): "
-                            + mapperInterface.getName() + "." + methodName);
                 }
+                throw new BindingException("Invalid bound statement (not found): "
+                        + mapperInterface.getName() + "." + methodName);
             } else {
                 name = ms.getId();
                 type = ms.getSqlCommandType();
@@ -236,13 +251,15 @@ public class MapperMethod {
             String statementId = mapperInterface.getName() + "." + methodName;
             if (configuration.hasStatement(statementId)) {
                 return configuration.getMappedStatement(statementId);
-            } else if (mapperInterface.equals(declaringClass)) {
+            }
+            if (mapperInterface.equals(declaringClass)) {
                 return null;
             }
             for (Class<?> superInterface : mapperInterface.getInterfaces()) {
                 if (declaringClass.isAssignableFrom(superInterface)) {
                     MappedStatement ms = resolveMappedStatement(superInterface, methodName,
-                            declaringClass, configuration);
+                            declaringClass, configuration
+                    );
                     if (ms != null) {
                         return ms;
                     }
@@ -296,10 +313,12 @@ public class MapperMethod {
         private void checkReactorType() {
             if (Mono.class.equals(this.returnType)
                     && Collection.class.isAssignableFrom(this.returnInferredType)) {
-                throw new UnsupportedOperationException("Return type assignable from Mono<Collection<T>> should be changed to Flux<T>");
+                throw new UnsupportedOperationException(
+                        "Return type assignable from Mono<Collection<T>> should be changed to Flux<T>");
             }
             if (void.class.equals(this.returnType)) {
-                throw new UnsupportedOperationException("Return type is void should be changed to Mono<Void> or Flux<Void>");
+                throw new UnsupportedOperationException(
+                        "Return type is void should be changed to Mono<Void> or Flux<Void>");
             }
             if (!Mono.class.equals(this.returnType) && !Flux.class.equals(this.returnType)) {
                 throw new UnsupportedOperationException("Return type should by either Mono or Flux");
@@ -326,7 +345,7 @@ public class MapperMethod {
         }
 
         /**
-         * Extract row bounds row bounds.
+         * Extract row bounds.
          *
          * @param args the args
          * @return the row bounds
@@ -350,8 +369,8 @@ public class MapperMethod {
          * @param args the args
          * @return the result handler
          */
-        public ResultHandler extractResultHandler(Object[] args) {
-            return hasResultHandler() ? (ResultHandler) args[resultHandlerIndex] : null;
+        public ResultHandler<?> extractResultHandler(Object[] args) {
+            return hasResultHandler() ? (ResultHandler<?>) args[resultHandlerIndex] : null;
         }
 
         /**

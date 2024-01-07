@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.transaction.insert.InsertMapper">
+
+  <insert id="insertOneDept" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.entity.Dept">
+    INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})
+  </insert>
+
+  <insert id="insertOneDeptWithGeneratedKey" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.entity.Dept" useGeneratedKeys="true" keyColumn="dept_no" keyProperty="deptNo" >
+    INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})
+  </insert>
+
+  <insert id="insertMultipleDept" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.entity.Dept">
+    INSERT INTO dept (dept_name, location, create_time) VALUES
+    <foreach collection="list" item="item" separator=",">
+      (#{item.deptName},#{item.location},#{item.createTime})
+    </foreach>
+  </insert>
+
+  <insert id="insertOneDeptWithGeneratedKeyUsingSelectKeyMysql" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.entity.Dept" useGeneratedKeys="true">
+    <selectKey resultType="long" order="AFTER" keyProperty="deptNo">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})
+  </insert>
+
+  <insert id="insertOneDeptWithGeneratedKeyUsingSelectKeyPostgresql" useGeneratedKeys="true">
+    <selectKey resultType="long" order="AFTER" keyProperty="deptNo">
+      SELECT currval('dept_dept_no_seq')
+    </selectKey>
+    INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})
+  </insert>
+
+  <parameterMap id="SubjectContent" type="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.entity.SubjectContent">
+    <parameter property="id" jdbcType="INTEGER" />
+    <parameter property="blobContent" jdbcType="BLOB" typeHandler="pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.support.ForceToUseR2dbcTypeHandlerAdapter"/>
+    <parameter property="clobContent" jdbcType="CLOB" typeHandler="pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.support.ForceToUseR2dbcTypeHandlerAdapter"/>
+  </parameterMap>
+
+  <insert id="insertWithBlobAndClod" parameterMap="SubjectContent">
+    INSERT INTO subject_content VALUES (#{id},#{blobContent},#{clobContent})
+  </insert>
+
+
+</mapper>

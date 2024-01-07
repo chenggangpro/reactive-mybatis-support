@@ -1,3 +1,18 @@
+/*
+ *    Copyright 2009-2024 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties;
 
 import io.r2dbc.pool.SimplePoolMetricsRecorder;
@@ -5,7 +20,6 @@ import io.r2dbc.spi.ValidationDepth;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.springframework.util.ClassUtils;
 import reactor.pool.PoolMetricsRecorder;
 import reactor.util.annotation.Nullable;
 
@@ -38,6 +52,11 @@ public class R2dbcMybatisConnectionFactoryProperties {
      * Name of the connection factory
      */
     private String name;
+
+    /**
+     * Default connection factory when using routing datasource
+     */
+    private boolean asDefault;
 
     /**
      * Whether to generate a random connection factory name.
@@ -106,11 +125,6 @@ public class R2dbcMybatisConnectionFactoryProperties {
             encodedPassword = password;
         }
         String credential = encodedUsername + (password == null || password.isEmpty() ? "" : ":" + encodedPassword);
-        //only replace 'r2dbc:mysql:' with 'r2dbc:mariadb' when using 'MariadbConnectionFactory'
-        boolean isMariadbConnectionfactoryPresent = ClassUtils.isPresent("org.mariadb.r2dbc.MariadbConnectionFactory", this.getClass().getClassLoader());
-        if (isMariadbConnectionfactoryPresent && r2dbcUrl.startsWith("r2dbc:mysql:")) {
-            r2dbcUrl = r2dbcUrl.replace("r2dbc:mysql:", "r2dbc:mariadb:");
-        }
         r2dbcUrl = r2dbcUrl.replace("//", "//" + credential + "@");
         return r2dbcUrl;
     }

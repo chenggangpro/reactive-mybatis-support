@@ -1,4 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+       Copyright 2009-2023 the original author or authors.
+
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+
+          https://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing, software
+       distributed under the License is distributed on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+       See the License for the specific language governing permissions and
+       limitations under the License.
+
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -45,10 +62,12 @@
         <url>https://github.com/chenggangpro/reactive-mybatis-support</url>
     </scm>
 
+    <inceptionYear>2009</inceptionYear>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <java.version>17</java.version>
+        <java.version>11</java.version>
         <reactor-bom.version>2022.0.12</reactor-bom.version>
         <r2dbc-bom.version>Borca-SR2</r2dbc-bom.version>
         <mybatis.version>3.5.13</mybatis.version>
@@ -57,7 +76,7 @@
         <mybatis-velocity.version>2.1.1</mybatis-velocity.version>
         <mybatis-thymeleaf.version>1.0.4</mybatis-thymeleaf.version>
         <mybatis-generator-core.version>1.4.2</mybatis-generator-core.version>
-        <mybatis-dynamic-sql.version>1.4.1</mybatis-dynamic-sql.version>
+        <mybatis-dynamic-sql.version>1.5.0</mybatis-dynamic-sql.version>
         <lombok.version>1.18.26</lombok.version>
         <spring-boot-starter-parent.version>3.0.11</spring-boot-starter-parent.version>
         <blockhound.version>1.0.8.RELEASE</blockhound.version>
@@ -65,8 +84,14 @@
         <testcontainers.version>1.18.3</testcontainers.version>
         <assertj.version>3.24.2</assertj.version>
         <byte-buddy.version>1.14.9</byte-buddy.version>
-        <caffeine.version>3.1.8</caffeine.version>
-        <mysql-connector-java.version>8.0.33</mysql-connector-java.version>
+        <caffeine.version>2.9.3</caffeine.version>
+        <license-maven-plugin.version>4.3</license-maven-plugin.version>
+        <r2dbc-mysql.version>0.9.5</r2dbc-mysql.version>
+        <slf4j.version>1.7.36</slf4j.version>
+        <postgresql.version>42.6.0</postgresql.version>
+        <mysql-connector-j.version>8.1.0</mysql-connector-j.version>
+        <mariadb-java-client.version>2.1.2</mariadb-java-client.version>
+        <mssql-jdbc.version>12.5.0.jre8-preview</mssql-jdbc.version>
     </properties>
 
     <dependencyManagement>
@@ -166,6 +191,11 @@
                 <artifactId>caffeine</artifactId>
                 <version>${caffeine.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -219,10 +249,39 @@
         <finalName>${project.artifactId}</finalName>
         <plugins>
             <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>${license-maven-plugin.version}</version>
+                <configuration>
+                    <licenseSets>
+                        <licenseSet>
+                            <header>${user.dir}/LICENSE_HEADER</header>
+                            <excludes>
+                                <exclude>**/README</exclude>
+                                <exclude>src/test/resources/**</exclude>
+                                <exclude>src/main/resources/**</exclude>
+                            </excludes>
+                        </licenseSet>
+                    </licenseSets>
+                    <mapping>
+                        <!-- Default mapping located at https://github.com/mathieucarbou/license-maven-plugin/blob/master/license-maven-plugin/src/main/java/com/mycila/maven/plugin/license/document/DocumentType.java -->
+                        <xml.vm>XML_STYLE</xml.vm>
+                    </mapping>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.mycila</groupId>
+                        <artifactId>license-maven-plugin-git</artifactId>
+                        <version>${license-maven-plugin.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.10.1</version>
                 <configuration>
+                    <compilerArgument>-parameters</compilerArgument>
                     <verbose>true</verbose>
                     <fork>true</fork>
                     <source>${java.version}</source>

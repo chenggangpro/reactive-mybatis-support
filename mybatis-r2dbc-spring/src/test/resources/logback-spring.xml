@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>  
 <configuration scan="true" scanPeriod="60 seconds" debug="false">
-    <springProperty scope="context" name="log_dir" source="logging.file.path" />
+
     <property scope="context" name="app_profile" value="default"/>
-    <property scope="context" name="app_name" value="test-application"/>
+    <property scope="context" name="app_name" value="mybatis-r2dbc-spring"/>
     <property name="maxFileSize" value="300MB"/>
     <property name="maxHistory" value="30"/>
-    <!-- 彩色日志格式 -->
+
     <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } [%t] [%-40.40logger{39}:%line] %m%n"/>
     <property name="CONSOLE_LOG_PATTERN" value="${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr([%t]){faint} %clr([%-40.40logger{39}:%line]){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}" />
-    <!-- 彩色日志 -->
-    <!-- 彩色日志依赖的渲染类 -->
+
     <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
     <conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" />
     <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter" />
@@ -19,33 +18,15 @@
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
         </encoder>  
     </appender>
-    <!-- 按照每天生成日志文件 -->
-    <appender name="Roll" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <Append>true</Append>
-        <File>${log_dir}/${app_name}.log</File>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${log_dir}/${app_name}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxFileSize>${maxFileSize}</maxFileSize>
-            <maxHistory>${maxHistory}</maxHistory>
-        </rollingPolicy>
-        <encoder>
-            <pattern>${LOG_PATTERN}</pattern>
-            <charset>UTF-8</charset>
-        </encoder>
-    </appender>
 
-    <appender name ="ASYNC" class= "ch.qos.logback.classic.AsyncAppender">
-        <!-- 不丢失日志.默认的,如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志 -->
-        <discardingThreshold>0</discardingThreshold>
-        <!-- 更改默认的队列的深度,该值会影响性能.默认值为256 -->
-        <queueSize>2048</queueSize>
-        <!-- 添加附加的appender,最多只能添加一个 -->
-        <appender-ref ref ="Roll"/>
-    </appender>
+<!--    <logger name="io.r2dbc" level="DEBUG" />-->
+    <logger name="com.mybatis" level="DEBUG" />
+    <logger name="pro.chenggang" level="DEBUG" />
+    <logger name="org.springframework.r2dbc" level="DEBUG" />
+    <logger name="org.testcontainers" level="INFO" />
+    <logger name="org.testcontainers.utility.RyukResourceReaper" level="ERROR" />
 
-    <!-- 日志输出级别 -->
     <root level="INFO">
         <appender-ref ref="STDOUT" />
-        <appender-ref ref="ASYNC" />
     </root>
 </configuration> 
