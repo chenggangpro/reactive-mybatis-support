@@ -92,7 +92,7 @@ public class MybatisR2dbcBaseTests {
         databaseInitializationContainer.put(MariaDBContainer.class, new MariadbTestContainerInitialization());
         databaseInitializationContainer.put(PostgreSQLContainer.class, new PostgresqlTestContainerInitialization());
         databaseInitializationContainer.put(MSSQLServerContainer.class, new SqlServerTestContainerInitialization());
-        // Oracle R2DBC can only interoperate with libraries that support the 1.0.0.RELEASE version of the R2DBC SPI.
+        // TODO oracle test didn't passed
 //        databaseInitializationContainer.put(OracleContainer.class, new OracleTestContainerInitialization());
     }
 
