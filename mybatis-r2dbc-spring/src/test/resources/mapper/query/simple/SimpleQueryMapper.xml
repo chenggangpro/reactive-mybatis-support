@@ -7,11 +7,14 @@
   </select>
 
   <select id="selectOneDept" resultType="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.entity.Dept">
-    SELECT * FROM dept ORDER BY dept_no LIMIT 1
-  </select>
-
-  <select id="selectOneDeptMssql" resultType="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.entity.Dept">
-    SELECT * FROM dept ORDER BY dept_no OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+    <choose>
+      <when test="_databaseId == 'mssql' ">
+        SELECT * FROM dept ORDER BY dept_no OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+      </when>
+      <otherwise>
+        SELECT * FROM dept ORDER BY dept_no LIMIT 1
+      </otherwise>
+    </choose>
   </select>
 
   <select id="selectByDeptNo" resultType="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.entity.Dept">

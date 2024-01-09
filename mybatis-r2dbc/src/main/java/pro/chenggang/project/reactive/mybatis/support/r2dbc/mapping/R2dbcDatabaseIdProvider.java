@@ -13,21 +13,25 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.service;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.mapping;
 
-import reactor.core.publisher.Mono;
+import io.r2dbc.spi.ConnectionFactory;
+
+import java.util.Properties;
 
 /**
+ * Should return an id to identify the type of this database. That id can be used later on to build different queries
+ * for each database type This mechanism enables supporting multiple vendors or versions
+ *
+ * @author Eduardo Macarron
  * @author Gang Cheng
- * @version 1.0.0
- * @since 1.0.0
+ * @see org.apache.ibatis.mapping.DatabaseIdProvider
  */
-public interface DynamicRoutingService {
+public interface R2dbcDatabaseIdProvider {
 
-    Mono<Void> runWithDynamicRoutingWithoutTransaction();
+    default void setProperties(Properties p) {
+        // NOP
+    }
 
-    Mono<Void> runWithDynamicRoutingWithTransactionCommit();
-
-    Mono<Void> runWithDynamicRoutingWithTransactionRollback();
-
+    String getDatabaseId(ConnectionFactory connectionFactory);
 }

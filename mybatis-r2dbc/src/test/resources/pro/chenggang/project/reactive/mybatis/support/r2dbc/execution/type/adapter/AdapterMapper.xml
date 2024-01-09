@@ -17,8 +17,8 @@
 
     <resultMap id="SubjectContent" type="pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectContent" >
         <id column="id" property="id" jdbcType="INTEGER" />
-        <result column="blob_content" property="blobContent" jdbcType="BLOB" typeHandler="pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.support.ForceToUseR2dbcTypeHandlerAdapter"/>
-        <result column="clob_content" property="clobContent" jdbcType="CLOB" typeHandler="pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.support.ForceToUseR2dbcTypeHandlerAdapter"/>
+        <result column="blob_content" property="blobContent" />
+        <result column="clob_content" property="clobContent" />
     </resultMap>
     <select id="selectAll" resultMap="SubjectContent">
         SELECT * FROM subject_content ORDER BY id

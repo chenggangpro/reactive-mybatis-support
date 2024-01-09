@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -57,6 +57,7 @@ public class MysqlTestContainerInitialization implements DatabaseInitialization 
                 .withUsername(databaseConfig.getUsername())
                 .withPassword(databaseConfig.getPassword())
                 .withUrlParam("useSSL", "false")
+                .withCommand("--default-authentication-plugin=mysql_native_password")
                 .withInitScript("sql-script/init_mysql.sql");
         mysqlTestContainer = jdbcDatabaseContainer;
         mysqlTestContainer.start();

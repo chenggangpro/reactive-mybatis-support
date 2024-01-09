@@ -10,25 +10,28 @@
     INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})
   </insert>
 
+  <insert id="insertOneDeptWithGeneratedKeyUsingSelectKey" parameterType="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept" useGeneratedKeys="true">
+    <selectKey resultType="long" order="AFTER" keyProperty="deptNo">
+        <choose>
+          <when test="_databaseId == 'mysql' or _databaseId == 'mariadb'">
+            SELECT LAST_INSERT_ID()
+          </when>
+          <when test="_databaseId == 'postgresql'">
+            SELECT currval('dept_dept_no_seq')
+          </when>
+          <otherwise>
+            NOT SUPPORTED
+          </otherwise>
+        </choose>
+    </selectKey>
+    INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})
+  </insert>
+
   <insert id="insertMultipleDept" parameterType="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
     INSERT INTO dept (dept_name, location, create_time) VALUES
     <foreach collection="list" item="item" separator=",">
       (#{item.deptName},#{item.location},#{item.createTime})
     </foreach>
-  </insert>
-
-  <insert id="insertOneDeptWithGeneratedKeyUsingSelectKeyMysql" parameterType="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept" useGeneratedKeys="true">
-    <selectKey resultType="long" order="AFTER" keyProperty="deptNo">
-      SELECT LAST_INSERT_ID()
-    </selectKey>
-    INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})
-  </insert>
-
-  <insert id="insertOneDeptWithGeneratedKeyUsingSelectKeyPostgresql" useGeneratedKeys="true">
-    <selectKey resultType="long" order="AFTER" keyProperty="deptNo">
-      SELECT currval('dept_dept_no_seq')
-    </selectKey>
-    INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})
   </insert>
 
   <parameterMap id="SubjectContent" type="pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectContent">

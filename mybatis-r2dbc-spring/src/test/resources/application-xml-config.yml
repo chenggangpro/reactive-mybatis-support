@@ -2,11 +2,6 @@ server:
   port: 0
   netty:
     connection-timeout: PT120S
-r2dbc:
-  mybatis:
-    mapper-locations: classpath:mapper/**/*.xml
-    configuration:
-      map-underscore-to-camel-case: true
 spring:
   r2dbc:
     mybatis:

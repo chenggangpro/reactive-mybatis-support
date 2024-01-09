@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,17 +15,18 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.builder;
 
+import io.r2dbc.spi.ConnectionFactories;
+import io.r2dbc.spi.ConnectionFactory;
+import io.r2dbc.spi.ConnectionFactoryOptions;
+import io.r2dbc.spi.Option;
 import org.apache.ibatis.builder.BaseBuilder;
 import org.apache.ibatis.builder.BuilderException;
 import org.apache.ibatis.builder.xml.XMLMapperEntityResolver;
-import org.apache.ibatis.datasource.DataSourceFactory;
 import org.apache.ibatis.executor.ErrorContext;
 import org.apache.ibatis.executor.loader.ProxyFactory;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.io.VFS;
 import org.apache.ibatis.logging.Log;
-import org.apache.ibatis.mapping.DatabaseIdProvider;
-import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.parsing.XNode;
 import org.apache.ibatis.parsing.XPathParser;
 import org.apache.ibatis.plugin.Interceptor;
@@ -39,13 +40,14 @@ import org.apache.ibatis.session.AutoMappingUnknownColumnBehavior;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.LocalCacheScope;
-import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.type.JdbcType;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.mapping.R2dbcDatabaseIdProvider;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.mapping.R2dbcEnvironment;
 
-import javax.sql.DataSource;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -61,6 +63,7 @@ public class R2dbcXMLConfigBuilder extends BaseBuilder {
     private final ReflectorFactory localReflectorFactory = new DefaultReflectorFactory();
     private boolean parsed;
     private String environment;
+    private final R2dbcMybatisConfiguration r2dbcMybatisConfiguration;
 
     /**
      * Instantiates a new R2dbc xml config builder.
@@ -124,6 +127,7 @@ public class R2dbcXMLConfigBuilder extends BaseBuilder {
 
     private R2dbcXMLConfigBuilder(XPathParser parser, String environment, Properties props) {
         super(new R2dbcMybatisConfiguration());
+        this.r2dbcMybatisConfiguration = (R2dbcMybatisConfiguration) this.configuration;
         ErrorContext.instance().resource("SQL Mapper Configuration");
         this.configuration.setVariables(props);
         this.parsed = false;
@@ -231,7 +235,8 @@ public class R2dbcXMLConfigBuilder extends BaseBuilder {
             for (XNode child : parent.getChildren()) {
                 String interceptor = child.getStringAttribute("interceptor");
                 Properties properties = child.getChildrenAsProperties();
-                Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).getDeclaredConstructor().newInstance();
+                Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).getDeclaredConstructor()
+                        .newInstance();
                 interceptorInstance.setProperties(properties);
                 configuration.addInterceptor(interceptorInstance);
             }
@@ -251,7 +256,8 @@ public class R2dbcXMLConfigBuilder extends BaseBuilder {
     private void objectWrapperFactoryElement(XNode context) throws Exception {
         if (context != null) {
             String type = context.getStringAttribute("type");
-            ObjectWrapperFactory factory = (ObjectWrapperFactory) resolveClass(type).getDeclaredConstructor().newInstance();
+            ObjectWrapperFactory factory = (ObjectWrapperFactory) resolveClass(type).getDeclaredConstructor()
+                    .newInstance();
             configuration.setObjectWrapperFactory(factory);
         }
     }
@@ -270,7 +276,8 @@ public class R2dbcXMLConfigBuilder extends BaseBuilder {
             String resource = context.getStringAttribute("resource");
             String url = context.getStringAttribute("url");
             if (resource != null && url != null) {
-                throw new BuilderException("The properties element cannot specify both a URL and a resource based property file reference.  Please specify one or the other.");
+                throw new BuilderException(
+                        "The properties element cannot specify both a URL and a resource based property file reference.  Please specify one or the other.");
             }
             if (resource != null) {
                 defaults.putAll(Resources.getResourceAsProperties(resource));
@@ -287,13 +294,20 @@ public class R2dbcXMLConfigBuilder extends BaseBuilder {
     }
 
     private void settingsElement(Properties props) {
-        configuration.setAutoMappingBehavior(AutoMappingBehavior.valueOf(props.getProperty("autoMappingBehavior", "PARTIAL")));
-        configuration.setAutoMappingUnknownColumnBehavior(AutoMappingUnknownColumnBehavior.valueOf(props.getProperty("autoMappingUnknownColumnBehavior", "NONE")));
+        configuration.setAutoMappingBehavior(AutoMappingBehavior.valueOf(props.getProperty("autoMappingBehavior",
+                "PARTIAL"
+        )));
+        configuration.setAutoMappingUnknownColumnBehavior(AutoMappingUnknownColumnBehavior.valueOf(props.getProperty(
+                "autoMappingUnknownColumnBehavior",
+                "NONE"
+        )));
         configuration.setCacheEnabled(booleanValueOf(props.getProperty("cacheEnabled"), true));
         configuration.setProxyFactory((ProxyFactory) createInstance(props.getProperty("proxyFactory")));
         configuration.setLazyLoadingEnabled(booleanValueOf(props.getProperty("lazyLoadingEnabled"), false));
         configuration.setAggressiveLazyLoading(booleanValueOf(props.getProperty("aggressiveLazyLoading"), false));
-        configuration.setMultipleResultSetsEnabled(booleanValueOf(props.getProperty("multipleResultSetsEnabled"), true));
+        configuration.setMultipleResultSetsEnabled(booleanValueOf(props.getProperty("multipleResultSetsEnabled"),
+                true
+        ));
         configuration.setUseColumnLabel(booleanValueOf(props.getProperty("useColumnLabel"), true));
         configuration.setUseGeneratedKeys(booleanValueOf(props.getProperty("useGeneratedKeys"), false));
         configuration.setDefaultExecutorType(ExecutorType.valueOf(props.getProperty("defaultExecutorType", "SIMPLE")));
@@ -304,17 +318,22 @@ public class R2dbcXMLConfigBuilder extends BaseBuilder {
         configuration.setSafeRowBoundsEnabled(booleanValueOf(props.getProperty("safeRowBoundsEnabled"), false));
         configuration.setLocalCacheScope(LocalCacheScope.valueOf(props.getProperty("localCacheScope", "SESSION")));
         configuration.setJdbcTypeForNull(JdbcType.valueOf(props.getProperty("jdbcTypeForNull", "OTHER")));
-        configuration.setLazyLoadTriggerMethods(stringSetValueOf(props.getProperty("lazyLoadTriggerMethods"), "equals,clone,hashCode,toString"));
+        configuration.setLazyLoadTriggerMethods(stringSetValueOf(props.getProperty("lazyLoadTriggerMethods"),
+                "equals,clone,hashCode,toString"
+        ));
         configuration.setSafeResultHandlerEnabled(booleanValueOf(props.getProperty("safeResultHandlerEnabled"), true));
         configuration.setDefaultScriptingLanguage(resolveClass(props.getProperty("defaultScriptingLanguage")));
         configuration.setDefaultEnumTypeHandler(resolveClass(props.getProperty("defaultEnumTypeHandler")));
         configuration.setCallSettersOnNulls(booleanValueOf(props.getProperty("callSettersOnNulls"), false));
         configuration.setUseActualParamName(booleanValueOf(props.getProperty("useActualParamName"), true));
-        configuration.setReturnInstanceForEmptyRow(booleanValueOf(props.getProperty("returnInstanceForEmptyRow"), false));
+        configuration.setReturnInstanceForEmptyRow(booleanValueOf(props.getProperty("returnInstanceForEmptyRow"),
+                false
+        ));
         configuration.setLogPrefix(props.getProperty("logPrefix"));
         configuration.setConfigurationFactory(resolveClass(props.getProperty("configurationFactory")));
         configuration.setShrinkWhitespacesInSql(booleanValueOf(props.getProperty("shrinkWhitespacesInSql"), false));
-        configuration.setArgNameBasedConstructorAutoMapping(booleanValueOf(props.getProperty("argNameBasedConstructorAutoMapping"), false));
+        configuration.setArgNameBasedConstructorAutoMapping(booleanValueOf(props.getProperty(
+                "argNameBasedConstructorAutoMapping"), false));
         configuration.setDefaultSqlProviderType(resolveClass(props.getProperty("defaultSqlProviderType")));
         configuration.setNullableOnForEach(booleanValueOf(props.getProperty("nullableOnForEach"), false));
     }
@@ -327,13 +346,17 @@ public class R2dbcXMLConfigBuilder extends BaseBuilder {
             for (XNode child : context.getChildren()) {
                 String id = child.getStringAttribute("id");
                 if (isSpecifiedEnvironment(id)) {
-                    TransactionFactory txFactory = transactionManagerElement(child.evalNode("transactionManager"));
-                    DataSourceFactory dsFactory = dataSourceElement(child.evalNode("dataSource"));
-                    DataSource dataSource = dsFactory.getDataSource();
-                    Environment.Builder environmentBuilder = new Environment.Builder(id)
-                            .transactionFactory(txFactory)
-                            .dataSource(dataSource);
-                    configuration.setEnvironment(environmentBuilder.build());
+                    XNode dataSourceNode = child.evalNode("dataSource");
+                    ConnectionFactory connectionFactory = connectionFactoryElement(dataSourceNode);
+                    boolean defaultTransactionProxy = Boolean.parseBoolean(dataSourceNode.getChildrenAsProperties()
+                            .getProperty("@defaultTransactionProxy",
+                                    Boolean.TRUE.toString()
+                            ));
+                    R2dbcEnvironment r2dbcEnvironment = new R2dbcEnvironment.Builder(id)
+                            .connectionFactory(connectionFactory)
+                            .withDefaultTransactionProxy(defaultTransactionProxy)
+                            .build();
+                    this.r2dbcMybatisConfiguration.setR2dbcEnvironment(r2dbcEnvironment);
                     break;
                 }
             }
@@ -341,44 +364,53 @@ public class R2dbcXMLConfigBuilder extends BaseBuilder {
     }
 
     private void databaseIdProviderElement(XNode context) throws Exception {
-        DatabaseIdProvider databaseIdProvider = null;
+        R2dbcDatabaseIdProvider databaseIdProvider = null;
         if (context != null) {
             String type = context.getStringAttribute("type");
             // awful patch to keep backward compatibility
-            if ("VENDOR".equals(type)) {
-                type = "DB_VENDOR";
+            if ("VENDOR".equals(type) || "DB_VENDOR".equals(type)) {
+                type = "R2DBC_VENDOR";
             }
             Properties properties = context.getChildrenAsProperties();
-            databaseIdProvider = (DatabaseIdProvider) resolveClass(type).getDeclaredConstructor().newInstance();
+            Object r2dbcDatabaseIdProvider = resolveClass(type).getDeclaredConstructor().newInstance();
+            if (!(r2dbcDatabaseIdProvider instanceof R2dbcDatabaseIdProvider)) {
+                throw new IllegalArgumentException("DatabaseIdProvider should be an instance of R2dbcDatabaseIdProvider");
+            }
+            databaseIdProvider = (R2dbcDatabaseIdProvider) r2dbcDatabaseIdProvider;
             databaseIdProvider.setProperties(properties);
         }
-        Environment environment = configuration.getEnvironment();
-        if (environment != null && databaseIdProvider != null) {
-            String databaseId = databaseIdProvider.getDatabaseId(environment.getDataSource());
+        if (this.r2dbcMybatisConfiguration.getR2dbcEnvironment() != null && databaseIdProvider != null) {
+            String databaseId = databaseIdProvider.getDatabaseId(this.r2dbcMybatisConfiguration.getR2dbcEnvironment()
+                    .getConnectionFactory()
+            );
             configuration.setDatabaseId(databaseId);
         }
     }
 
-    private TransactionFactory transactionManagerElement(XNode context) throws Exception {
+    private ConnectionFactory connectionFactoryElement(XNode context) throws Exception {
         if (context != null) {
-            String type = context.getStringAttribute("type");
             Properties props = context.getChildrenAsProperties();
-            TransactionFactory factory = (TransactionFactory) resolveClass(type).getDeclaredConstructor().newInstance();
-            factory.setProperties(props);
-            return factory;
+            ConnectionFactoryOptions.Builder optionsBuilder = ConnectionFactoryOptions.builder();
+            ConnectionFactoryOptionsConfigurer connectionFactoryOptionsConfigurer = null;
+            for (Map.Entry<Object, Object> entry : props.entrySet()) {
+                if ("@configurer".equals(entry.getKey()) && entry.getValue() instanceof String) {
+                    connectionFactoryOptionsConfigurer = (ConnectionFactoryOptionsConfigurer) resolveClass((String) entry.getValue())
+                            .getDeclaredConstructor()
+                            .newInstance();
+                    continue;
+                }
+                if (entry.getKey() == null || entry.getKey().toString().startsWith("@")) {
+                    //ignore any other properties witch start with '@'
+                    continue;
+                }
+                optionsBuilder.option(Option.valueOf(String.valueOf(entry.getKey())), entry.getValue());
+            }
+            if (null != connectionFactoryOptionsConfigurer) {
+                connectionFactoryOptionsConfigurer.configure(optionsBuilder);
+            }
+            return ConnectionFactories.get(optionsBuilder.build());
         }
-        throw new BuilderException("Environment declaration requires a TransactionFactory.");
-    }
-
-    private DataSourceFactory dataSourceElement(XNode context) throws Exception {
-        if (context != null) {
-            String type = context.getStringAttribute("type");
-            Properties props = context.getChildrenAsProperties();
-            DataSourceFactory factory = (DataSourceFactory) resolveClass(type).getDeclaredConstructor().newInstance();
-            factory.setProperties(props);
-            return factory;
-        }
-        throw new BuilderException("Environment declaration requires a DataSourceFactory.");
+        throw new BuilderException("Environment declaration requires a ConnectionFactory.");
     }
 
     private void typeHandlerElement(XNode parent) {
@@ -421,20 +453,29 @@ public class R2dbcXMLConfigBuilder extends BaseBuilder {
                     if (resource != null && url == null && mapperClass == null) {
                         ErrorContext.instance().resource(resource);
                         try (InputStream inputStream = Resources.getResourceAsStream(resource)) {
-                            R2dbcXMLMapperBuilder mapperParser = new R2dbcXMLMapperBuilder(inputStream, configuration, resource, configuration.getSqlFragments());
+                            R2dbcXMLMapperBuilder mapperParser = new R2dbcXMLMapperBuilder(inputStream,
+                                    configuration,
+                                    resource,
+                                    configuration.getSqlFragments()
+                            );
                             mapperParser.parse();
                         }
                     } else if (resource == null && url != null && mapperClass == null) {
                         ErrorContext.instance().resource(url);
                         try (InputStream inputStream = Resources.getUrlAsStream(url)) {
-                            R2dbcXMLMapperBuilder mapperParser = new R2dbcXMLMapperBuilder(inputStream, configuration, url, configuration.getSqlFragments());
+                            R2dbcXMLMapperBuilder mapperParser = new R2dbcXMLMapperBuilder(inputStream,
+                                    configuration,
+                                    url,
+                                    configuration.getSqlFragments()
+                            );
                             mapperParser.parse();
                         }
                     } else if (resource == null && url == null && mapperClass != null) {
                         Class<?> mapperInterface = Resources.classForName(mapperClass);
                         configuration.addMapper(mapperInterface);
                     } else {
-                        throw new BuilderException("A mapper element may only specify a url, resource or class, but not more than one.");
+                        throw new BuilderException(
+                                "A mapper element may only specify a url, resource or class, but not more than one.");
                     }
                 }
             }

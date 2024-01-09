@@ -72,6 +72,8 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReac
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.converter.MybatisTypeHandlerConverter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.mapping.R2dbcDatabaseIdProvider;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.mapping.R2dbcEnvironment;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.annotation.R2dbcMapperScan;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.executor.SpringReactiveMybatisExecutor;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.mapper.R2dbcMapperFactoryBean;
@@ -183,15 +185,24 @@ public class R2dbcMybatisAutoConfiguration {
     }
 
     @Bean
-    public R2dbcMybatisConfiguration configuration(R2dbcMybatisProperties r2dbcMybatisProperties,
+    public R2dbcMybatisConfiguration configuration(ConnectionFactory connectionFactory,
+                                                   R2dbcMybatisProperties r2dbcMybatisProperties,
                                                    ObjectProvider<TypeHandler<?>> typeHandlerProvider,
                                                    ObjectProvider<R2dbcMybatisConfigurationCustomizer> configurationCustomizerProvider,
                                                    ObjectProvider<R2dbcTypeHandlerAdapter<?>> r2dbcTypeHandlerAdapterProvider,
                                                    ObjectProvider<MybatisTypeHandlerConverter> mybatisTypeHandlerConverterObjectProvider,
-                                                   ObjectProvider<LanguageDriver> languageDriversProvider) throws Exception {
-        R2dbcMybatisConfiguration r2dbcMybatisConfiguration = Optional
-                .ofNullable(r2dbcMybatisProperties.getConfiguration())
+                                                   ObjectProvider<LanguageDriver> languageDriversProvider,
+                                                   ObjectProvider<R2dbcDatabaseIdProvider> databaseIdProviderObjectProvider) throws Exception {
+        R2dbcMybatisConfiguration r2dbcMybatisConfiguration = Optional.ofNullable(r2dbcMybatisProperties.getConfiguration())
                 .orElse(new R2dbcMybatisConfiguration());
+        R2dbcEnvironment.Builder environmentBuilder = new R2dbcEnvironment.Builder(ReactiveSqlSessionFactory.class.getSimpleName())
+                .withDefaultTransactionProxy(false);
+        if (!TransactionAwareConnectionFactoryProxy.class.isAssignableFrom(connectionFactory.getClass())) {
+            environmentBuilder.connectionFactory(new TransactionAwareConnectionFactoryProxy(connectionFactory));
+        } else {
+            environmentBuilder.connectionFactory(connectionFactory);
+        }
+        r2dbcMybatisConfiguration.setR2dbcEnvironment(environmentBuilder.build());
         r2dbcMybatisConfiguration.setVfsImpl(SpringBootVFS.class);
         if (r2dbcMybatisProperties.getConfigurationProperties() != null) {
             r2dbcMybatisConfiguration.setVariables(r2dbcMybatisProperties.getConfigurationProperties());
@@ -265,6 +276,13 @@ public class R2dbcMybatisAutoConfiguration {
         }
         if (defaultLanguageDriver != null) {
             r2dbcMybatisConfiguration.setDefaultScriptingLanguage(defaultLanguageDriver);
+        }
+        // use R2dbcDatabaseIdProvider instead of the original databaseIdProvider
+        R2dbcDatabaseIdProvider r2dbcDatabaseIdProvider = databaseIdProviderObjectProvider.getIfAvailable();
+        if (r2dbcMybatisConfiguration.getR2dbcEnvironment() != null && r2dbcDatabaseIdProvider != null) {// fix #64 set databaseId before parse mapper xmls
+            r2dbcMybatisConfiguration.setDatabaseId(r2dbcDatabaseIdProvider.getDatabaseId(r2dbcMybatisConfiguration.getR2dbcEnvironment()
+                    .getConnectionFactory())
+            );
         }
         //mapper scan
         Resource[] mapperLocations = r2dbcMybatisProperties.resolveMapperLocations();
@@ -341,18 +359,11 @@ public class R2dbcMybatisAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(ReactiveSqlSessionFactory.class)
-    public ReactiveSqlSessionFactory reactiveSqlSessionFactoryWithTransaction(R2dbcMybatisConfiguration configuration,
-                                                                              ConnectionFactory connectionFactory) {
-        if (!TransactionAwareConnectionFactoryProxy.class.isAssignableFrom(connectionFactory.getClass())) {
-            configuration.setConnectionFactory(new TransactionAwareConnectionFactoryProxy(connectionFactory));
-        } else {
-            configuration.setConnectionFactory(connectionFactory);
-        }
+    public ReactiveSqlSessionFactory reactiveSqlSessionFactoryWithTransaction(R2dbcMybatisConfiguration configuration) {
         SpringReactiveMybatisExecutor springReactiveMybatisExecutor = new SpringReactiveMybatisExecutor(configuration);
         return DefaultReactiveSqlSessionFactory.newBuilder()
                 .withR2dbcMybatisConfiguration(configuration)
                 .withReactiveMybatisExecutor(springReactiveMybatisExecutor)
-                .withDefaultConnectionFactoryProxy(false)
                 .build();
     }
 
