@@ -42,8 +42,6 @@ public interface SimpleQueryMapper {
 
     Mono<Dept> selectOneDept();
 
-    Mono<Dept> selectOneDeptMssql();
-
     Mono<Dept> selectByDeptNo(@Param("deptNo") Long deptNo);
 
     @Results(id = "selectByDeptNoWithAnnotationResult", value = {

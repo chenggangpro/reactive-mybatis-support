@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,10 +15,11 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate;
 
-import io.r2dbc.spi.ConnectionFactory;
-import org.apache.ibatis.mapping.Environment;
+import io.r2dbc.spi.Blob;
+import io.r2dbc.spi.Clob;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.Configuration;
+import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderDialect;
@@ -29,6 +30,9 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.R2d
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapterRegistry;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.converter.MybatisTypeHandlerConverter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.support.ForceToUseR2dbcTypeHandlerAdapter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.mapping.R2dbcEnvironment;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.mapping.R2dbcVendorDatabaseIdProvider;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -60,23 +64,25 @@ public class R2dbcMybatisConfiguration extends Configuration {
     protected Integer formattedDialectSqlCacheMaxSize = 10_000;
     protected Duration formattedDialectSqlCacheExpireDuration = Duration.ofHours(6);
 
-    private ConnectionFactory connectionFactory;
+    private R2dbcEnvironment r2dbcEnvironment;
 
     /**
      * Instantiates a new R2dbc mybatis configuration.
      */
     public R2dbcMybatisConfiguration() {
         this.loadNotSupportedDataTypes();
+        this.registerInternalTypeAlias();
+        this.registerForceToUseR2dbcTypeHandlerAdapter();
     }
 
     /**
      * Instantiates a new R2dbc mybatis configuration.
      *
-     * @param environment the environment
+     * @param r2dbcEnvironment the r2dbc environment
      */
-    public R2dbcMybatisConfiguration(Environment environment) {
-        super(environment);
-        this.loadNotSupportedDataTypes();
+    public R2dbcMybatisConfiguration(R2dbcEnvironment r2dbcEnvironment) {
+        this();
+        this.r2dbcEnvironment = r2dbcEnvironment;
     }
 
     /**
@@ -87,6 +93,21 @@ public class R2dbcMybatisConfiguration extends Configuration {
         this.notSupportedDataTypes.add(SQLXML.class);
         this.notSupportedDataTypes.add(Reader.class);
         this.notSupportedDataTypes.add(StringReader.class);
+    }
+
+    /**
+     * register internal type alias
+     */
+    private void registerInternalTypeAlias() {
+        typeAliasRegistry.registerAlias("R2DBC_VENDOR", R2dbcVendorDatabaseIdProvider.class);
+    }
+
+    /**
+     * register ForceToUseR2dbcTypeHandlerAdapter
+     */
+    private void registerForceToUseR2dbcTypeHandlerAdapter() {
+        typeHandlerRegistry.register(Blob.class, JdbcType.BLOB, ForceToUseR2dbcTypeHandlerAdapter.class);
+        typeHandlerRegistry.register(Clob.class, JdbcType.CLOB, ForceToUseR2dbcTypeHandlerAdapter.class);
     }
 
     /**
@@ -102,21 +123,21 @@ public class R2dbcMybatisConfiguration extends Configuration {
     }
 
     /**
-     * Gets connection factory.
+     * Gets r2dbc environment.
      *
-     * @return the connection factory
+     * @return the r2dbc environment
      */
-    public ConnectionFactory getConnectionFactory() {
-        return connectionFactory;
+    public R2dbcEnvironment getR2dbcEnvironment() {
+        return r2dbcEnvironment;
     }
 
     /**
-     * Sets connection factory.
+     * Sets r2dbc environment.
      *
-     * @param connectionFactory the connection factory
+     * @param r2dbcEnvironment the r2dbc environment
      */
-    public void setConnectionFactory(ConnectionFactory connectionFactory) {
-        this.connectionFactory = connectionFactory;
+    public void setR2dbcEnvironment(R2dbcEnvironment r2dbcEnvironment) {
+        this.r2dbcEnvironment = r2dbcEnvironment;
     }
 
     @Override
@@ -307,6 +328,9 @@ public class R2dbcMybatisConfiguration extends Configuration {
      * Initialize r2dbc configuration.
      */
     public void initialize() {
+        if (null == this.r2dbcEnvironment) {
+            throw new IllegalStateException("R2dbc environment can not be null, please check your configuration");
+        }
         if (initializedFlag.compareAndSet(false, true)) {
             this.convertMybatisTypeHandler(this.getR2dbcTypeHandlerAdapterRegistry().getMybatisTypeHandlerConverters());
         }

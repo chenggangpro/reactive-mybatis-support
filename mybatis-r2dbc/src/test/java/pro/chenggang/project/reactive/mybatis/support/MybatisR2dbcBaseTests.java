@@ -44,6 +44,9 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.builder.R2dbcXMLMapp
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReactiveSqlSessionOperator;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.mapping.R2dbcDatabaseIdProvider;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.mapping.R2dbcEnvironment;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.mapping.R2dbcVendorDatabaseIdProvider;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
@@ -59,6 +62,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
@@ -85,6 +89,7 @@ public class MybatisR2dbcBaseTests {
     protected static final Map<Class<?>, DatabaseInitialization> databaseInitializationContainer;
     protected static final List<String> commonXmlMapperLocations = new ArrayList<>();
     private static final AtomicBoolean validateTestcontainersFlag = new AtomicBoolean(false);
+    private static final Properties databaseIdAliasProperties = new Properties();
 
     static {
         databaseInitializationContainer = new LinkedHashMap<>();
@@ -101,6 +106,13 @@ public class MybatisR2dbcBaseTests {
         commonXmlMapperLocations.add("pro/chenggang/project/reactive/mybatis/support/common/EmpMapper.xml");
         commonXmlMapperLocations.add("pro/chenggang/project/reactive/mybatis/support/common/SubjectMapper.xml");
         commonXmlMapperLocations.add("pro/chenggang/project/reactive/mybatis/support/common/SubjectDataMapper.xml");
+    }
+
+    static {
+        databaseIdAliasProperties.setProperty("MySQL","mysql");
+        databaseIdAliasProperties.setProperty("MariaDB","mariadb");
+        databaseIdAliasProperties.setProperty("PostgreSQL","postgresql");
+        databaseIdAliasProperties.setProperty("Microsoft SQL Server","mssql");
     }
 
     protected static final String DB_NAME = "mybatis_r2dbc_test";
@@ -135,13 +147,17 @@ public class MybatisR2dbcBaseTests {
                 .password(PASSWORD)
                 .build();
         R2dbcProtocol r2dbcProtocol = databaseInitialization.startup(databaseConfig, dryRun);
-        this.connectionFactory = this.connectionFactory(r2dbcProtocol.getProtocolUrlWithCredential(),
-                r2dbcProtocol.getValidationQuery()
-        );
-        this.reactiveSqlSessionFactory = this.reactiveSqlSessionFactory(
-                r2dbcMybatisConfigurationProvider.apply(r2dbcProtocol),
-                this.connectionFactory
-        );
+        this.connectionFactory = this.connectionFactory(r2dbcProtocol.getProtocolUrlWithCredential());
+        R2dbcMybatisConfiguration r2dbcMybatisConfiguration = r2dbcMybatisConfigurationProvider.apply(r2dbcProtocol);
+        R2dbcDatabaseIdProvider r2dbcDatabaseIdProvider = new R2dbcVendorDatabaseIdProvider();
+        r2dbcDatabaseIdProvider.setProperties(databaseIdAliasProperties);
+        r2dbcMybatisConfiguration.setDatabaseId(r2dbcDatabaseIdProvider.getDatabaseId(connectionFactory));
+        R2dbcEnvironment r2dbcEnvironment = new R2dbcEnvironment.Builder(testContainerClass.getSimpleName())
+                .withDefaultTransactionProxy(true)
+                .connectionFactory(connectionFactory)
+                .build();
+        r2dbcMybatisConfiguration.setR2dbcEnvironment(r2dbcEnvironment);
+        this.reactiveSqlSessionFactory = this.reactiveSqlSessionFactory(r2dbcMybatisConfiguration);
         assertThat(this.connectionFactory, notNullValue());
         assertThat(this.reactiveSqlSessionFactory, notNullValue());
         log.info("Initialize ConnectionFactory ReactiveSqlSessionFactory success");
@@ -161,7 +177,7 @@ public class MybatisR2dbcBaseTests {
         databaseInitialization.destroy();
     }
 
-    protected ConnectionPool connectionFactory(String r2dbcProtocolUrl, String validationQuery) {
+    protected ConnectionPool connectionFactory(String r2dbcProtocolUrl) {
         ConnectionFactory connectionFactory = ConnectionFactories.get(r2dbcProtocolUrl);
         if (connectionFactory instanceof ConnectionPool) {
             return (ConnectionPool) connectionFactory;
@@ -177,14 +193,12 @@ public class MybatisR2dbcBaseTests {
                 .maxCreateConnectionTime(NO_TIMEOUT)
                 .maxLifeTime(NO_TIMEOUT)
                 .validationDepth(ValidationDepth.REMOTE)
-                .validationQuery(validationQuery);
+                .validationQuery("SELECT 1");
         return new ConnectionPool(builder.build());
     }
 
-    protected ReactiveSqlSessionFactory reactiveSqlSessionFactory(R2dbcMybatisConfiguration configuration,
-                                                                  ConnectionFactory connectionFactory) {
+    protected ReactiveSqlSessionFactory reactiveSqlSessionFactory(R2dbcMybatisConfiguration configuration) {
         return DefaultReactiveSqlSessionFactory.newBuilder()
-                .withConnectionFactory(connectionFactory)
                 .withR2dbcMybatisConfiguration(configuration)
                 .build();
     }

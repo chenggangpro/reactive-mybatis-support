@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * @author evans
+ * @author Gang Cheng
  * @version 1.0.0
  * @since 2.0.0
  */

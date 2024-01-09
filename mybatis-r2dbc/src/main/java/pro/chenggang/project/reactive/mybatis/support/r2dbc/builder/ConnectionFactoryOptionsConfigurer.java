@@ -13,21 +13,23 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.service;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.builder;
 
-import reactor.core.publisher.Mono;
+import io.r2dbc.spi.ConnectionFactoryOptions;
 
 /**
+ * The connection factory options configurer
+ *
  * @author Gang Cheng
  * @version 1.0.0
  * @since 1.0.0
  */
-public interface DynamicRoutingService {
+public interface ConnectionFactoryOptionsConfigurer {
 
-    Mono<Void> runWithDynamicRoutingWithoutTransaction();
-
-    Mono<Void> runWithDynamicRoutingWithTransactionCommit();
-
-    Mono<Void> runWithDynamicRoutingWithTransactionRollback();
-
+    /**
+     * Customize connection factory options by builder.
+     *
+     * @param optionsBuilder the options builder
+     */
+    void configure(ConnectionFactoryOptions.Builder optionsBuilder);
 }

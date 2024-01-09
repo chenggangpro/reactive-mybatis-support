@@ -19,11 +19,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.testcontainers.containers.MSSQLServerContainer;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.MybatisR2dbcApplication;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.query.simple.SimpleQueryMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.test.MybatisR2dbcApplicationTests;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -49,13 +47,7 @@ public class SimpleQueryMapperTests extends MybatisR2dbcApplicationTests {
 
     @Test
     void selectOne() {
-        Mono.justOrEmpty(currentContainerType)
-                .flatMap(type -> {
-                    if (MSSQLServerContainer.class.equals(type)) {
-                        return simpleQueryMapper.selectOneDeptMssql();
-                    }
-                    return simpleQueryMapper.selectOneDept();
-                })
+        simpleQueryMapper.selectOneDept()
                 .as(StepVerifier::create)
                 .assertNext(dept -> {
                     assertEquals(1L, dept.getDeptNo());

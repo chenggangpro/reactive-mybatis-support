@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.transacti
 import io.r2dbc.spi.Blob;
 import io.r2dbc.spi.Clob;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -36,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
- * @author evans
+ * @author Gang Cheng
  * @version 1.0.0
  * @since 1.0.0
  */
@@ -96,40 +97,16 @@ class InsertMapperTest extends MybatisR2dbcBaseTests {
     }
 
     @Test
-    void insertOneDeptWithGeneratedKeyUsingSelectKeyMysql() {
+    void insertOneDeptWithGeneratedKeyUsingSelectKey() {
         super.<Integer>newTestRunner()
-                .filterDatabases(
-                        databaseType -> MySQLContainer.class.equals(databaseType) || MariaDBContainer.class.equals(
-                                databaseType))
+                .filterDatabases(databaseType -> !MSSQLServerContainer.class.equals(databaseType))
                 .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(InsertMapper.class);
                 })
                 .runWithThenRollback((type, reactiveSqlSession) -> {
                     InsertMapper insertMapper = reactiveSqlSession.getMapper(InsertMapper.class);
                     this.resetDept();
-                    return insertMapper.insertOneDeptWithGeneratedKeyUsingSelectKeyMysql(dept);
-                })
-                .verifyWith(firstStep -> firstStep
-                        .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 1);
-                            assertEquals(dept.getDeptNo(), 5L);
-                        })
-                        .verifyComplete()
-                )
-                .run();
-    }
-
-    @Test
-    void insertOneDeptWithGeneratedKeyUsingSelectKeyPostgresql() {
-        super.<Integer>newTestRunner()
-                .filterDatabases(PostgreSQLContainer.class::equals)
-                .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
-                    r2dbcMybatisConfiguration.addMapper(InsertMapper.class);
-                })
-                .runWithThenRollback((type, reactiveSqlSession) -> {
-                    InsertMapper insertMapper = reactiveSqlSession.getMapper(InsertMapper.class);
-                    this.resetDept();
-                    return insertMapper.insertOneDeptWithGeneratedKeyUsingSelectKeyPostgresql(dept);
+                    return insertMapper.insertOneDeptWithGeneratedKeyUsingSelectKey(dept);
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {

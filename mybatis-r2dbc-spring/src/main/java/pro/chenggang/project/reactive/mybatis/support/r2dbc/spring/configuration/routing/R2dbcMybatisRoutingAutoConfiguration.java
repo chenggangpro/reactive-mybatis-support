@@ -26,7 +26,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.r2dbc.connection.R2dbcTransactionManager;
-import org.springframework.r2dbc.connection.TransactionAwareConnectionFactoryProxy;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
@@ -76,15 +75,11 @@ public class R2dbcMybatisRoutingAutoConfiguration {
 
     @Primary // configured as primary reactive sql session factory
     @Bean
-    public ReactiveSqlSessionFactory reactiveSqlSessionFactory(R2dbcMybatisConfiguration configuration,
-                                                               R2dbcMybatisDynamicRoutingConnectionFactory r2dbcMybatisDynamicRoutingConnectionFactory) {
-        configuration.setConnectionFactory(new TransactionAwareConnectionFactoryProxy(
-                r2dbcMybatisDynamicRoutingConnectionFactory));
+    public ReactiveSqlSessionFactory reactiveSqlSessionFactory(R2dbcMybatisConfiguration configuration) {
         SpringReactiveMybatisExecutor springReactiveMybatisExecutor = new SpringReactiveMybatisExecutor(configuration);
         return DefaultReactiveSqlSessionFactory.newBuilder()
                 .withR2dbcMybatisConfiguration(configuration)
                 .withReactiveMybatisExecutor(springReactiveMybatisExecutor)
-                .withDefaultConnectionFactoryProxy(false)
                 .build();
     }
 

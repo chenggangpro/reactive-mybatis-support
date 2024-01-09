@@ -13,21 +13,24 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.service;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.test.config;
 
-import reactor.core.publisher.Mono;
+import io.r2dbc.spi.ConnectionFactoryOptions;
+import io.r2dbc.spi.Option;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.builder.ConnectionFactoryOptionsConfigurer;
+
+import java.time.Duration;
 
 /**
  * @author Gang Cheng
  * @version 1.0.0
  * @since 1.0.0
  */
-public interface DynamicRoutingService {
+public class MysqlConnectionFactoryOptionsConfigurer implements ConnectionFactoryOptionsConfigurer {
 
-    Mono<Void> runWithDynamicRoutingWithoutTransaction();
-
-    Mono<Void> runWithDynamicRoutingWithTransactionCommit();
-
-    Mono<Void> runWithDynamicRoutingWithTransactionRollback();
-
+    @Override
+    public void configure(ConnectionFactoryOptions.Builder optionsBuilder) {
+        optionsBuilder.option(Option.valueOf("connectTimeout"), Duration.ofSeconds(10));
+        optionsBuilder.option(Option.valueOf("sslMode"), "DISABLED");
+    }
 }

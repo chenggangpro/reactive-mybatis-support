@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -20,15 +20,19 @@ import lombok.Setter;
 import lombok.ToString;
 import org.apache.ibatis.scripting.LanguageDriver;
 import org.apache.ibatis.type.TypeHandler;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.builder.R2dbcXMLConfigBuilder;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 
 import java.io.IOException;
 import java.util.Properties;
 import java.util.stream.Stream;
+
+import static org.springframework.util.Assert.state;
 
 /**
  * r2dbc mybatis properties
@@ -40,7 +44,7 @@ import java.util.stream.Stream;
 @Getter
 @Setter
 @ToString
-public class R2dbcMybatisProperties {
+public class R2dbcMybatisProperties implements InitializingBean {
 
     /**
      * The R2dbcMybatisProperties PREFIX.
@@ -48,6 +52,11 @@ public class R2dbcMybatisProperties {
     public static final String PREFIX = "r2dbc.mybatis";
 
     private static final ResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver();
+
+    /**
+     * Mybatis config file's location
+     */
+    private String configLocation;
 
     /**
      * Locations of MyBatis mapper files.
@@ -116,6 +125,24 @@ public class R2dbcMybatisProperties {
             return resourceResolver.getResources(location);
         } catch (IOException e) {
             return new Resource[0];
+        }
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        state((configuration == null && configLocation == null) || !(configuration != null && configLocation != null),
+                "Property 'configuration' and 'configLocation' can not specified with together"
+        );
+        if (this.configLocation != null) {
+            Resource[] configResources = this.getResources(this.configLocation);
+            if (configResources.length == 0) {
+                throw new IllegalStateException("Could not find mybatis config file from location : " + this.configLocation);
+            }
+            R2dbcXMLConfigBuilder r2dbcXMLConfigBuilder = new R2dbcXMLConfigBuilder(configResources[0].getInputStream(),
+                    null,
+                    this.configurationProperties
+            );
+            this.configuration = r2dbcXMLConfigBuilder.parse();
         }
     }
 }

@@ -58,6 +58,7 @@ public class MysqlTestContainerInitialization implements DatabaseInitialization 
                 .withUsername(databaseConfig.getUsername())
                 .withPassword(databaseConfig.getPassword())
                 .withUrlParam("useSSL", "false")
+                .withCommand("--default-authentication-plugin=mysql_native_password")
                 .withInitScript("sql-script/init_mysql.sql");
         mysqlTestContainer = jdbcDatabaseContainer;
         mysqlTestContainer.start();
