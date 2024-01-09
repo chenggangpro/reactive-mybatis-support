@@ -147,7 +147,7 @@ public class MybatisR2dbcBaseTests {
                 .password(PASSWORD)
                 .build();
         R2dbcProtocol r2dbcProtocol = databaseInitialization.startup(databaseConfig, dryRun);
-        this.connectionFactory = this.connectionFactory(r2dbcProtocol.getProtocolUrlWithCredential());
+        this.connectionFactory = this.connectionFactory(r2dbcProtocol);
         R2dbcMybatisConfiguration r2dbcMybatisConfiguration = r2dbcMybatisConfigurationProvider.apply(r2dbcProtocol);
         R2dbcDatabaseIdProvider r2dbcDatabaseIdProvider = new R2dbcVendorDatabaseIdProvider();
         r2dbcDatabaseIdProvider.setProperties(databaseIdAliasProperties);
@@ -177,8 +177,8 @@ public class MybatisR2dbcBaseTests {
         databaseInitialization.destroy();
     }
 
-    protected ConnectionPool connectionFactory(String r2dbcProtocolUrl) {
-        ConnectionFactory connectionFactory = ConnectionFactories.get(r2dbcProtocolUrl);
+    protected ConnectionPool connectionFactory(R2dbcProtocol r2dbcProtocol) {
+        ConnectionFactory connectionFactory = ConnectionFactories.get(r2dbcProtocol.getProtocolUrlWithCredential());
         if (connectionFactory instanceof ConnectionPool) {
             return (ConnectionPool) connectionFactory;
         }
@@ -193,7 +193,7 @@ public class MybatisR2dbcBaseTests {
                 .maxCreateConnectionTime(NO_TIMEOUT)
                 .maxLifeTime(NO_TIMEOUT)
                 .validationDepth(ValidationDepth.REMOTE)
-                .validationQuery("SELECT 1");
+                .validationQuery(r2dbcProtocol.getValidationQuery());
         return new ConnectionPool(builder.build());
     }
 
