@@ -56,7 +56,7 @@ class UpdateMapperTest extends MybatisR2dbcApplicationTests {
                 .as(super::withRollback)
                 .as(StepVerifier::create)
                 .consumeNextWith(effectRowCount -> {
-                    assertEquals(effectRowCount, 1);
+                    assertEquals(1, effectRowCount);
                 })
                 .verifyComplete();
     }
@@ -72,7 +72,7 @@ class UpdateMapperTest extends MybatisR2dbcApplicationTests {
                 .as(super::withRollback)
                 .as(StepVerifier::create)
                 .consumeNextWith(effectRowCount -> {
-                    assertEquals(effectRowCount, 1);
+                    assertEquals(1, effectRowCount);
                 })
                 .verifyComplete();
     }
@@ -88,7 +88,7 @@ class UpdateMapperTest extends MybatisR2dbcApplicationTests {
                 .as(super::withRollback)
                 .as(StepVerifier::create)
                 .consumeNextWith(effectRowCount -> {
-                    assertEquals(effectRowCount, 1);
+                    assertEquals(1, effectRowCount);
                 })
                 .verifyComplete();
     }
@@ -107,7 +107,7 @@ class UpdateMapperTest extends MybatisR2dbcApplicationTests {
                 .as(super::withRollback)
                 .as(StepVerifier::create)
                 .consumeNextWith(effectRowCount -> {
-                    assertEquals(effectRowCount, 1);
+                    assertEquals(1, effectRowCount);
                 })
                 .verifyComplete();
     }

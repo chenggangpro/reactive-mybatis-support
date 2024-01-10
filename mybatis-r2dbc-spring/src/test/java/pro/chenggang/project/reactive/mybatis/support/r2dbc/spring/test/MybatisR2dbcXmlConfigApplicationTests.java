@@ -42,6 +42,7 @@ public class MybatisR2dbcXmlConfigApplicationTests extends MybatisR2dbcBaseTests
         registry.add("spring.r2dbc.mybatis.r2dbc-url", r2dbcProtocol::getProtocolUrl);
         registry.add("spring.r2dbc.mybatis.password", databaseConfig::getPassword);
         registry.add("spring.r2dbc.mybatis.username", databaseConfig::getUsername);
+        registry.add("spring.r2dbc.mybatis.pool.validation-query", r2dbcProtocol::getValidationQuery);
         registry.add("r2dbc.mybatis.environment", () -> "mysql");
         registry.add("r2dbc.mybatis.config-location", () -> "classpath:MybatisR2dbcConfig.xml");
     }

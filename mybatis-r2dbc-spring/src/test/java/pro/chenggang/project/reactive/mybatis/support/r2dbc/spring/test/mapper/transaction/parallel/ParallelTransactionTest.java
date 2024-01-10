@@ -20,8 +20,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.TransactionDefinition;
-import org.testcontainers.containers.MariaDBContainer;
-import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.OracleContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.MybatisR2dbcApplication;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.query.simple.SimpleQueryMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.transaction.update.UpdateMapper;
@@ -57,10 +57,11 @@ class ParallelTransactionTest extends MybatisR2dbcApplicationTests {
 
     @Test
     void parallelMultipleTransaction() {
-        // this test doesn't work with r2dbc-mssql driver
-        // r2dbc-mssql 0.9.0 has an issue fixed in 1.0.2.RELEASE but the r2dbc-spi's baseline is 1.0.0.RELEASE
-        // issue link: https://github.com/r2dbc/r2dbc-mssql/issues/271
-        if (!MySQLContainer.class.equals(currentContainerType) && !MariaDBContainer.class.equals(currentContainerType)) {
+        /*
+         * 1. oracle jdbc doesn't support IsolationLevel.READ_UNCOMMITTED
+         * 2. postgresql server treat READ_UNCOMMITTED as READ_COMMITTED
+         */
+        if (PostgreSQLContainer.class.equals(currentContainerType) || OracleContainer.class.equals(currentContainerType)) {
             return;
         }
         ExecutorService executorService = Executors.newScheduledThreadPool(16);

@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -19,8 +19,10 @@ import io.r2dbc.spi.Blob;
 import io.r2dbc.spi.Clob;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.OracleContainer;
 import pro.chenggang.project.reactive.mybatis.support.MybatisR2dbcBaseTests;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectContent;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -37,12 +39,15 @@ public class AdapterMapperTests extends MybatisR2dbcBaseTests {
     @Test
     void selectAllAStringAsBlob() {
         super.<Blob>newTestRunner()
+                .allDatabases()
                 .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(AdapterMapper.class);
                 })
                 .runWith((type, reactiveSqlSession) -> {
                     AdapterMapper adapterMapper = reactiveSqlSession.getMapper(AdapterMapper.class);
-                    return adapterMapper.selectAllAStringAsBlob();
+                    return adapterMapper.selectAllAStringAsBlob()
+                            .collectList()
+                            .flatMapMany(Flux::fromIterable);
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(blob -> {
@@ -64,7 +69,10 @@ public class AdapterMapperTests extends MybatisR2dbcBaseTests {
 
     @Test
     void selectAStringAsBlobByAString() {
+        // oracle doesn't support blob on where condition
+        // link https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/Comparison-Conditions.html#GUID-828576BF-E606-4EA6-B94B-BFF48B67F927
         super.<Blob>newTestRunner()
+                .filterDatabases(databaseType -> !OracleContainer.class.equals(databaseType))
                 .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(AdapterMapper.class);
                 })
@@ -93,7 +101,9 @@ public class AdapterMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .runWith((type, reactiveSqlSession) -> {
                     AdapterMapper adapterMapper = reactiveSqlSession.getMapper(AdapterMapper.class);
-                    return adapterMapper.selectAllAStringAsClob();
+                    return adapterMapper.selectAllAStringAsClob()
+                            .collectList()
+                            .flatMapMany(Flux::fromIterable);
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(clob -> {
@@ -115,7 +125,10 @@ public class AdapterMapperTests extends MybatisR2dbcBaseTests {
 
     @Test
     void selectAStringAsClobByAString() {
+        // oracle doesn't support clob on where condition
+        // link https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/Comparison-Conditions.html#GUID-828576BF-E606-4EA6-B94B-BFF48B67F927
         super.<Clob>newTestRunner()
+                .filterDatabases(databaseType -> !OracleContainer.class.equals(databaseType))
                 .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(AdapterMapper.class);
                 })

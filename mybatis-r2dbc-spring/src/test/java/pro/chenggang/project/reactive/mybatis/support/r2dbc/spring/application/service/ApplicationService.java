@@ -28,5 +28,9 @@ public interface ApplicationService {
 
     Mono<Void> runWithTransactionCommit();
 
+    Mono<Void> runWithTransactionCommitManually();
+
     Mono<Void> runWithTransactionRollback();
+
+    Mono<Void> runWithTransactionRollbackManually();
 }

@@ -11,22 +11,39 @@
   </insert>
 
   <insert id="insertMultipleDept" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.entity.Dept">
-    INSERT INTO dept (dept_name, location, create_time) VALUES
-    <foreach collection="list" item="item" separator=",">
-      (#{item.deptName},#{item.location},#{item.createTime})
-    </foreach>
+    <choose>
+      <when test="_databaseId == 'oracle' ">
+        INSERT ALL
+        <foreach collection="list" item="item" separator=" ">
+          INTO dept (dept_name, location, create_time) VALUES (#{item.deptName},#{item.location},#{item.createTime})
+        </foreach>
+        SELECT * FROM DUAL
+      </when>
+      <otherwise>
+        INSERT INTO dept (dept_name, location, create_time) VALUES
+        <foreach collection="list" item="item" separator=",">
+          (#{item.deptName},#{item.location},#{item.createTime})
+        </foreach>
+      </otherwise>
+    </choose>
   </insert>
 
-  <insert id="insertOneDeptWithGeneratedKeyUsingSelectKeyMysql" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.entity.Dept" useGeneratedKeys="true">
+  <insert id="insertOneDeptWithGeneratedKeyUsingSelectKey" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.entity.Dept" useGeneratedKeys="true">
     <selectKey resultType="long" order="AFTER" keyProperty="deptNo">
-      SELECT LAST_INSERT_ID()
-    </selectKey>
-    INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})
-  </insert>
-
-  <insert id="insertOneDeptWithGeneratedKeyUsingSelectKeyPostgresql" useGeneratedKeys="true">
-    <selectKey resultType="long" order="AFTER" keyProperty="deptNo">
-      SELECT currval('dept_dept_no_seq')
+      <choose>
+        <when test="_databaseId == 'mysql' or _databaseId == 'mariadb'">
+          SELECT LAST_INSERT_ID()
+        </when>
+        <when test="_databaseId == 'postgresql'">
+          SELECT currval('dept_dept_no_seq')
+        </when>
+        <when test="_databaseId == 'oracle'">
+          SELECT dept_seq.currval FROM DUAL
+        </when>
+        <otherwise>
+          NOT SUPPORTED
+        </otherwise>
+      </choose>
     </selectKey>
     INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})
   </insert>

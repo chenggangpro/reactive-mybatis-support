@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -105,7 +105,7 @@ public class R2dbcMapperFactoryBean<T> implements FactoryBean<T>, InitializingBe
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        notNull(this.reactiveSqlSessionFactory, "Property 'sqlSessionFactory' are required...");
+        notNull(this.reactiveSqlSessionFactory, "Property 'reactiveSqlSessionFactory' are required...");
         if (!reactiveSqlSessionFactory.getConfiguration().hasMapper(this.mapperInterface)) {
             try {
                 reactiveSqlSessionFactory.getConfiguration().addMapper(this.mapperInterface);

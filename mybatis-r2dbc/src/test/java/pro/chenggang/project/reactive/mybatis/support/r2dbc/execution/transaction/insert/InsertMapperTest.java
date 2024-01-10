@@ -19,9 +19,7 @@ import io.r2dbc.spi.Blob;
 import io.r2dbc.spi.Clob;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MSSQLServerContainer;
-import org.testcontainers.containers.MariaDBContainer;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.OracleContainer;
 import pro.chenggang.project.reactive.mybatis.support.MybatisR2dbcBaseTests;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.Dept;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectContent;
@@ -66,7 +64,7 @@ class InsertMapperTest extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 1);
+                            assertEquals(1, effectRowCount);
                             assertNull(dept.getDeptNo());
                         })
                         .verifyComplete()
@@ -88,8 +86,8 @@ class InsertMapperTest extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 1);
-                            assertEquals(dept.getDeptNo(), 5L);
+                            assertEquals(1, effectRowCount);
+                            assertEquals(5L, dept.getDeptNo());
                         })
                         .verifyComplete()
                 )
@@ -110,8 +108,8 @@ class InsertMapperTest extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 1);
-                            assertEquals(dept.getDeptNo(), 5L);
+                            assertEquals(1, effectRowCount);
+                            assertEquals(5L, dept.getDeptNo());
                         })
                         .verifyComplete()
                 )
@@ -132,7 +130,7 @@ class InsertMapperTest extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 1);
+                            assertEquals(1, effectRowCount);
                             assertNull(dept.getDeptNo());
                         })
                         .verifyComplete()
@@ -154,8 +152,8 @@ class InsertMapperTest extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 1);
-                            assertEquals(dept.getDeptNo(), 5L);
+                            assertEquals(1, effectRowCount);
+                            assertEquals(5L, dept.getDeptNo());
                         })
                         .verifyComplete()
                 )
@@ -163,45 +161,21 @@ class InsertMapperTest extends MybatisR2dbcBaseTests {
     }
 
     @Test
-    void insertOneDeptWithGeneratedKeyAndAnnotationMysql() {
+    void insertOneDeptWithGeneratedKeyAndAnnotationAndSelectKey() {
         super.<Integer>newTestRunner()
-                .filterDatabases(
-                        databaseType -> MySQLContainer.class.equals(databaseType) || MariaDBContainer.class.equals(
-                                databaseType))
+                .filterDatabases(databaseType -> !MSSQLServerContainer.class.equals(databaseType))
                 .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(InsertMapper.class);
                 })
                 .runWithThenRollback((type, reactiveSqlSession) -> {
                     InsertMapper insertMapper = reactiveSqlSession.getMapper(InsertMapper.class);
                     this.resetDept();
-                    return insertMapper.insertOneDeptWithGeneratedKeyAndAnnotationMysql(dept);
+                    return insertMapper.insertOneDeptWithGeneratedKeyAndAnnotationAndSelectKey(dept);
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 1);
-                            assertEquals(dept.getDeptNo(), 5L);
-                        })
-                        .verifyComplete()
-                )
-                .run();
-    }
-
-    @Test
-    void insertOneDeptWithGeneratedKeyAndAnnotationPostgresql() {
-        super.<Integer>newTestRunner()
-                .filterDatabases(PostgreSQLContainer.class::equals)
-                .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
-                    r2dbcMybatisConfiguration.addMapper(InsertMapper.class);
-                })
-                .runWithThenRollback((type, reactiveSqlSession) -> {
-                    InsertMapper insertMapper = reactiveSqlSession.getMapper(InsertMapper.class);
-                    this.resetDept();
-                    return insertMapper.insertOneDeptWithGeneratedKeyAndAnnotationPostgresql(dept);
-                })
-                .verifyWith(firstStep -> firstStep
-                        .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 1);
-                            assertEquals(dept.getDeptNo(), 5L);
+                            assertEquals(1, effectRowCount);
+                            assertEquals(5L, dept.getDeptNo());
                         })
                         .verifyComplete()
                 )
@@ -226,7 +200,7 @@ class InsertMapperTest extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 3);
+                            assertEquals(3, effectRowCount);
                         })
                         .verifyComplete()
                 )
@@ -251,7 +225,7 @@ class InsertMapperTest extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 3);
+                            assertEquals(3, effectRowCount);
                         })
                         .verifyComplete()
                 )
@@ -272,7 +246,7 @@ class InsertMapperTest extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 1);
+                            assertEquals(1, effectRowCount);
                             assertNull(dept.getDeptNo());
                         })
                         .verifyComplete()
@@ -294,8 +268,8 @@ class InsertMapperTest extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 1);
-                            assertEquals(dept.getDeptNo(), 5L);
+                            assertEquals(1, effectRowCount);
+                            assertEquals(5L, dept.getDeptNo());
                         })
                         .verifyComplete()
                 )
@@ -305,7 +279,9 @@ class InsertMapperTest extends MybatisR2dbcBaseTests {
     @Test
     void insertMultipleWithDynamic() {
         super.<Integer>newTestRunner()
-                .allDatabases()
+                // mybatis-dynamic-sql doesn't support oracle insert batch operations
+                // https://github.com/mybatis/mybatis-dynamic-sql/issues/242
+                .filterDatabases(databaseType -> !OracleContainer.class.equals(databaseType))
                 .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(InsertMapper.class);
                 })
@@ -320,7 +296,7 @@ class InsertMapperTest extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 3);
+                            assertEquals(3, effectRowCount);
                         })
                         .verifyComplete()
                 )
@@ -348,7 +324,7 @@ class InsertMapperTest extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 1);
+                            assertEquals(1, effectRowCount);
                         })
                         .verifyComplete()
                 )

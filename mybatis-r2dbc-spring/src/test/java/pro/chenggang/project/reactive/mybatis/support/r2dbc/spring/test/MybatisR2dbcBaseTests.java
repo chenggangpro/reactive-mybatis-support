@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.OracleContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.testcontainers.DatabaseInitialization;
@@ -29,6 +30,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.testco
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.testcontainers.DatabaseInitialization.R2dbcProtocol;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.testcontainers.MariadbTestContainerInitialization;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.testcontainers.MysqlTestContainerInitialization;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.testcontainers.OracleTestContainerInitialization;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.testcontainers.PostgresqlTestContainerInitialization;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.testcontainers.SqlServerTestContainerInitialization;
 import reactor.core.publisher.Hooks;
@@ -57,8 +59,7 @@ public class MybatisR2dbcBaseTests {
         databaseInitializationContainer.put(MariaDBContainer.class, new MariadbTestContainerInitialization());
         databaseInitializationContainer.put(PostgreSQLContainer.class, new PostgresqlTestContainerInitialization());
         databaseInitializationContainer.put(MSSQLServerContainer.class, new SqlServerTestContainerInitialization());
-        // Oracle R2DBC can only interoperate with libraries that support the 1.0.0.RELEASE version of the R2DBC SPI.
-//        databaseInitializationContainer.put(OracleContainer.class,new OracleTestContainerInitialization());
+        databaseInitializationContainer.put(OracleContainer.class,new OracleTestContainerInitialization());
     }
 
     protected static final String DB_NAME = "mybatis_r2dbc_test";

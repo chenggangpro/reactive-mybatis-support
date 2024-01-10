@@ -49,13 +49,13 @@ commit ;
 -- Records of dept
 
 
-INSERT INTO dept VALUES ('1', 'ACCOUNTING', 'NEW YORK', SYSTIMESTAMP);
+INSERT INTO dept (dept_name, location, create_time) VALUES ('ACCOUNTING', 'NEW YORK', SYSTIMESTAMP);
 
-INSERT INTO dept VALUES ('2', 'RESEARCH', 'DALLAS', SYSTIMESTAMP);
+INSERT INTO dept (dept_name, location, create_time) VALUES ('RESEARCH', 'DALLAS', SYSTIMESTAMP);
 
-INSERT INTO dept VALUES ('3', 'SALES', 'CHICAGO', SYSTIMESTAMP);
+INSERT INTO dept (dept_name, location, create_time) VALUES ('SALES', 'CHICAGO', SYSTIMESTAMP);
 
-INSERT INTO dept VALUES ('4', 'OPERATIONS', 'BOSTON', SYSTIMESTAMP);
+INSERT INTO dept (dept_name, location, create_time) VALUES ('OPERATIONS', 'BOSTON', SYSTIMESTAMP);
 
 commit ;
 --  DEMO *** or emp
@@ -105,33 +105,33 @@ commit ;
 
 -- Records of emp
 
-INSERT INTO emp VALUES ('1', 'SMITH', 'CLERK', '13', TO_DATE('1980-12-17','YYYY-MM-DD'), '800', '0.82','2', SYSTIMESTAMP);
+INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create_time) VALUES ('SMITH', 'CLERK', '13', TO_DATE('1980-12-17','YYYY-MM-DD'), '800', '0.82','2', SYSTIMESTAMP);
 
-INSERT INTO emp VALUES ('2', 'ALLEN', 'SALESMAN', '6', TO_DATE('1981-02-20','YYYY-MM-DD'), '1600', '0.57', '3', SYSTIMESTAMP);
+INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create_time) VALUES ('ALLEN', 'SALESMAN', '6', TO_DATE('1981-02-20','YYYY-MM-DD'), '1600', '0.57', '3', SYSTIMESTAMP);
 
-INSERT INTO emp VALUES ('3', 'WARD', 'SALESMAN', '6', TO_DATE('1981-02-22','YYYY-MM-DD'), '1250', '0.73', '3', SYSTIMESTAMP);
+INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create_time) VALUES ('WARD', 'SALESMAN', '6', TO_DATE('1981-02-22','YYYY-MM-DD'), '1250', '0.73', '3', SYSTIMESTAMP);
 
-INSERT INTO emp VALUES ('4', 'JONES', 'MANAGER', '9', TO_DATE('1981-04-02','YYYY-MM-DD'), '2975', '0.94', '2', SYSTIMESTAMP);
+INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create_time) VALUES ('JONES', 'MANAGER', '9', TO_DATE('1981-04-02','YYYY-MM-DD'), '2975', '0.94', '2', SYSTIMESTAMP);
 
-INSERT INTO emp VALUES ('5', 'MARTIN', 'SALESMAN', '6', TO_DATE('1981-09-28','YYYY-MM-DD'), '1250', '0.83', '3', SYSTIMESTAMP);
+INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create_time) VALUES ('MARTIN', 'SALESMAN', '6', TO_DATE('1981-09-28','YYYY-MM-DD'), '1250', '0.83', '3', SYSTIMESTAMP);
 
-INSERT INTO emp VALUES ('6', 'BLAKE', 'MANAGER', '9', TO_DATE('1981-05-01','YYYY-MM-DD'), '2850', '0.50', '3', SYSTIMESTAMP);
+INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create_time) VALUES ('BLAKE', 'MANAGER', '9', TO_DATE('1981-05-01','YYYY-MM-DD'), '2850', '0.50', '3', SYSTIMESTAMP);
 
-INSERT INTO emp VALUES ('7', 'CLARK', 'MANAGER', '9', TO_DATE('1981-06-09','YYYY-MM-DD'), '2450', '0.69', '1', SYSTIMESTAMP);
+INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create_time) VALUES ('CLARK', 'MANAGER', '9', TO_DATE('1981-06-09','YYYY-MM-DD'), '2450', '0.69', '1', SYSTIMESTAMP);
 
-INSERT INTO emp VALUES ('8', 'SCOTT', 'ANALYST', '4', TO_DATE('1987-04-19','YYYY-MM-DD'), '3000', '0.47', '2', SYSTIMESTAMP);
+INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create_time) VALUES ('SCOTT', 'ANALYST', '4', TO_DATE('1987-04-19','YYYY-MM-DD'), '3000', '0.47', '2', SYSTIMESTAMP);
 
-INSERT INTO emp VALUES ('9', 'KING', 'PRESIDENT', null, TO_DATE('1981-11-17','YYYY-MM-DD'), '5000', '1.00', '1', SYSTIMESTAMP);
+INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create_time) VALUES ('KING', 'PRESIDENT', null, TO_DATE('1981-11-17','YYYY-MM-DD'), '5000', '1.00', '1', SYSTIMESTAMP);
 
-INSERT INTO emp VALUES ('10', 'TURNER', 'SALESMAN', '6', TO_DATE('1981-09-08','YYYY-MM-DD'), '1500', '0.52', '3', SYSTIMESTAMP);
+INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create_time) VALUES ('TURNER', 'SALESMAN', '6', TO_DATE('1981-09-08','YYYY-MM-DD'), '1500', '0.52', '3', SYSTIMESTAMP);
 
-INSERT INTO emp VALUES ('11', 'ADAMS', 'CLERK', '8', TO_DATE('1987-05-23','YYYY-MM-DD'), '1100', '0.74', '2', SYSTIMESTAMP);
+INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create_time) VALUES ('ADAMS', 'CLERK', '8', TO_DATE('1987-05-23','YYYY-MM-DD'), '1100', '0.74', '2', SYSTIMESTAMP);
 
-INSERT INTO emp VALUES ('12', 'JAMES', 'CLERK', '6', TO_DATE('1981-12-03','YYYY-MM-DD'), '950', '0.91', '3', SYSTIMESTAMP);
+INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create_time) VALUES ('JAMES', 'CLERK', '6', TO_DATE('1981-12-03','YYYY-MM-DD'), '950', '0.91', '3', SYSTIMESTAMP);
 
-INSERT INTO emp VALUES ('13', 'FORD', 'ANALYST', '4', TO_DATE('1981-12-03','YYYY-MM-DD'), '3000', '1.00', '2', SYSTIMESTAMP);
+INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create_time) VALUES ('FORD', 'ANALYST', '4', TO_DATE('1981-12-03','YYYY-MM-DD'), '3000', '1.00', '2', SYSTIMESTAMP);
 
-INSERT INTO emp VALUES ('14', 'MILLER', 'CLERK', '7', TO_DATE('1982-01-23','YYYY-MM-DD'), '1300', '0.99', '1', SYSTIMESTAMP);
+INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create_time) VALUES ('MILLER', 'CLERK', '7', TO_DATE('1982-01-23','YYYY-MM-DD'), '1300', '0.99', '1', SYSTIMESTAMP);
 
 commit ;
 
@@ -163,7 +163,7 @@ CREATE TABLE subject
     age    NUMBER(10) NOT NULL,
     height NUMBER(10),
     weight NUMBER(10),
-    active RAW(1),
+    active NUMBER(1),
     dt     TIMESTAMP(0),
     length NUMBER(19)
 );
@@ -179,7 +179,7 @@ CREATE TABLE subject_data
     aLong      NUMBER(19),
     aFloat     BINARY_DOUBLE,
     aDouble    BINARY_DOUBLE,
-    aBoolean   RAW(1),
+    aBoolean   NUMBER(1),
     aString    VARCHAR2(255),
     anEnum     VARCHAR2(50),
     aDecimal     NUMBER(4, 2),
@@ -191,25 +191,24 @@ CREATE TABLE subject_data
 commit ;
 
 INSERT INTO subject
-SELECT 1, 'a', 10, 100, 45, HEXTORAW('01'), TO_TIMESTAMP('2023-01-01 01:01:01.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 22222222222 FROM dual
+SELECT 1, 'a', 10, 100, 45, 1, TO_TIMESTAMP('2023-01-01 01:01:01.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), 22222222222 FROM dual
 UNION ALL
 
-SELECT 2, 'b', 20, NULL, 45, HEXTORAW('01'), SYSTIMESTAMP, 22222222222 FROM dual
+SELECT 2, 'b', 20, NULL, 45, 1, SYSTIMESTAMP, 22222222222 FROM dual
 UNION ALL
 
-SELECT 3, 'c', 30, 33, NULL, HEXTORAW('00'), NULL, 22222222222 FROM dual
+SELECT 3, 'c', 30, 33, NULL, 0, NULL, 22222222222 FROM dual
 UNION ALL
 
-SELECT 4, 'd', 40, NULL, NULL, HEXTORAW('00'), SYSTIMESTAMP, 22222222222 FROM dual;
+SELECT 4, 'd', 40, NULL, NULL, 0, SYSTIMESTAMP, 22222222222 FROM dual;
 
 
 INSERT INTO subject_data
-SELECT 1, 1, 'a', 1, 1, TO_BINARY_DOUBLE(1), TO_BINARY_DOUBLE(1.0), HEXTORAW('01'), 'a', 'A', 10.23, SYSTIMESTAMP, SYSDATE, SYSDATE  FROM dual
+SELECT 1, 1, 'a', 1, 1, TO_BINARY_DOUBLE(1), TO_BINARY_DOUBLE(1.0), 1, 'a', 'A', 10.23, SYSTIMESTAMP, SYSDATE, SYSDATE  FROM dual
 UNION ALL
-SELECT 2, 2, 'b', 2, 2, TO_BINARY_DOUBLE(2), TO_BINARY_DOUBLE(2.0), HEXTORAW('00'), 'b', 'B', 10.23, TO_TIMESTAMP('2023-01-01 01:01:01.000', 'YYYY-MM-DD HH24:MI:SS.FF3'), TO_DATE('2023-01-01', 'YYYY-MM-DD'), SYSDATE  FROM dual
+SELECT 2, 2, 'b', 2, 2, TO_BINARY_DOUBLE(2), TO_BINARY_DOUBLE(2.0), 0, 'b', 'B', 10.23, NULL, TO_DATE('2023-01-01', 'YYYY-MM-DD'), TO_TIMESTAMP('2023-01-01 01:01:01.000', 'YYYY-MM-DD HH24:MI:SS.FF3')  FROM dual
 UNION ALL
-SELECT 3, 3, 'c', 3, 3, TO_BINARY_DOUBLE(3), TO_BINARY_DOUBLE(3.0), HEXTORAW('01'), 'c', 'C', 10.23, SYSTIMESTAMP, NULL, SYSDATE  FROM dual;
-
+SELECT 3, 3, 'c', 3, 3, TO_BINARY_DOUBLE(3), TO_BINARY_DOUBLE(3.0), 1, 'c', 'C', 10.23, SYSTIMESTAMP, NULL, SYSDATE  FROM dual;
 
 commit ;
 

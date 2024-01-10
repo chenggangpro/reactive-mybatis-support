@@ -10,6 +10,7 @@ r2dbc:
       "MariaDB": "mariadb"
       "PostgreSQL": "postgresql"
       "[Microsoft SQL Server]": "mssql"
+      "[Oracle Database]": "oracle"
     configuration:
       map-underscore-to-camel-case: true
 spring:
@@ -17,7 +18,6 @@ spring:
     mybatis:
       pool:
         max-idle-time: PT3M
-        validation-query: SELECT 1
         initial-size: 3
         max-size: 16
         acquire-retry: 3

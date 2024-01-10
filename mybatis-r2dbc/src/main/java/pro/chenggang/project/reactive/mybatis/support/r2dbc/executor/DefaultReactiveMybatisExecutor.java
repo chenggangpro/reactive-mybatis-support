@@ -52,6 +52,7 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SELECT_KEY_AFTER;
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SELECT_KEY_BEFORE;
@@ -144,9 +145,6 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                             String boundSql = mappedStatement.getBoundSql(parameter).getSql();
                             Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameter, rowBounds, false, attribute, r2dbcStatementLog);
                             ReactiveResultHandler reactiveResultHandler = new DefaultReactiveResultHandler(configuration, mappedStatement);
-                            if(RowBounds.NO_ROW_OFFSET == rowBounds.getOffset()){
-                                statement.fetchSize(rowBounds.getLimit());
-                            }
                             return Flux.from(statement.execute())
                                     .checkpoint("[DefaultReactiveExecutor] SQL: \"" + boundSql + "\"")
                                     .skip(rowBounds.getOffset())
@@ -213,9 +211,19 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
         } catch (SQLException e) {
             throw new R2dbcParameterException(e);
         }
-        if(Objects.nonNull(rowBounds)){
-            statement.fetchSize(rowBounds.getLimit());
-        }
+        Integer mappedStatementFetchSize = mappedStatement.getFetchSize();
+        Integer defaultFetchSize = configuration.getDefaultFetchSize();
+        /*
+         * If fetch size is configured by MappedStatement or Configuration
+         * then take the min value between configured fetch size and limit value in rowBounds
+         */
+        Stream.of(mappedStatementFetchSize,defaultFetchSize)
+                .filter(Objects::nonNull)
+                .min(Integer::compareTo)
+                .ifPresent(configuredFetchSize -> {
+                    int fetchSize = Integer.min(configuredFetchSize, rowBounds.getLimit());
+                    statement.fetchSize(fetchSize);
+                });
         return statement;
     }
 

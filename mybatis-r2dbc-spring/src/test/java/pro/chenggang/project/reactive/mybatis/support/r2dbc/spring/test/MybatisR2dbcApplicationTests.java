@@ -17,7 +17,6 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.test;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.platform.commons.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -25,7 +24,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.ReactiveTransactionManager;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
-import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.MSSQLServerContainer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -42,13 +41,15 @@ public class MybatisR2dbcApplicationTests extends MybatisR2dbcBaseTests {
     @DynamicPropertySource
     static void postgresqlProperties(DynamicPropertyRegistry registry) {
         // FIXME setup target testcontainer that worked around current test
-        setUp(MySQLContainer.class, false);
+//        setUp(MySQLContainer.class, false);
 //        setUp(MariaDBContainer.class, false);
 //        setUp(PostgreSQLContainer.class, false);
-//        setUp(MSSQLServerContainer.class, false);
+        setUp(MSSQLServerContainer.class, false);
+//        setUp(OracleContainer.class, false);
         registry.add("spring.r2dbc.mybatis.r2dbc-url", r2dbcProtocol::getProtocolUrl);
         registry.add("spring.r2dbc.mybatis.password", r2dbcProtocol.getDatabaseConfig()::getPassword);
         registry.add("spring.r2dbc.mybatis.username", r2dbcProtocol.getDatabaseConfig()::getUsername);
+        registry.add("spring.r2dbc.mybatis.pool.validation-query", r2dbcProtocol::getValidationQuery);
     }
 
     @Autowired
@@ -64,9 +65,6 @@ public class MybatisR2dbcApplicationTests extends MybatisR2dbcBaseTests {
     protected TransactionalOperator transactionalOperator(Consumer<DefaultTransactionDefinition> transactionDefinitionCustomizer) {
         DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
         transactionDefinitionCustomizer.accept(definition);
-        if (StringUtils.isBlank(definition.getName())) {
-            definition.setName(UUID.randomUUID().toString());
-        }
         return TransactionalOperator.create(transactionManager, definition);
     }
 

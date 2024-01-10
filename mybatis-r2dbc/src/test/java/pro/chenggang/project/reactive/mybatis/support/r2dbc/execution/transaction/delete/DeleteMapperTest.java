@@ -40,7 +40,7 @@ class DeleteMapperTest extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 1);
+                            assertEquals(1, effectRowCount);
                         })
                         .verifyComplete()
                 )
@@ -60,7 +60,7 @@ class DeleteMapperTest extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 1);
+                            assertEquals(1, effectRowCount);
                         })
                         .verifyComplete()
                 )
@@ -80,7 +80,7 @@ class DeleteMapperTest extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 1);
+                            assertEquals(1, effectRowCount);
                         })
                         .verifyComplete()
                 )

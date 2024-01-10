@@ -21,9 +21,11 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.testcontainers.containers.OracleContainer;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.MybatisR2dbcApplication;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.type.adapter.AdapterMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.test.MybatisR2dbcApplicationTests;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -44,6 +46,8 @@ public class AdapterMapperTests extends MybatisR2dbcApplicationTests {
     @Test
     void selectAllAStringAsBlob() {
         adapterMapper.selectAllAStringAsBlob()
+                .collectList()
+                .flatMapMany(Flux::fromIterable)
                 .as(StepVerifier::create)
                 .consumeNextWith(blob -> {
                     Mono.from(blob.stream())
@@ -62,6 +66,11 @@ public class AdapterMapperTests extends MybatisR2dbcApplicationTests {
 
     @Test
     void selectAStringAsBlobByAString() {
+        if(OracleContainer.class.equals(currentContainerType)){
+            // oracle doesn't support blob on where condition
+            // link https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/Comparison-Conditions.html#GUID-828576BF-E606-4EA6-B94B-BFF48B67F927
+            return;
+        }
         adapterMapper.selectAStringAsBlobByAString(Blob.from(Mono.just(ByteBuffer.wrap(
                         "This is a blob content1".getBytes(StandardCharsets.UTF_8)))))
                 .as(StepVerifier::create)
@@ -77,6 +86,8 @@ public class AdapterMapperTests extends MybatisR2dbcApplicationTests {
     @Test
     void selectAllAStringAsClob() {
         adapterMapper.selectAllAStringAsClob()
+                .collectList()
+                .flatMapMany(Flux::fromIterable)
                 .as(StepVerifier::create)
                 .consumeNextWith(clob -> {
                     Mono.from(clob.stream())
@@ -95,6 +106,11 @@ public class AdapterMapperTests extends MybatisR2dbcApplicationTests {
 
     @Test
     void selectAStringAsClobByAString() {
+        if(OracleContainer.class.equals(currentContainerType)){
+            // oracle doesn't support clob on where condition
+            // link https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/Comparison-Conditions.html#GUID-828576BF-E606-4EA6-B94B-BFF48B67F927
+            return;
+        }
         adapterMapper.selectAStringAsClobByAString(Clob.from(Mono.just(
                         "This is a clob content1")))
                 .as(StepVerifier::create)
@@ -110,6 +126,8 @@ public class AdapterMapperTests extends MybatisR2dbcApplicationTests {
     @Test
     void selectAll() {
         adapterMapper.selectAll()
+                .collectList()
+                .flatMapMany(Flux::fromIterable)
                 .as(StepVerifier::create)
                 .consumeNextWith(subjectContent -> {
                     Assertions.assertEquals(1, subjectContent.getId());

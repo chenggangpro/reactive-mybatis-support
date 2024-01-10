@@ -18,6 +18,8 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.transacti
 import io.r2dbc.spi.IsolationLevel;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.containers.MariaDBContainer;
 import pro.chenggang.project.reactive.mybatis.support.MybatisR2dbcBaseTests;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.Dept;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionOperator;
@@ -50,10 +52,16 @@ class ParallelTransactionTest extends MybatisR2dbcBaseTests {
     @Test
     void parallelMultipleTransaction() {
         super.<Integer>newTestRunner()
-                // this test doesn't work with r2dbc-mssql driver
-                // r2dbc-mssql 0.9.0 has an issue fixed in 1.0.2.RELEASE but the r2dbc-spi's baseline is 1.0.0.RELEASE
-                // issue link: https://github.com/r2dbc/r2dbc-mssql/issues/271
-//                .filterDatabases(MySQLContainer.class::equals)
+                /*
+                 * 1. this test doesn't work with r2dbc-mssql driver
+                 *  r2dbc-mssql 0.9.0 has an issue fixed in 1.0.2.RELEASE but the r2dbc-spi's baseline is 1.0.0.RELEASE
+                 * issue link: https://github.com/r2dbc/r2dbc-mssql/issues/271
+                 * 2. oracle jdbc doesn't support IsolationLevel.READ_UNCOMMITTED
+                 * 3. postgresql server treat READ_UNCOMMITTED as READ_COMMITTED
+                 */
+                .filterDatabases(databaseType -> MSSQLServerContainer.class.equals(databaseType)
+                        || MariaDBContainer.class.equals(databaseType)
+                )
                 .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
                     r2dbcMybatisConfiguration.addMapper(UpdateMapper.class);
                     r2dbcMybatisConfiguration.addMapper(SimpleQueryMapper.class);
@@ -65,16 +73,18 @@ class ParallelTransactionTest extends MybatisR2dbcBaseTests {
                             reactiveSqlSessionFactory);
                     Tuple3<AtomicInteger, AtomicInteger, AtomicInteger> results = Tuples.of(new AtomicInteger(0),
                             new AtomicInteger(0),
-                            new AtomicInteger(0));
+                            new AtomicInteger(0)
+                    );
                     Flux.range(0, parallelCount)
                             .flatMap(loop -> {
                                 if (loop % 2 == 0) {
                                     return Mono.fromCompletionStage(CompletableFuture
                                             .runAsync(() -> {
                                                 reactiveSqlSessionOperator.executeAndRollback(
-                                                        ReactiveSqlSessionProfile.of(IsolationLevel.READ_COMMITTED),
+                                                                ReactiveSqlSessionProfile.of(IsolationLevel.READ_COMMITTED),
                                                                 reactiveSqlSession -> {
-                                                                    UpdateMapper updateMapper = reactiveSqlSession.getMapper(UpdateMapper.class);
+                                                                    UpdateMapper updateMapper = reactiveSqlSession.getMapper(
+                                                                            UpdateMapper.class);
                                                                     SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(
                                                                             SimpleQueryMapper.class
                                                                     );
@@ -85,20 +95,24 @@ class ParallelTransactionTest extends MybatisR2dbcBaseTests {
                                                                     dept.setCreateTime(LocalDateTime.now());
                                                                     return updateMapper.updateDeptByDeptNo(dept)
                                                                             .then(simpleQueryMapper.selectByDeptNo(1L));
-                                                                })
+                                                                }
+                                                        )
                                                         .as(StepVerifier::create)
                                                         .consumeNextWith(dept -> {
-                                                            Assertions.assertEquals(dept.getDeptName(), "INSET_DEPT_NAME1");
+                                                            Assertions.assertEquals(dept.getDeptName(),
+                                                                    "INSET_DEPT_NAME1"
+                                                            );
                                                         })
                                                         .verifyComplete();
-                                            },executorService));
+                                            }, executorService));
                                 } else {
                                     return Mono.fromCompletionStage(CompletableFuture.runAsync(
                                             () -> {
                                                 reactiveSqlSessionOperator.executeAndRollback(
                                                                 ReactiveSqlSessionProfile.of(IsolationLevel.READ_UNCOMMITTED),
                                                                 reactiveSqlSession -> {
-                                                                    UpdateMapper updateMapper = reactiveSqlSession.getMapper(UpdateMapper.class);
+                                                                    UpdateMapper updateMapper = reactiveSqlSession.getMapper(
+                                                                            UpdateMapper.class);
                                                                     SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(
                                                                             SimpleQueryMapper.class);
                                                                     Dept dept = new Dept();
@@ -108,8 +122,10 @@ class ParallelTransactionTest extends MybatisR2dbcBaseTests {
                                                                     dept.setCreateTime(LocalDateTime.now());
                                                                     return simpleQueryMapper.selectByDeptNo(1L)
                                                                             .doOnNext(oldDept -> {
-                                                                                boolean readUnCommitted = "INSET_DEPT_NAME1".equals(oldDept.getDeptName());
-                                                                                boolean readCurrent = "INSET_DEPT_NAME2".equals(oldDept.getDeptName());
+                                                                                boolean readUnCommitted = "INSET_DEPT_NAME1".equals(
+                                                                                        oldDept.getDeptName());
+                                                                                boolean readCurrent = "INSET_DEPT_NAME2".equals(
+                                                                                        oldDept.getDeptName());
                                                                                 boolean readOriginal = !readUnCommitted && !readCurrent;
                                                                                 if (readUnCommitted) {
                                                                                     results.getT1().getAndIncrement();
@@ -123,8 +139,10 @@ class ParallelTransactionTest extends MybatisR2dbcBaseTests {
                                                                             })
                                                                             .flatMap(oldDept -> {
                                                                                 return updateMapper.updateDeptByDeptNo(dept)
-                                                                                        .then(simpleQueryMapper.selectByDeptNo(1L))
-                                                                                        .doOnNext(newDept -> Assertions.assertEquals(newDept.getDeptName(),
+                                                                                        .then(simpleQueryMapper.selectByDeptNo(
+                                                                                                1L))
+                                                                                        .doOnNext(newDept -> Assertions.assertEquals(
+                                                                                                newDept.getDeptName(),
                                                                                                 "INSET_DEPT_NAME2"
                                                                                         ));
                                                                             });
@@ -142,7 +160,7 @@ class ParallelTransactionTest extends MybatisR2dbcBaseTests {
                         executorService.awaitTermination(30, TimeUnit.SECONDS);
                     } catch (InterruptedException e) {
                         //ignore
-                    }finally {
+                    } finally {
                         executorService.shutdownNow();
                     }
                     try {

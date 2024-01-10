@@ -18,22 +18,16 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.ReactiveTransactionManager;
-import org.springframework.transaction.reactive.TransactionalOperator;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.OracleContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.service.ApplicationService;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.service.DynamicRoutingService;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.routing.context.R2dbcMybatisDatabaseRoutingOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.UUID;
-
-import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
 /**
  * @author Gang Cheng
@@ -46,7 +40,6 @@ import static org.springframework.transaction.TransactionDefinition.PROPAGATION_
 public class DynamicRoutingServiceImpl implements DynamicRoutingService {
 
     private final ApplicationService applicationService;
-    private final ReactiveTransactionManager reactiveTransactionManager;
 
     @Override
     public Mono<Void> runWithDynamicRoutingWithoutTransaction() {
@@ -66,7 +59,11 @@ public class DynamicRoutingServiceImpl implements DynamicRoutingService {
                 MSSQLServerContainer.class.getSimpleName(),
                 applicationService.runWithoutTransaction()
         );
-        return Flux.concat(mysqlExecution, mariadbExecution, postgresExecution, mssqlExecution)
+        Mono<Void> oracleExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
+                OracleContainer.class.getSimpleName(),
+                applicationService.runWithoutTransaction()
+        );
+        return Flux.concat(mysqlExecution, mariadbExecution, postgresExecution, mssqlExecution, oracleExecution)
                 .then();
     }
 
@@ -75,44 +72,70 @@ public class DynamicRoutingServiceImpl implements DynamicRoutingService {
         Mono<Void> mysqlExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
                 MySQLContainer.class.getSimpleName(),
                 Mono.defer(() -> {
-                    DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
-                    definition.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
-                    definition.setName(UUID.randomUUID().toString());
-                    return TransactionalOperator.create(this.reactiveTransactionManager, definition)
-                            .transactional(applicationService.runWithTransactionCommit());
+                    return this.applicationService.runWithTransactionCommit();
                 })
         );
         Mono<Void> mariadbExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
                 MariaDBContainer.class.getSimpleName(),
                 Mono.defer(() -> {
-                    DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
-                    definition.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
-                    definition.setName(UUID.randomUUID().toString());
-                    return TransactionalOperator.create(this.reactiveTransactionManager, definition)
-                            .transactional(applicationService.runWithTransactionCommit());
+                    return this.applicationService.runWithTransactionCommit();
                 })
         );
         Mono<Void> postgresExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
                 PostgreSQLContainer.class.getSimpleName(),
                 Mono.defer(() -> {
-                    DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
-                    definition.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
-                    definition.setName(UUID.randomUUID().toString());
-                    return TransactionalOperator.create(this.reactiveTransactionManager, definition)
-                            .transactional(applicationService.runWithTransactionCommit());
+                    return this.applicationService.runWithTransactionCommit();
                 })
         );
         Mono<Void> mssqlExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
                 MSSQLServerContainer.class.getSimpleName(),
                 Mono.defer(() -> {
-                    DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
-                    definition.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
-                    definition.setName(UUID.randomUUID().toString());
-                    return TransactionalOperator.create(this.reactiveTransactionManager, definition)
-                            .transactional(applicationService.runWithTransactionCommit());
+                    return this.applicationService.runWithTransactionCommit();
                 })
         );
-        return Flux.concat(mysqlExecution, mariadbExecution, postgresExecution, mssqlExecution)
+        Mono<Void> oracleExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
+                OracleContainer.class.getSimpleName(),
+                Mono.defer(() -> {
+                    return this.applicationService.runWithTransactionCommit();
+                })
+        );
+        return Flux.concat(mysqlExecution, mariadbExecution, postgresExecution, mssqlExecution, oracleExecution)
+                .then();
+    }
+
+    @Override
+    public Mono<Void> runWithDynamicRoutingWithTransactionCommitManually() {
+        Mono<Void> mysqlExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
+                MySQLContainer.class.getSimpleName(),
+                Mono.defer(() -> {
+                    return this.applicationService.runWithTransactionCommitManually();
+                })
+        );
+        Mono<Void> mariadbExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
+                MariaDBContainer.class.getSimpleName(),
+                Mono.defer(() -> {
+                    return this.applicationService.runWithTransactionCommitManually();
+                })
+        );
+        Mono<Void> postgresExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
+                PostgreSQLContainer.class.getSimpleName(),
+                Mono.defer(() -> {
+                    return this.applicationService.runWithTransactionCommitManually();
+                })
+        );
+        Mono<Void> mssqlExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
+                MSSQLServerContainer.class.getSimpleName(),
+                Mono.defer(() -> {
+                    return this.applicationService.runWithTransactionCommitManually();
+                })
+        );
+        Mono<Void> oracleExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
+                OracleContainer.class.getSimpleName(),
+                Mono.defer(() -> {
+                    return this.applicationService.runWithTransactionCommitManually();
+                })
+        );
+        return Flux.concat(mysqlExecution, mariadbExecution, postgresExecution, mssqlExecution, oracleExecution)
                 .then();
     }
 
@@ -121,44 +144,80 @@ public class DynamicRoutingServiceImpl implements DynamicRoutingService {
         Mono<Void> mysqlExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
                 MySQLContainer.class.getSimpleName(),
                 Mono.defer(() -> {
-                    DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
-                    definition.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
-                    definition.setName(UUID.randomUUID().toString());
-                    return TransactionalOperator.create(this.reactiveTransactionManager, definition)
-                            .transactional(applicationService.runWithTransactionRollback());
+                    return applicationService.runWithTransactionRollback();
                 })
         );
         Mono<Void> mariadbExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
                 MariaDBContainer.class.getSimpleName(),
                 Mono.defer(() -> {
-                    DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
-                    definition.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
-                    definition.setName(UUID.randomUUID().toString());
-                    return TransactionalOperator.create(this.reactiveTransactionManager, definition)
-                            .transactional(applicationService.runWithTransactionRollback());
+                    return applicationService.runWithTransactionRollback();
                 })
         );
         Mono<Void> postgresExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
                 PostgreSQLContainer.class.getSimpleName(),
                 Mono.defer(() -> {
-                    DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
-                    definition.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
-                    definition.setName(UUID.randomUUID().toString());
-                    return TransactionalOperator.create(this.reactiveTransactionManager, definition)
-                            .transactional(applicationService.runWithTransactionRollback());
+                    return applicationService.runWithTransactionRollback();
                 })
         );
         Mono<Void> mssqlExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
                 MSSQLServerContainer.class.getSimpleName(),
                 Mono.defer(() -> {
-                    DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
-                    definition.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
-                    definition.setName(UUID.randomUUID().toString());
-                    return TransactionalOperator.create(this.reactiveTransactionManager, definition)
-                            .transactional(applicationService.runWithTransactionRollback());
+                    return applicationService.runWithTransactionRollback();
                 })
         );
-        return Flux.concatDelayError(mysqlExecution, mariadbExecution, postgresExecution, mssqlExecution)
+        Mono<Void> oracleExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
+                OracleContainer.class.getSimpleName(),
+                Mono.defer(() -> {
+                    return applicationService.runWithTransactionRollback();
+                })
+        );
+        return Flux.concatDelayError(mysqlExecution,
+                        mariadbExecution,
+                        postgresExecution,
+                        mssqlExecution,
+                        oracleExecution
+                )
+                .then();
+    }
+
+    @Override
+    public Mono<Void> runWithDynamicRoutingWithTransactionRollbackManually() {
+        Mono<Void> mysqlExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
+                MySQLContainer.class.getSimpleName(),
+                Mono.defer(() -> {
+                    return applicationService.runWithTransactionRollbackManually();
+                })
+        );
+        Mono<Void> mariadbExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
+                MariaDBContainer.class.getSimpleName(),
+                Mono.defer(() -> {
+                    return applicationService.runWithTransactionRollbackManually();
+                })
+        );
+        Mono<Void> postgresExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
+                PostgreSQLContainer.class.getSimpleName(),
+                Mono.defer(() -> {
+                    return applicationService.runWithTransactionRollbackManually();
+                })
+        );
+        Mono<Void> mssqlExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
+                MSSQLServerContainer.class.getSimpleName(),
+                Mono.defer(() -> {
+                    return applicationService.runWithTransactionRollbackManually();
+                })
+        );
+        Mono<Void> oracleExecution = R2dbcMybatisDatabaseRoutingOperator.executeMono(
+                OracleContainer.class.getSimpleName(),
+                Mono.defer(() -> {
+                    return applicationService.runWithTransactionRollbackManually();
+                })
+        );
+        return Flux.concatDelayError(mysqlExecution,
+                        mariadbExecution,
+                        postgresExecution,
+                        mssqlExecution,
+                        oracleExecution
+                )
                 .then();
     }
 }

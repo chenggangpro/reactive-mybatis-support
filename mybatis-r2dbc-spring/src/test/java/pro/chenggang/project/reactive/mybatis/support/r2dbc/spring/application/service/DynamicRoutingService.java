@@ -28,6 +28,10 @@ public interface DynamicRoutingService {
 
     Mono<Void> runWithDynamicRoutingWithTransactionCommit();
 
+    Mono<Void> runWithDynamicRoutingWithTransactionCommitManually();
+
     Mono<Void> runWithDynamicRoutingWithTransactionRollback();
+
+    Mono<Void> runWithDynamicRoutingWithTransactionRollbackManually();
 
 }

@@ -1,0 +1,5 @@
+pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.configuration.AutoExclusionFilter
+pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.configuration.MybatisLanguageDriverAutoConfiguration
+pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.configuration.routing.R2dbcMybatisRoutingAutoConfiguration
+pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.configuration.routing.R2dbcMybatisMultiConnectionFactoryAutoInitializer
+pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.configuration.R2dbcMybatisAutoConfiguration

@@ -18,7 +18,11 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.ReactiveTransactionManager;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.reactive.TransactionalOperator;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.query.simple.SimpleQueryMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.transaction.delete.DeleteMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.transaction.insert.InsertMapper;
@@ -28,6 +32,8 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
+
+import static org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW;
 
 /**
  * @author Gang Cheng
@@ -42,6 +48,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final SimpleQueryMapper simpleQueryMapper;
     private final InsertMapper insertMapper;
     private final DeleteMapper deleteMapper;
+    private final ReactiveTransactionManager reactiveTransactionManager;
 
     @Override
     public Mono<Void> runWithoutTransaction() {
@@ -66,7 +73,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 });
     }
 
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
     @Override
     public Mono<Void> runWithTransactionCommit() {
         return simpleQueryMapper.countAllDept()
@@ -99,7 +106,15 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .then();
     }
 
-    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public Mono<Void> runWithTransactionCommitManually() {
+        DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
+        definition.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
+        return TransactionalOperator.create(this.reactiveTransactionManager, definition)
+                .transactional(Mono.defer(this::runWithTransactionCommit));
+    }
+
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
     @Override
     public Mono<Void> runWithTransactionRollback() {
         return simpleQueryMapper.countAllDept()
@@ -131,5 +146,13 @@ public class ApplicationServiceImpl implements ApplicationService {
                             );
                 })
                 .then();
+    }
+
+    @Override
+    public Mono<Void> runWithTransactionRollbackManually() {
+        DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
+        definition.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
+        return TransactionalOperator.create(this.reactiveTransactionManager, definition)
+                .transactional(Mono.defer(this::runWithTransactionRollback));
     }
 }

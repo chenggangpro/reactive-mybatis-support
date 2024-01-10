@@ -22,7 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.OracleContainer;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.MybatisR2dbcApplication;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.transaction.insert.InsertMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.entity.Dept;
@@ -68,7 +68,7 @@ class InsertMapperTest extends MybatisR2dbcApplicationTests {
                 .as(super::withRollback)
                 .as(StepVerifier::create)
                 .consumeNextWith(effectRowCount -> {
-                    assertEquals(effectRowCount, 1);
+                    assertEquals(1, effectRowCount);
                     assertNull(dept.getDeptNo());
                 })
                 .verifyComplete();
@@ -81,39 +81,23 @@ class InsertMapperTest extends MybatisR2dbcApplicationTests {
                 .as(super::withRollback)
                 .as(StepVerifier::create)
                 .consumeNextWith(effectRowCount -> {
-                    assertEquals(effectRowCount, 1);
+                    assertEquals(1, effectRowCount);
                     assertNotNull(dept.getDeptNo());
                 })
                 .verifyComplete();
     }
 
     @Test
-    void insertOneDeptWithGeneratedKeyUsingSelectKeyMysql() {
+    void insertOneDeptWithGeneratedKeyUsingSelectKey() {
         if (!MySQLContainer.class.equals(currentContainerType) && !MariaDBContainer.class.equals(currentContainerType)) {
             return;
         }
         this.resetDept();
-        insertMapper.insertOneDeptWithGeneratedKeyUsingSelectKeyMysql(dept)
+        insertMapper.insertOneDeptWithGeneratedKeyUsingSelectKey(dept)
                 .as(super::withRollback)
                 .as(StepVerifier::create)
                 .consumeNextWith(effectRowCount -> {
-                    assertEquals(effectRowCount, 1);
-                    assertNotNull(dept.getDeptNo());
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void insertOneDeptWithGeneratedKeyUsingSelectKeyPostgresql() {
-        if (!PostgreSQLContainer.class.equals(currentContainerType)) {
-            return;
-        }
-        this.resetDept();
-        insertMapper.insertOneDeptWithGeneratedKeyUsingSelectKeyPostgresql(dept)
-                .as(super::withRollback)
-                .as(StepVerifier::create)
-                .consumeNextWith(effectRowCount -> {
-                    assertEquals(effectRowCount, 1);
+                    assertEquals(1, effectRowCount);
                     assertNotNull(dept.getDeptNo());
                 })
                 .verifyComplete();
@@ -126,7 +110,7 @@ class InsertMapperTest extends MybatisR2dbcApplicationTests {
                 .as(super::withRollback)
                 .as(StepVerifier::create)
                 .consumeNextWith(effectRowCount -> {
-                    assertEquals(effectRowCount, 1);
+                    assertEquals(1, effectRowCount);
                     assertNull(dept.getDeptNo());
                 })
                 .verifyComplete();
@@ -139,39 +123,23 @@ class InsertMapperTest extends MybatisR2dbcApplicationTests {
                 .as(super::withRollback)
                 .as(StepVerifier::create)
                 .consumeNextWith(effectRowCount -> {
-                    assertEquals(effectRowCount, 1);
+                    assertEquals(1, effectRowCount);
                     assertNotNull(dept.getDeptNo());
                 })
                 .verifyComplete();
     }
 
     @Test
-    void insertOneDeptWithGeneratedKeyAndAnnotationMysql() {
+    void insertOneDeptWithGeneratedKeyAndAnnotationAndSelectKey() {
         if (!MySQLContainer.class.equals(currentContainerType) && !MariaDBContainer.class.equals(currentContainerType)) {
             return;
         }
         this.resetDept();
-        insertMapper.insertOneDeptWithGeneratedKeyAndAnnotationMysql(dept)
+        insertMapper.insertOneDeptWithGeneratedKeyAndAnnotationAndSelectKey(dept)
                 .as(super::withRollback)
                 .as(StepVerifier::create)
                 .consumeNextWith(effectRowCount -> {
-                    assertEquals(effectRowCount, 1);
-                    assertNotNull(dept.getDeptNo());
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void insertOneDeptWithGeneratedKeyAndAnnotationPostgresql() {
-        if (!PostgreSQLContainer.class.equals(currentContainerType)) {
-            return;
-        }
-        this.resetDept();
-        insertMapper.insertOneDeptWithGeneratedKeyAndAnnotationPostgresql(dept)
-                .as(super::withRollback)
-                .as(StepVerifier::create)
-                .consumeNextWith(effectRowCount -> {
-                    assertEquals(effectRowCount, 1);
+                    assertEquals(1, effectRowCount);
                     assertNotNull(dept.getDeptNo());
                 })
                 .verifyComplete();
@@ -188,7 +156,7 @@ class InsertMapperTest extends MybatisR2dbcApplicationTests {
                 .as(super::withRollback)
                 .as(StepVerifier::create)
                 .consumeNextWith(effectRowCount -> {
-                    assertEquals(effectRowCount, 3);
+                    assertEquals(3, effectRowCount);
                 })
                 .verifyComplete();
     }
@@ -204,7 +172,7 @@ class InsertMapperTest extends MybatisR2dbcApplicationTests {
                 .as(super::withRollback)
                 .as(StepVerifier::create)
                 .consumeNextWith(effectRowCount -> {
-                    assertEquals(effectRowCount, 3);
+                    assertEquals(3, effectRowCount);
                 })
                 .verifyComplete();
     }
@@ -215,7 +183,7 @@ class InsertMapperTest extends MybatisR2dbcApplicationTests {
         insertMapper.insertWithDynamic(dept)
                 .as(StepVerifier::create)
                 .consumeNextWith(effectRowCount -> {
-                    assertEquals(effectRowCount, 1);
+                    assertEquals(1, effectRowCount);
                     assertNull(dept.getDeptNo());
                 })
                 .verifyComplete();
@@ -228,7 +196,7 @@ class InsertMapperTest extends MybatisR2dbcApplicationTests {
                 .as(super::withRollback)
                 .as(StepVerifier::create)
                 .consumeNextWith(effectRowCount -> {
-                    assertEquals(effectRowCount, 1);
+                    assertEquals(1, effectRowCount);
                     assertNotNull(dept.getDeptNo());
                 })
                 .verifyComplete();
@@ -236,6 +204,11 @@ class InsertMapperTest extends MybatisR2dbcApplicationTests {
 
     @Test
     void insertMultipleWithDynamic() {
+        // mybatis-dynamic-sql doesn't support oracle insert batch operations
+        // https://github.com/mybatis/mybatis-dynamic-sql/issues/242
+        if(OracleContainer.class.equals(currentContainerType)){
+            return;
+        }
         this.resetDept();
         List<Dept> deptList = new ArrayList<>();
         deptList.add(dept);
@@ -245,7 +218,7 @@ class InsertMapperTest extends MybatisR2dbcApplicationTests {
                 .as(super::withRollback)
                 .as(StepVerifier::create)
                 .consumeNextWith(effectRowCount -> {
-                    assertEquals(effectRowCount, 3);
+                    assertEquals(3, effectRowCount);
                 })
                 .verifyComplete();
     }
@@ -264,7 +237,7 @@ class InsertMapperTest extends MybatisR2dbcApplicationTests {
                 .as(super::withRollback)
                 .as(StepVerifier::create)
                 .consumeNextWith(effectRowCount -> {
-                    assertEquals(effectRowCount, 1);
+                    assertEquals(1, effectRowCount);
                 })
                 .verifyComplete();
     }

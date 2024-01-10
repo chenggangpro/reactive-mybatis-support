@@ -27,6 +27,7 @@ import reactor.core.Exceptions;
 import reactor.test.StepVerifier;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * @author Gang Cheng
@@ -55,16 +56,45 @@ public class DynamicRoutingServiceTests extends MybatisR2dbcRoutingApplicationTe
     }
 
     @Test
+    void runWithDynamicRoutingWithTransactionCommitManually() {
+        dynamicRoutingService.runWithDynamicRoutingWithTransactionCommitManually()
+                .as(StepVerifier::create)
+                .verifyComplete();
+    }
+
+    @Test
     void runWithDynamicRoutingWithTransactionRollback() {
         dynamicRoutingService.runWithDynamicRoutingWithTransactionRollback()
                 .as(StepVerifier::create)
                 .verifyErrorSatisfies(throwable -> {
                     Assertions.assertTrue(Exceptions.isMultiple(throwable));
                     List<Throwable> throwableList = Exceptions.unwrapMultipleExcludingTracebacks(throwable);
-                    Assertions.assertEquals(4,throwableList.size());
                     for (Throwable th : throwableList) {
-                        Assertions.assertInstanceOf(IllegalStateException.class,th);
+                        Assertions.assertTrue(th instanceof IllegalStateException);
                     }
+                    long totalIllegalStateExceptionCount = throwableList.stream()
+                            .filter(Predicate.not(Exceptions::isTraceback))
+                            .filter(th -> th instanceof IllegalStateException)
+                            .count();
+                    Assertions.assertEquals(5, totalIllegalStateExceptionCount);
+                });
+    }
+
+    @Test
+    void runWithDynamicRoutingWithTransactionRollbackManually() {
+        dynamicRoutingService.runWithDynamicRoutingWithTransactionRollbackManually()
+                .as(StepVerifier::create)
+                .verifyErrorSatisfies(throwable -> {
+                    Assertions.assertTrue(Exceptions.isMultiple(throwable));
+                    List<Throwable> throwableList = Exceptions.unwrapMultipleExcludingTracebacks(throwable);
+                    for (Throwable th : throwableList) {
+                        Assertions.assertTrue(th instanceof IllegalStateException);
+                    }
+                    long totalIllegalStateExceptionCount = throwableList.stream()
+                            .filter(Predicate.not(Exceptions::isTraceback))
+                            .filter(th -> th instanceof IllegalStateException)
+                            .count();
+                    Assertions.assertEquals(5, totalIllegalStateExceptionCount);
                 });
     }
 
