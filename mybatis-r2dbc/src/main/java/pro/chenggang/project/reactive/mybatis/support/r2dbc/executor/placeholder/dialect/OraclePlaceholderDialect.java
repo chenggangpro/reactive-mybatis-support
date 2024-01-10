@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,6 +15,9 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.dialect;
 
+import java.util.Objects;
+import java.util.regex.Pattern;
+
 /**
  * Oracle placeholder dialect
  *
@@ -23,6 +26,8 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholde
  * @since 1.0.5
  */
 public class OraclePlaceholderDialect implements NamePlaceholderDialect {
+
+    private static final Pattern PROPERTY_PATTERN = Pattern.compile("\\.|[^@:;/$\\d\\w_]");
 
     /**
      * The dialect name
@@ -36,7 +41,15 @@ public class OraclePlaceholderDialect implements NamePlaceholderDialect {
 
     @Override
     public String getMarker() {
-        return ":";
+        return ":Or_";
+    }
+
+    @Override
+    public String propertyNamePostProcess(String propertyName) {
+        if (Objects.isNull(propertyName) || propertyName.length() == 0) {
+            return propertyName;
+        }
+        return PROPERTY_PATTERN.matcher(propertyName).replaceAll("_");
     }
 
 }

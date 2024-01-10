@@ -48,9 +48,7 @@ public interface InsertMapper extends CommonInsertMapper<Dept> {
 
     Mono<Integer> insertOneDeptWithGeneratedKey(Dept dept);
 
-    Mono<Integer> insertOneDeptWithGeneratedKeyUsingSelectKeyMysql(Dept dept);
-
-    Mono<Integer> insertOneDeptWithGeneratedKeyUsingSelectKeyPostgresql(Dept dept);
+    Mono<Integer> insertOneDeptWithGeneratedKeyUsingSelectKey(Dept dept);
 
     @Insert("INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})")
     Mono<Integer> insertOneDeptWithAnnotation(Dept dept);
@@ -59,17 +57,49 @@ public interface InsertMapper extends CommonInsertMapper<Dept> {
     @Options(useGeneratedKeys = true, keyProperty = "deptNo", keyColumn = "dept_no")
     Mono<Integer> insertOneDeptWithGeneratedKeyAndAnnotation(Dept dept);
 
-    @SelectKey(statement = "SELECT LAST_INSERT_ID()", keyColumn = "dept_no", keyProperty = "deptNo", resultType = Long.class, before = false)
+    @SelectKey(databaseId = "postgresql", statement = "SELECT currval('dept_dept_no_seq')", keyColumn = "dept_no", keyProperty = "deptNo", resultType = Long.class, before = false)
+    @SelectKey(databaseId = "mysql", statement = "SELECT LAST_INSERT_ID()", keyColumn = "dept_no", keyProperty = "deptNo", resultType = Long.class, before = false)
+    @SelectKey(databaseId = "mariadb", statement = "SELECT LAST_INSERT_ID()", keyColumn = "dept_no", keyProperty = "deptNo", resultType = Long.class, before = false)
+    @SelectKey(databaseId = "oracle", statement = "SELECT dept_seq.currval FROM DUAL", keyColumn = "dept_no", keyProperty = "deptNo", resultType = Long.class, before = false)
     @Insert("INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})")
-    Mono<Integer> insertOneDeptWithGeneratedKeyAndAnnotationMysql(Dept dept);
-
-    @SelectKey(statement = "SELECT currval('dept_dept_no_seq')", keyColumn = "dept_no", keyProperty = "deptNo", resultType = Long.class, before = false)
-    @Insert("INSERT INTO dept (dept_name, location, create_time) VALUES (#{deptName},#{location},#{createTime})")
-    Mono<Integer> insertOneDeptWithGeneratedKeyAndAnnotationPostgresql(Dept dept);
+    Mono<Integer> insertOneDeptWithGeneratedKeyAndAnnotationAndSelectKey(Dept dept);
 
     Mono<Integer> insertMultipleDept(List<Dept> deptList);
 
-    @Insert({
+    @Insert(databaseId = "oracle", value = {
+            "<script>",
+            "INSERT ALL",
+            "<foreach collection='list' item='item' separator=' '>" +
+                    "  INTO dept (dept_name, location, create_time) VALUES (#{item.deptName},#{item.location},#{item.createTime})" +
+                    "</foreach>" +
+                    "SELECT * FROM DUAL",
+            "</script>"
+    })
+    @Insert(databaseId = "mysql",value = {
+            "<script>",
+            "INSERT INTO dept (dept_name, location, create_time) VALUES",
+            "<foreach collection='list' item='item' separator=','>" +
+                    "(#{item.deptName},#{item.location},#{item.createTime})" +
+                    "</foreach>",
+            "</script>"
+    })
+    @Insert(databaseId = "mariadb",value = {
+            "<script>",
+            "INSERT INTO dept (dept_name, location, create_time) VALUES",
+            "<foreach collection='list' item='item' separator=','>" +
+                    "(#{item.deptName},#{item.location},#{item.createTime})" +
+                    "</foreach>",
+            "</script>"
+    })
+    @Insert(databaseId = "postgresql",value = {
+            "<script>",
+            "INSERT INTO dept (dept_name, location, create_time) VALUES",
+            "<foreach collection='list' item='item' separator=','>" +
+                    "(#{item.deptName},#{item.location},#{item.createTime})" +
+                    "</foreach>",
+            "</script>"
+    })
+    @Insert(databaseId = "mssql",value = {
             "<script>",
             "INSERT INTO dept (dept_name, location, create_time) VALUES",
             "<foreach collection='list' item='item' separator=','>" +

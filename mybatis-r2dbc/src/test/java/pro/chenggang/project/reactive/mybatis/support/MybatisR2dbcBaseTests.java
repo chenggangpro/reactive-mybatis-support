@@ -23,7 +23,6 @@ import io.r2dbc.spi.ValidationDepth;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.io.Resources;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.containers.MariaDBContainer;
@@ -97,7 +96,7 @@ public class MybatisR2dbcBaseTests {
         databaseInitializationContainer.put(MariaDBContainer.class, new MariadbTestContainerInitialization());
         databaseInitializationContainer.put(PostgreSQLContainer.class, new PostgresqlTestContainerInitialization());
         databaseInitializationContainer.put(MSSQLServerContainer.class, new SqlServerTestContainerInitialization());
-        // Oracle R2DBC can only interoperate with libraries that support the 1.0.0.RELEASE version of the R2DBC SPI.
+//         Oracle R2DBC can only interoperate with libraries that support the 1.0.0.RELEASE version of the R2DBC SPI and depends on the JDK 11 build of Oracle JDBC 21.11.0.0.
 //        databaseInitializationContainer.put(OracleContainer.class,new OracleTestContainerInitialization());
     }
 
@@ -109,10 +108,11 @@ public class MybatisR2dbcBaseTests {
     }
 
     static {
-        databaseIdAliasProperties.setProperty("MySQL","mysql");
-        databaseIdAliasProperties.setProperty("MariaDB","mariadb");
-        databaseIdAliasProperties.setProperty("PostgreSQL","postgresql");
-        databaseIdAliasProperties.setProperty("Microsoft SQL Server","mssql");
+        databaseIdAliasProperties.setProperty("MySQL", "mysql");
+        databaseIdAliasProperties.setProperty("MariaDB", "mariadb");
+        databaseIdAliasProperties.setProperty("PostgreSQL", "postgresql");
+        databaseIdAliasProperties.setProperty("Microsoft SQL Server", "mssql");
+        databaseIdAliasProperties.setProperty("Oracle Database", "oracle");
     }
 
     protected static final String DB_NAME = "mybatis_r2dbc_test";
@@ -149,9 +149,6 @@ public class MybatisR2dbcBaseTests {
         R2dbcProtocol r2dbcProtocol = databaseInitialization.startup(databaseConfig, dryRun);
         this.connectionFactory = this.connectionFactory(r2dbcProtocol);
         R2dbcMybatisConfiguration r2dbcMybatisConfiguration = r2dbcMybatisConfigurationProvider.apply(r2dbcProtocol);
-        R2dbcDatabaseIdProvider r2dbcDatabaseIdProvider = new R2dbcVendorDatabaseIdProvider();
-        r2dbcDatabaseIdProvider.setProperties(databaseIdAliasProperties);
-        r2dbcMybatisConfiguration.setDatabaseId(r2dbcDatabaseIdProvider.getDatabaseId(connectionFactory));
         R2dbcEnvironment r2dbcEnvironment = new R2dbcEnvironment.Builder(testContainerClass.getSimpleName())
                 .withDefaultTransactionProxy(true)
                 .connectionFactory(connectionFactory)
@@ -223,6 +220,9 @@ public class MybatisR2dbcBaseTests {
             log.info("⬇⬇⬇⬇⬇⬇ {} ----------------", aClass.getSimpleName());
             ReactiveSqlSessionFactory reactiveSqlSessionFactory = setUp(aClass, false, r2dbcProtocol -> {
                 R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
+                R2dbcDatabaseIdProvider r2dbcDatabaseIdProvider = new R2dbcVendorDatabaseIdProvider();
+                r2dbcDatabaseIdProvider.setProperties(databaseIdAliasProperties);
+                r2dbcMybatisConfiguration.setDatabaseId(r2dbcDatabaseIdProvider.getDatabaseId(connectionFactory));
                 for (String commonXmlMapperLocation : commonXmlMapperLocations) {
                     loadXmlMapper(commonXmlMapperLocation, r2dbcMybatisConfiguration);
                 }
@@ -242,6 +242,9 @@ public class MybatisR2dbcBaseTests {
             log.info("⬇⬇⬇⬇⬇⬇ {} ----------------", aClass.getSimpleName());
             ReactiveSqlSessionFactory reactiveSqlSessionFactory = setUp(aClass, true, r2dbcProtocol -> {
                 R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
+                R2dbcDatabaseIdProvider r2dbcDatabaseIdProvider = new R2dbcVendorDatabaseIdProvider();
+                r2dbcDatabaseIdProvider.setProperties(databaseIdAliasProperties);
+                r2dbcMybatisConfiguration.setDatabaseId(r2dbcDatabaseIdProvider.getDatabaseId(connectionFactory));
                 r2dbcMybatisConfigurationInitialization.accept(r2dbcMybatisConfiguration);
                 return r2dbcMybatisConfiguration;
             });
@@ -256,7 +259,7 @@ public class MybatisR2dbcBaseTests {
         return new MybatisR2dbcTestRunner<>();
     }
 
-    @Test
+//    @Test
     void validateTestcontainers() {
         if (!validateTestcontainersFlag.compareAndSet(false, true)) {
             log.info("All testcontainers have already been validated.");
@@ -345,6 +348,9 @@ public class MybatisR2dbcBaseTests {
                                 dryRun,
                                 r2dbcProtocol -> {
                                     R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
+                                    R2dbcDatabaseIdProvider r2dbcDatabaseIdProvider = new R2dbcVendorDatabaseIdProvider();
+                                    r2dbcDatabaseIdProvider.setProperties(databaseIdAliasProperties);
+                                    r2dbcMybatisConfiguration.setDatabaseId(r2dbcDatabaseIdProvider.getDatabaseId(connectionFactory));
                                     r2dbcMybatisConfigurationCustomizer.accept(
                                             r2dbcMybatisConfiguration);
                                     for (String commonXmlMapperLocation : commonXmlMapperLocations) {

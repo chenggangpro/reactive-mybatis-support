@@ -19,6 +19,9 @@
           <when test="_databaseId == 'postgresql'">
             SELECT currval('dept_dept_no_seq')
           </when>
+          <when test="_databaseId == 'oracle'">
+            SELECT dept_seq.currval FROM DUAL
+          </when>
           <otherwise>
             NOT SUPPORTED
           </otherwise>
@@ -28,10 +31,21 @@
   </insert>
 
   <insert id="insertMultipleDept" parameterType="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
-    INSERT INTO dept (dept_name, location, create_time) VALUES
-    <foreach collection="list" item="item" separator=",">
-      (#{item.deptName},#{item.location},#{item.createTime})
-    </foreach>
+    <choose>
+      <when test="_databaseId == 'oracle' ">
+        INSERT ALL
+          <foreach collection="list" item="item" separator=" ">
+            INTO dept (dept_name, location, create_time) VALUES (#{item.deptName},#{item.location},#{item.createTime})
+          </foreach>
+        SELECT * FROM DUAL
+      </when>
+      <otherwise>
+        INSERT INTO dept (dept_name, location, create_time) VALUES
+        <foreach collection="list" item="item" separator=",">
+          (#{item.deptName},#{item.location},#{item.createTime})
+        </foreach>
+      </otherwise>
+    </choose>
   </insert>
 
   <parameterMap id="SubjectContent" type="pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectContent">

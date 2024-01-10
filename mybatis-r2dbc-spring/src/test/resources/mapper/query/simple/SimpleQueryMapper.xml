@@ -8,7 +8,7 @@
 
   <select id="selectOneDept" resultType="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.entity.Dept">
     <choose>
-      <when test="_databaseId == 'mssql' ">
+      <when test="_databaseId == 'mssql' or _databaseId == 'oracle' ">
         SELECT * FROM dept ORDER BY dept_no OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
       </when>
       <otherwise>

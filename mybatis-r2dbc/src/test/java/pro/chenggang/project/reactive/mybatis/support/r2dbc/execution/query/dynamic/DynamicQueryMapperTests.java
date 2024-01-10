@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ public class DynamicQueryMapperTests extends MybatisR2dbcBaseTests {
                     return dynamicQueryMapper.countAllDept();
                 })
                 .verifyWith(firstStep -> firstStep
-                        .assertNext(result -> assertEquals(result, 4))
+                        .assertNext(result -> assertEquals(4, result))
                         .verifyComplete()
                 )
                 .run();
@@ -61,7 +61,7 @@ public class DynamicQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 1L);
+                            assertEquals(1L, dept.getDeptNo());
                         })
                         .verifyComplete()
                 )
@@ -82,16 +82,16 @@ public class DynamicQueryMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 1L);
+                            assertEquals(1L, dept.getDeptNo());
                         })
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 2L);
+                            assertEquals(2L, dept.getDeptNo());
                         })
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 3L);
+                            assertEquals(3L, dept.getDeptNo());
                         })
                         .assertNext(dept -> {
-                            assertEquals(dept.getDeptNo(), 4L);
+                            assertEquals(4L, dept.getDeptNo());
                         })
                         .verifyComplete()
                 )

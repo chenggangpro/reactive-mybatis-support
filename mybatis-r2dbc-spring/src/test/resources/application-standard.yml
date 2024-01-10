@@ -10,6 +10,7 @@ r2dbc:
       "MariaDB": "mariadb"
       "PostgreSQL": "postgresql"
       "[Microsoft SQL Server]": "mssql"
+      "[Oracle Database]": "oracle"
     configuration:
       map-underscore-to-camel-case: true
 spring:

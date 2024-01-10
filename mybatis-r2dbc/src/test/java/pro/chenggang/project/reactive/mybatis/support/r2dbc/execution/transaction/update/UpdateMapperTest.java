@@ -54,7 +54,7 @@ class UpdateMapperTest extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 1);
+                            assertEquals(1, effectRowCount);
                         })
                         .verifyComplete()
                 )
@@ -79,7 +79,7 @@ class UpdateMapperTest extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 1);
+                            assertEquals(1, effectRowCount);
                         })
                         .verifyComplete()
                 )
@@ -104,7 +104,7 @@ class UpdateMapperTest extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 1);
+                            assertEquals(1, effectRowCount);
                         })
                         .verifyComplete()
                 )
@@ -132,7 +132,7 @@ class UpdateMapperTest extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(effectRowCount -> {
-                            assertEquals(effectRowCount, 1);
+                            assertEquals(1, effectRowCount);
                         })
                         .verifyComplete()
                 )

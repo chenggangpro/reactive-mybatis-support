@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -58,6 +58,7 @@ public class SqlServerTestContainerInitialization implements DatabaseInitializat
                     .protocolSymbol("mssql")
                     .host("127.0.0.1")
                     .port(MS_SQL_SERVER_PORT)
+                    .validationQuery("SELECT 1")
                     .build();
             log.info("[DryRun] Start up test container success : {}", r2dbcProtocol);
             return r2dbcProtocol;
@@ -77,6 +78,7 @@ public class SqlServerTestContainerInitialization implements DatabaseInitializat
                 .host(jdbcDatabaseContainer.getHost())
                 .port(jdbcDatabaseContainer.getMappedPort(MS_SQL_SERVER_PORT))
                 .options("encrypt=false")
+                .validationQuery("SELECT 1")
                 .build();
         log.info("Start up test container success : {}", r2dbcProtocol);
         return r2dbcProtocol;

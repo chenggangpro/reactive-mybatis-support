@@ -49,7 +49,7 @@ public class DynamicQueryMapperTests extends MybatisR2dbcApplicationTests {
         dynamicQueryMapper.selectByDeptNo(1L)
                 .as(StepVerifier::create)
                 .assertNext(dept -> {
-                    assertEquals(dept.getDeptNo(), 1L);
+                    assertEquals(1L, dept.getDeptNo());
                 })
                 .verifyComplete();
     }
@@ -59,16 +59,16 @@ public class DynamicQueryMapperTests extends MybatisR2dbcApplicationTests {
         dynamicQueryMapper.selectAllDept()
                 .as(StepVerifier::create)
                 .assertNext(dept -> {
-                    assertEquals(dept.getDeptNo(), 1L);
+                    assertEquals(1L, dept.getDeptNo());
                 })
                 .assertNext(dept -> {
-                    assertEquals(dept.getDeptNo(), 2L);
+                    assertEquals(2L, dept.getDeptNo());
                 })
                 .assertNext(dept -> {
-                    assertEquals(dept.getDeptNo(), 3L);
+                    assertEquals(3L, dept.getDeptNo());
                 })
                 .assertNext(dept -> {
-                    assertEquals(dept.getDeptNo(), 4L);
+                    assertEquals(4L, dept.getDeptNo());
                 })
                 .verifyComplete();
     }

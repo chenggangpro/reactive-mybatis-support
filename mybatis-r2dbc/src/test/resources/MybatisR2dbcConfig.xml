@@ -72,6 +72,7 @@
     <property name="MariaDB" value="mariadb"/>
     <property name="PostgreSQL" value="postgresql"/>
     <property name="Microsoft SQL Server" value="mssql"/>
+    <property name="Oracle Database" value="oracle"/>
   </databaseIdProvider>
 
   <mappers>

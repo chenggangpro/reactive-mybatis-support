@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ public class PostgresqlTestContainerInitialization implements DatabaseInitializa
                     .protocolSymbol("postgresql")
                     .host("127.0.0.1")
                     .port(POSTGRESQL_PORT)
+                    .validationQuery("SELECT 1")
                     .build();
             log.info("[DryRun] Start up test container success : {}", r2dbcProtocol);
             return r2dbcProtocol;
@@ -68,6 +69,7 @@ public class PostgresqlTestContainerInitialization implements DatabaseInitializa
                 .host(jdbcDatabaseContainer.getHost())
                 .port(jdbcDatabaseContainer.getMappedPort(POSTGRESQL_PORT))
                 .options("sslMode=disable")
+                .validationQuery("SELECT 1")
                 .build();
         log.info("Start up test container success : {}", r2dbcProtocol);
         return r2dbcProtocol;
