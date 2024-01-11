@@ -33,7 +33,6 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.test;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.platform.commons.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -48,7 +47,6 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.testco
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.UUID;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
@@ -88,16 +86,12 @@ public class MybatisR2dbcRoutingApplicationTests extends MybatisR2dbcBaseTests {
     protected TransactionalOperator transactionalOperator() {
         DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
         definition.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
-        definition.setName(UUID.randomUUID().toString());
         return TransactionalOperator.create(transactionManager, definition);
     }
 
     protected TransactionalOperator transactionalOperator(Consumer<DefaultTransactionDefinition> transactionDefinitionCustomizer) {
         DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
         transactionDefinitionCustomizer.accept(definition);
-        if (StringUtils.isBlank(definition.getName())) {
-            definition.setName(UUID.randomUUID().toString());
-        }
         return TransactionalOperator.create(transactionManager, definition);
     }
 

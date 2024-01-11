@@ -57,7 +57,6 @@ public class MybatisR2dbcApplicationTests extends MybatisR2dbcBaseTests {
     protected TransactionalOperator transactionalOperator() {
         DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
         definition.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
-        definition.setName(UUID.randomUUID().toString());
         return TransactionalOperator.create(transactionManager, definition);
     }
 

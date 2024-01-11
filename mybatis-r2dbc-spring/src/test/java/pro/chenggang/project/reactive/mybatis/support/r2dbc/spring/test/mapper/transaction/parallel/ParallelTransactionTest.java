@@ -57,9 +57,11 @@ class ParallelTransactionTest extends MybatisR2dbcApplicationTests {
 
     @Test
     void parallelMultipleTransaction() {
-        // this test doesn't work with r2dbc-mssql driver
+        // 1. this test doesn't work with r2dbc-mssql driver
         // r2dbc-mssql 0.9.0 has an issue fixed in 1.0.2.RELEASE but the r2dbc-spi's baseline is 1.0.0.RELEASE
         // issue link: https://github.com/r2dbc/r2dbc-mssql/issues/271
+        // 2. oracle jdbc doesn't support IsolationLevel.READ_UNCOMMITTED
+        // 3. postgresql server treat READ_UNCOMMITTED as READ_COMMITTED
         if (!MySQLContainer.class.equals(currentContainerType) && !MariaDBContainer.class.equals(currentContainerType)) {
             return;
         }

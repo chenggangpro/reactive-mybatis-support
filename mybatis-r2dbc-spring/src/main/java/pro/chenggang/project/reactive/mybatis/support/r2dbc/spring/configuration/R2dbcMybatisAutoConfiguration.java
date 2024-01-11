@@ -43,6 +43,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.EnvironmentAware;
@@ -134,6 +135,7 @@ public class R2dbcMybatisAutoConfiguration {
      * @param connectionFactoryOptionsCustomizerProvider the connection factory options customizer object provider
      * @return the connection pool
      */
+    @ConditionalOnProperty(value = "spring.r2dbc.mybatis.routing.enabled", havingValue = "false", matchIfMissing = true)
     @ConditionalOnMissingBean(ConnectionFactory.class)
     @Bean(destroyMethod = "dispose")
     public ConnectionPool connectionFactory(R2dbcMybatisConnectionFactoryProperties r2dbcMybatisConnectionFactoryProperties,

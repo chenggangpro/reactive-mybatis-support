@@ -18,6 +18,7 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.query.simple.SimpleQueryMapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.transaction.delete.DeleteMapper;
@@ -66,7 +67,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 });
     }
 
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
     @Override
     public Mono<Void> runWithTransactionCommit() {
         return simpleQueryMapper.countAllDept()
@@ -99,7 +100,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .then();
     }
 
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
     @Override
     public Mono<Void> runWithTransactionRollback() {
         return simpleQueryMapper.countAllDept()
