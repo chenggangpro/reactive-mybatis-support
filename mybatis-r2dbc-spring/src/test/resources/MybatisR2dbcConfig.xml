@@ -38,6 +38,8 @@
     <typeAlias alias="SubjectData" type="pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.common.entity.SubjectData"/>
   </typeAliases>
 
+  <!-- the connection factory configured in "datasource" label of "environments" label is unuseful in spring environment-->
+
   <databaseIdProvider type="DB_VENDOR">
     <property name="MySQL" value="mysql"/>
     <property name="MariaDB" value="mariadb"/>
