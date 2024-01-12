@@ -159,7 +159,7 @@ public class MybatisR2dbcXmlConfigTests {
             assertNotNull(r2dbcEnvironment);
             assertNotNull(r2dbcEnvironment.getConnectionFactory());
             assertEquals("mysql", r2dbcMybatisConfiguration.getDatabaseId());
-            assertInstanceOf(DefaultTransactionSupportConnectionFactory.class, r2dbcEnvironment.getConnectionFactory());
+            assertInstanceOf(ConnectionPool.class, r2dbcEnvironment.getConnectionFactory());
             r2dbcMybatisConfiguration.addMapper(AdapterMapper.class);
             ReactiveSqlSessionFactory reactiveSqlSessionFactory = DefaultReactiveSqlSessionFactory.newBuilder()
                     .withR2dbcMybatisConfiguration(r2dbcMybatisConfiguration)

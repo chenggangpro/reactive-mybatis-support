@@ -41,11 +41,14 @@ public class MybatisR2dbcApplicationTests extends MybatisR2dbcBaseTests {
 
     @DynamicPropertySource
     static void postgresqlProperties(DynamicPropertyRegistry registry) {
-        // FIXME setup target testcontainer that worked around current test
-        setUp(MySQLContainer.class, false);
-//        setUp(MariaDBContainer.class, false);
-//        setUp(PostgreSQLContainer.class, false);
-//        setUp(MSSQLServerContainer.class, false);
+        String envDatabaseType = System.getProperty("databaseType",
+                MySQLContainer.class.getSimpleName()
+        );
+        databaseInitializationContainer.keySet()
+                .stream()
+                .filter(databaseType -> databaseType.getSimpleName().equalsIgnoreCase(envDatabaseType))
+                .findFirst()
+                .ifPresent(databaseType -> setUp(databaseType, false));
         registry.add("spring.r2dbc.mybatis.r2dbc-url", r2dbcProtocol::getProtocolUrl);
         registry.add("spring.r2dbc.mybatis.password", r2dbcProtocol.getDatabaseConfig()::getPassword);
         registry.add("spring.r2dbc.mybatis.username", r2dbcProtocol.getDatabaseConfig()::getUsername);

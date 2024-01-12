@@ -99,6 +99,12 @@ public class MybatisR2dbcBaseTests {
             return;
         }
         for (Class<?> aClass : MybatisR2dbcBaseTests.databaseInitializationContainer.keySet()) {
+            String envDatabaseType = System.getProperty("databaseType",
+                    MySQLContainer.class.getSimpleName()
+            );
+            if (!aClass.getSimpleName().equalsIgnoreCase(envDatabaseType)) {
+                return;
+            }
             log.info("⬇⬇⬇⬇⬇⬇ {} ----------------", aClass.getSimpleName());
             Hooks.onOperatorDebug();
             Hooks.enableContextLossTracking();
