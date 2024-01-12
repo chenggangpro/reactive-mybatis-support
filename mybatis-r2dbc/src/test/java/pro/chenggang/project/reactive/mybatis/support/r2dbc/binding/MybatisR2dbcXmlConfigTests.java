@@ -15,6 +15,7 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.binding;
 
+import io.r2dbc.pool.ConnectionPool;
 import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.io.Resources;
@@ -53,7 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Gang Cheng
  * @version 1.0.0
- * @since 1.0.0
+ * @since 2.0.0
  */
 @Slf4j
 @Testcontainers
@@ -104,8 +105,8 @@ public class MybatisR2dbcXmlConfigTests {
             R2dbcEnvironment r2dbcEnvironment = r2dbcMybatisConfiguration.getR2dbcEnvironment();
             assertNotNull(r2dbcEnvironment);
             assertNotNull(r2dbcEnvironment.getConnectionFactory());
+            assertInstanceOf(ConnectionPool.class, r2dbcEnvironment.getConnectionFactory());
             assertEquals("mysql", r2dbcMybatisConfiguration.getDatabaseId());
-            assertInstanceOf(DefaultTransactionSupportConnectionFactory.class, r2dbcEnvironment.getConnectionFactory());
         }
     }
 
@@ -130,8 +131,9 @@ public class MybatisR2dbcXmlConfigTests {
             R2dbcEnvironment r2dbcEnvironment = r2dbcMybatisConfiguration.getR2dbcEnvironment();
             assertNotNull(r2dbcEnvironment);
             assertNotNull(r2dbcEnvironment.getConnectionFactory());
+            assertInstanceOf(DefaultTransactionSupportConnectionFactory.class, r2dbcEnvironment.getConnectionFactory());
+            assertInstanceOf(PostgresqlConnectionFactory.class, ((DefaultTransactionSupportConnectionFactory) r2dbcEnvironment.getConnectionFactory()).unwrap());
             assertEquals("postgresql", r2dbcMybatisConfiguration.getDatabaseId());
-            assertInstanceOf(PostgresqlConnectionFactory.class, r2dbcEnvironment.getConnectionFactory());
         }
     }
 

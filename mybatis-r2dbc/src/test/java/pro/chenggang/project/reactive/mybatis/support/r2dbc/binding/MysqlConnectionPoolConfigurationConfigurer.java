@@ -15,24 +15,19 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.binding;
 
-import io.r2dbc.spi.ConnectionFactoryOptions;
-import io.r2dbc.spi.Option;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.builder.ConnectionFactoryOptionsConfigurer;
-
-import java.util.HashMap;
-import java.util.Map;
+import io.r2dbc.pool.ConnectionPoolConfiguration;
+import io.r2dbc.pool.SimplePoolMetricsRecorder;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.builder.ConnectionPoolConfigurationConfigurer;
 
 /**
  * @author Gang Cheng
  * @version 1.0.0
  * @since 2.0.0
  */
-public class PostgresqlConnectionFactoryOptionsConfigurer implements ConnectionFactoryOptionsConfigurer {
+public class MysqlConnectionPoolConfigurationConfigurer implements ConnectionPoolConfigurationConfigurer {
 
     @Override
-    public void configure(ConnectionFactoryOptions.Builder optionsBuilder) {
-        Map<String, String> options = new HashMap<>();
-        options.put("lock_timeout", "10s");
-        optionsBuilder.option(Option.valueOf("options"), options);
+    public void configure(ConnectionPoolConfiguration.Builder builder) {
+        builder.metricsRecorder(new SimplePoolMetricsRecorder());
     }
 }

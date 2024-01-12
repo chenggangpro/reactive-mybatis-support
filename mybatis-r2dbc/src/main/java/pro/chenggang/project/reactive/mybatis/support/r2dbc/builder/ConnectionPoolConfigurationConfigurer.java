@@ -13,26 +13,23 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.binding;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.builder;
 
-import io.r2dbc.spi.ConnectionFactoryOptions;
-import io.r2dbc.spi.Option;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.builder.ConnectionFactoryOptionsConfigurer;
-
-import java.util.HashMap;
-import java.util.Map;
+import io.r2dbc.pool.ConnectionPoolConfiguration;
 
 /**
+ * The connection pool configuration configurer
+ *
  * @author Gang Cheng
  * @version 1.0.0
  * @since 2.0.0
  */
-public class PostgresqlConnectionFactoryOptionsConfigurer implements ConnectionFactoryOptionsConfigurer {
+public interface ConnectionPoolConfigurationConfigurer {
 
-    @Override
-    public void configure(ConnectionFactoryOptions.Builder optionsBuilder) {
-        Map<String, String> options = new HashMap<>();
-        options.put("lock_timeout", "10s");
-        optionsBuilder.option(Option.valueOf("options"), options);
-    }
+    /**
+     * Configure connection pool configuration by builder
+     *
+     * @param builder the connection pool configuration builder
+     */
+    void configure(ConnectionPoolConfiguration.Builder builder);
 }

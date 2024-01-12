@@ -41,7 +41,21 @@
   <environments default="r2dbc-test">
     <environment id="mysql">
       <transactionManager type="NOT_USED" />
-      <dataSource type="NOT_USED">
+      <dataSource type="POOLED">
+        <!--connection pool configuration-->
+        <property name="pool.name" value="mysql-connection-pool" />
+        <property name="pool.maxSize" value="16" />
+        <property name="pool.initialSize" value="4" />
+        <property name="pool.maxIdleTime" value="PT1M" />
+        <property name="pool.acquireRetry" value="1" />
+        <property name="pool.backgroundEvictionInterval" value="-PT1S" />
+        <property name="pool.maxAcquireTime" value="PT-1S" />
+        <property name="pool.maxCreateConnectionTime" value="PT-1S" />
+        <property name="pool.maxLifeTime" value="PT-1S" />
+        <property name="pool.validationDepth" value="REMOTE" />
+        <property name="pool.validationQuery" value="SELECT 1" />
+        <property name="pool.configurer" value="${mysql.pool.configurer}" />
+        <!--connection factory configuration-->
         <property name="driver" value="${mysql.driver}"/>
         <property name="host" value="${mysql.host}"/>
         <property name="port" value="${mysql.port}"/>
@@ -49,10 +63,11 @@
         <property name="password" value="${mysql.password}"/>
         <property name="database" value="${mysql.database}"/>
         <property name="@configurer" value="${mysql.configurer}"/>
+        <property name="@defaultTransactionProxy" value="false"/>
       </dataSource>
     </environment>
     <environment id="postgresql">
-      <transactionManager type="NOT_USED" />
+      <transactionManager type="UNPOOLED" />
       <dataSource type="NOT_USED">
         <property name="driver" value="${postgresql.driver}"/>
         <property name="host" value="${postgresql.host}"/>
@@ -61,7 +76,7 @@
         <property name="password" value="${postgresql.password}"/>
         <property name="database" value="${postgresql.database}"/>
         <property name="@configurer" value="${postgresql.configurer}"/>
-        <property name="@defaultTransactionProxy" value="false"/>
+        <property name="@defaultTransactionProxy" value="true"/>
       </dataSource>
     </environment>
   </environments>

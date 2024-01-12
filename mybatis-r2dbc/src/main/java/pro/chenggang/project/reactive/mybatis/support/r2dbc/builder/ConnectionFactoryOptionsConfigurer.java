@@ -22,12 +22,12 @@ import io.r2dbc.spi.ConnectionFactoryOptions;
  *
  * @author Gang Cheng
  * @version 1.0.0
- * @since 1.0.0
+ * @since 2.0.0
  */
 public interface ConnectionFactoryOptionsConfigurer {
 
     /**
-     * Customize connection factory options by builder.
+     * Configure connection factory options by builder.
      *
      * @param optionsBuilder the options builder
      */
