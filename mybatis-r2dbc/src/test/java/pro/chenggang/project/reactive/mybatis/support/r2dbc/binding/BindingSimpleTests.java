@@ -27,6 +27,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.builder.R2dbcMapperA
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.DefaultReactiveMybatisExecutor;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.mapping.R2dbcEnvironment;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -45,7 +46,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 public class BindingSimpleTests {
 
-    R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
+    R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration(new R2dbcEnvironment.Builder(
+            "BindingSimpleTests").build()
+    );
     ReactiveSqlSession mockReactiveSqlSession = new DefaultReactiveSqlSession(r2dbcMybatisConfiguration,
             new DefaultReactiveMybatisExecutor(r2dbcMybatisConfiguration),
             ReactiveSqlSession.DEFAULT_PROFILE

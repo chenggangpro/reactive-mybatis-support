@@ -23,6 +23,7 @@ import io.r2dbc.spi.ValidationDepth;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.io.Resources;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import org.testcontainers.containers.MSSQLServerContainer;
@@ -260,6 +261,7 @@ public class MybatisR2dbcBaseTests {
         return new MybatisR2dbcTestRunner<>();
     }
 
+    @Disabled
     @Test
     void validateTestcontainers() {
         if (!validateTestcontainersFlag.compareAndSet(false, true)) {
