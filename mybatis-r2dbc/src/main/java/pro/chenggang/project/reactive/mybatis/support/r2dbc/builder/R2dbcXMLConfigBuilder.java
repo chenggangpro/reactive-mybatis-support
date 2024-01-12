@@ -15,10 +15,13 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.builder;
 
+import io.r2dbc.pool.ConnectionPool;
+import io.r2dbc.pool.ConnectionPoolConfiguration;
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import io.r2dbc.spi.Option;
+import io.r2dbc.spi.ValidationDepth;
 import org.apache.ibatis.builder.BaseBuilder;
 import org.apache.ibatis.builder.BuilderException;
 import org.apache.ibatis.builder.xml.XMLMapperEntityResolver;
@@ -47,8 +50,11 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.mapping.R2dbcEnviron
 
 import java.io.InputStream;
 import java.io.Reader;
+import java.time.Duration;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
+import java.util.function.Function;
 
 /**
  * The type R2dbc xml config builder.
@@ -403,14 +409,56 @@ public class R2dbcXMLConfigBuilder extends BaseBuilder {
                     //ignore any other properties witch start with '@'
                     continue;
                 }
+                if (entry.getKey().toString().startsWith("pool.")) {
+                    //ignore connection pool properties witch start with 'pool.'
+                    continue;
+                }
                 optionsBuilder.option(Option.valueOf(String.valueOf(entry.getKey())), entry.getValue());
             }
             if (null != connectionFactoryOptionsConfigurer) {
                 connectionFactoryOptionsConfigurer.configure(optionsBuilder);
             }
-            return ConnectionFactories.get(optionsBuilder.build());
+            ConnectionFactory connectionFactory = ConnectionFactories.get(optionsBuilder.build());
+            String type = context.getStringAttribute("type");
+            if ("POOLED".equals(type)) {
+                ConnectionPoolConfiguration.Builder builder = ConnectionPoolConfiguration.builder(connectionFactory);
+                this.parsePropertiesTo(props, "pool.name", Function.identity()).ifPresent(builder::name);
+                this.parsePropertiesTo(props, "pool.maxSize", Integer::parseInt).ifPresent(builder::maxSize);
+                this.parsePropertiesTo(props, "pool.initialSize", Integer::parseInt).ifPresent(builder::initialSize);
+                this.parsePropertiesTo(props, "pool.maxIdleTime", Duration::parse).ifPresent(builder::maxIdleTime);
+                this.parsePropertiesTo(props, "pool.acquireRetry", Integer::parseInt).ifPresent(builder::acquireRetry);
+                this.parsePropertiesTo(props, "pool.backgroundEvictionInterval", Duration::parse).ifPresent(builder::backgroundEvictionInterval);
+                this.parsePropertiesTo(props, "pool.maxAcquireTime", Duration::parse).ifPresent(builder::maxAcquireTime);
+                this.parsePropertiesTo(props, "pool.maxCreateConnectionTime", Duration::parse).ifPresent(builder::maxCreateConnectionTime);
+                this.parsePropertiesTo(props, "pool.maxLifeTime", Duration::parse).ifPresent(builder::maxLifeTime);
+                this.parsePropertiesTo(props, "pool.validationDepth", ValidationDepth::valueOf).ifPresent(builder::validationDepth);
+                this.parsePropertiesTo(props, "pool.validationQuery", Function.identity()).ifPresent(builder::validationQuery);
+                this.parsePropertiesTo(props, "pool.configurer",
+                                value -> {
+                                    try {
+                                        Object poolConfigurationConfigurer = resolveClass(value).getDeclaredConstructor()
+                                                .newInstance();
+                                        if (!(poolConfigurationConfigurer instanceof ConnectionPoolConfigurationConfigurer)) {
+                                            throw new IllegalArgumentException(
+                                                    "ConnectionPoolConfigurationConfigurer should be an instance of ConnectionPoolConfigurationConfigurer");
+                                        }
+                                        return (ConnectionPoolConfigurationConfigurer) poolConfigurationConfigurer;
+                                    } catch (Exception e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                }
+                        )
+                        .ifPresent(connectionPoolConfigurationConfigurer -> connectionPoolConfigurationConfigurer.configure(builder));
+                return new ConnectionPool(builder.build());
+            }
+            return connectionFactory;
         }
         throw new BuilderException("Environment declaration requires a ConnectionFactory.");
+    }
+
+    private <T> Optional<T> parsePropertiesTo(Properties properties, String key, Function<String, T> parseFunction) {
+        return Optional.ofNullable(properties.getProperty(key))
+                .map(parseFunction);
     }
 
     private void typeHandlerElement(XNode parent) {

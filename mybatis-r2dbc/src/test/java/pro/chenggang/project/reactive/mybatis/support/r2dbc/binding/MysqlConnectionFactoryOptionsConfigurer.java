@@ -24,7 +24,7 @@ import java.time.Duration;
 /**
  * @author Gang Cheng
  * @version 1.0.0
- * @since 1.0.0
+ * @since 2.0.0
  */
 public class MysqlConnectionFactoryOptionsConfigurer implements ConnectionFactoryOptionsConfigurer {
 
