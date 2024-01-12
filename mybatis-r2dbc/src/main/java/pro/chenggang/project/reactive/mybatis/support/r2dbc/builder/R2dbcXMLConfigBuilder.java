@@ -142,6 +142,15 @@ public class R2dbcXMLConfigBuilder extends BaseBuilder {
     }
 
     /**
+     * Get r2dbc mybatis configuration .
+     *
+     * @return the r2dbc mybatis configuration
+     */
+    public R2dbcMybatisConfiguration getR2dbcMybatisConfiguration(){
+        return this.r2dbcMybatisConfiguration;
+    }
+
+    /**
      * Parse R2dbc mybatis configuration.
      *
      * @return the R2dbc mybatis configuration

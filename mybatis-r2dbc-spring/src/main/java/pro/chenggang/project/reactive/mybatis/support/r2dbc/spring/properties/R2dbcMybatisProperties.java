@@ -25,7 +25,6 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.builder.R2dbcXMLConfigBuilder;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 
 import java.io.IOException;
@@ -120,6 +119,14 @@ public class R2dbcMybatisProperties implements InitializingBean {
                 .toArray(Resource[]::new);
     }
 
+    public Resource resolveConfigLocation() {
+        Resource[] configResources = this.getResources(this.configLocation);
+        if (configResources.length == 0) {
+            throw new IllegalStateException("Could not find mybatis config file from location : " + this.configLocation);
+        }
+        return configResources[0];
+    }
+
     private Resource[] getResources(String location) {
         try {
             return resourceResolver.getResources(location);
@@ -133,16 +140,5 @@ public class R2dbcMybatisProperties implements InitializingBean {
         state((configuration == null && configLocation == null) || !(configuration != null && configLocation != null),
                 "Property 'configuration' and 'configLocation' can not specified with together"
         );
-        if (this.configLocation != null) {
-            Resource[] configResources = this.getResources(this.configLocation);
-            if (configResources.length == 0) {
-                throw new IllegalStateException("Could not find mybatis config file from location : " + this.configLocation);
-            }
-            R2dbcXMLConfigBuilder r2dbcXMLConfigBuilder = new R2dbcXMLConfigBuilder(configResources[0].getInputStream(),
-                    null,
-                    this.configurationProperties
-            );
-            this.configuration = r2dbcXMLConfigBuilder.parse();
-        }
     }
 }

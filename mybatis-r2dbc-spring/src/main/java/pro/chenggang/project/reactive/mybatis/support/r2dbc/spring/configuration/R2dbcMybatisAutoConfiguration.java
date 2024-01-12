@@ -68,6 +68,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFactory;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.builder.R2dbcXMLConfigBuilder;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.builder.R2dbcXMLMapperBuilder;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
@@ -195,8 +196,21 @@ public class R2dbcMybatisAutoConfiguration {
                                                    ObjectProvider<MybatisTypeHandlerConverter> mybatisTypeHandlerConverterObjectProvider,
                                                    ObjectProvider<LanguageDriver> languageDriversProvider,
                                                    ObjectProvider<R2dbcDatabaseIdProvider> databaseIdProviderObjectProvider) throws Exception {
-        R2dbcMybatisConfiguration r2dbcMybatisConfiguration = Optional.ofNullable(r2dbcMybatisProperties.getConfiguration())
-                .orElse(new R2dbcMybatisConfiguration());
+        final R2dbcMybatisConfiguration r2dbcMybatisConfiguration;
+        R2dbcXMLConfigBuilder r2dbcXMLConfigBuilder = null;
+        if(r2dbcMybatisProperties.getConfiguration() != null){
+            r2dbcMybatisConfiguration = r2dbcMybatisProperties.getConfiguration();
+        }else if (r2dbcMybatisProperties.getConfigLocation() != null) {
+            r2dbcXMLConfigBuilder = new R2dbcXMLConfigBuilder(r2dbcMybatisProperties.resolveConfigLocation().getInputStream(),
+                    null,
+                    r2dbcMybatisProperties.getConfigurationProperties()
+            );
+            r2dbcMybatisConfiguration= r2dbcXMLConfigBuilder.getR2dbcMybatisConfiguration();
+        }else {
+            log.debug("Property 'configuration' or 'configLocation' not specified, using default MyBatis Configuration");
+            r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
+            Optional.ofNullable(r2dbcMybatisProperties.getConfigurationProperties()).ifPresent(r2dbcMybatisConfiguration::setVariables);
+        }
         R2dbcEnvironment.Builder environmentBuilder = new R2dbcEnvironment.Builder(ReactiveSqlSessionFactory.class.getSimpleName())
                 .withDefaultTransactionProxy(false);
         if (!TransactionAwareConnectionFactoryProxy.class.isAssignableFrom(connectionFactory.getClass())) {
@@ -286,6 +300,11 @@ public class R2dbcMybatisAutoConfiguration {
                     .getConnectionFactory())
             );
         }
+        // parse config file if present
+        if(r2dbcXMLConfigBuilder != null){
+            r2dbcXMLConfigBuilder.parse();
+            log.debug("Parsed configuration file: '" + r2dbcMybatisProperties.getConfigLocation() + "'");
+        }
         //mapper scan
         Resource[] mapperLocations = r2dbcMybatisProperties.resolveMapperLocations();
         if (mapperLocations != null) {
@@ -318,7 +337,8 @@ public class R2dbcMybatisAutoConfiguration {
         configurationCustomizerProvider
                 .orderedStream()
                 .forEach(r2dbcMybatisConfigurationCustomizer -> r2dbcMybatisConfigurationCustomizer.customize(
-                        r2dbcMybatisConfiguration));
+                        r2dbcMybatisConfiguration)
+                );
         return r2dbcMybatisConfiguration;
     }
 
