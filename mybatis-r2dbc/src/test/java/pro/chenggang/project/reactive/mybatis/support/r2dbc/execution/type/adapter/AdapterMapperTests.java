@@ -158,7 +158,9 @@ public class AdapterMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .runWith((type, reactiveSqlSession) -> {
                     AdapterMapper adapterMapper = reactiveSqlSession.getMapper(AdapterMapper.class);
-                    return adapterMapper.selectAll();
+                    return adapterMapper.selectAll()
+                            .collectList()
+                            .flatMapMany(Flux::fromIterable);
                 })
                 .verifyWith(firstStep -> firstStep
                         .consumeNextWith(subjectContent -> {
