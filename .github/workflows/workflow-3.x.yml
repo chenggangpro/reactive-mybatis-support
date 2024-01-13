@@ -1,0 +1,121 @@
+name: Build and Test With Maven [3.x]
+
+on:
+  workflow_dispatch:
+    inputs:
+      databaseType:
+        type: choice
+        required: true
+        options:
+          - MySQL
+          - Mariadb
+          - MSSQL
+          - PostgreSQL
+          - Oracle
+          - All
+          - None
+
+jobs:
+  maven-build:
+    concurrency:
+      group: reactive-mybais-support
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Toolchain JDK 11
+        uses: renatoathaydes/setup-java-sdkman@v2.1.0
+        with:
+          java-version: 11.0.21-tem
+      - name: Set up Toolchain With JDK 11
+        shell: bash
+        run: |
+          mkdir -p $HOME/.m2 \
+          && cat << EOF > $HOME/.m2/toolchains.xml
+          <?xml version="1.0" encoding="UTF8"?>
+          <toolchains>
+            <toolchain>
+              <type>jdk</type>
+                <provides>
+                  <version>11</version>
+                </provides>
+                <configuration>
+                  <jdkHome>${{ env.JAVA_HOME }}</jdkHome>
+                </configuration>
+            </toolchain>
+          </toolchains>
+          EOF
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: maven
+      - name: Build mybatis-r2dbc and mybatis-r2dbc-generator
+        run: mvn clean compile -pl mybatis-r2dbc -pl mybatis-r2dbc-generator -am install -pl mybatis-r2dbc -pl mybatis-r2dbc-generator -am -DskipTests --file pom.xml
+      - name: Setup Testcontainers Cloud Client
+        if: ${{ github.event.inputs.databaseType != 'None' }}
+        uses: atomicjar/testcontainers-cloud-setup-action@v1
+        with:
+          token: ${{ secrets.TC_CLOUD_TOKEN }}
+      - name: Run [mybatis-r2dbc] Tests With MySQLContainer
+        if: ${{ contains(fromJSON('["All", "MySQL"]'), github.event.inputs.databaseType) }}
+        run: mvn -B -DargLine="-DdatabaseType=MySQLContainer" test -pl mybatis-r2dbc
+      - name: Run [mybatis-r2dbc] Tests With MariaDBContainer
+        if: ${{ contains(fromJSON('["All", "Mariadb"]'), github.event.inputs.databaseType) }}
+        run: mvn -B -DargLine="-DdatabaseType=MariaDBContainer" test -pl mybatis-r2dbc
+      - name: Run [mybatis-r2dbc] Tests With PostgreSQLContainer
+        if: ${{ contains(fromJSON('["All", "PostgreSQL"]'), github.event.inputs.databaseType) }}
+        run: mvn -B -DargLine="-DdatabaseType=PostgreSQLContainer" test -pl mybatis-r2dbc
+      - name: Run [mybatis-r2dbc] Tests With MSSQLServerContainer
+        if: ${{ contains(fromJSON('["All", "MSSQL"]'), github.event.inputs.databaseType) }}
+        run: mvn -B -DargLine="-DdatabaseType=MSSQLServerContainer" test -pl mybatis-r2dbc
+      - name: Run [mybatis-r2dbc] Tests With OracleContainer
+        if: ${{ contains(fromJSON('["All", "Oracle"]'), github.event.inputs.databaseType) }}
+        run: mvn -B -DargLine="-DdatabaseType=OracleContainer" test -pl mybatis-r2dbc
+      - name: Install Toolchain JDK 17
+        uses: renatoathaydes/setup-java-sdkman@v2.1.0
+        with:
+          java-version: 17.0.9-tem
+      - name: Set up Toolchain With JDK 17
+        shell: bash
+        run: |
+          rm -rf $HOME/.m2/toolchains.xml \
+          && cat << EOF > $HOME/.m2/toolchains.xml
+          <?xml version="1.0" encoding="UTF8"?>
+          <toolchains>
+            <toolchain>
+              <type>jdk</type>
+                <provides>
+                  <version>17</version>
+                </provides>
+                <configuration>
+                  <jdkHome>${{ env.JAVA_HOME }}</jdkHome>
+                </configuration>
+            </toolchain>
+          </toolchains>
+          EOF
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      - name: Build mybatis-r2dbc-spring
+        run: mvn compile -pl mybatis-r2dbc-spring package -pl mybatis-r2dbc-spring -DskipTests --file pom.xml
+      - name: Run [mybatis-r2dbc-spring] Tests With MySQLContainer
+        if: ${{ contains(fromJSON('["All", "MySQL"]'), github.event.inputs.databaseType) }}
+        run: mvn -B -DargLine="-DdatabaseType=MySQLContainer" test -pl mybatis-r2dbc-spring
+      - name: Run [mybatis-r2dbc-spring] Tests With MariaDBContainer
+        if: ${{ contains(fromJSON('["All", "Mariadb"]'), github.event.inputs.databaseType) }}
+        run: mvn -B -DargLine="-DdatabaseType=MariaDBContainer" test -pl mybatis-r2dbc-spring
+      - name: Run [mybatis-r2dbc-spring] Tests With PostgreSQLContainer
+        if: ${{ contains(fromJSON('["All", "PostgreSQL"]'), github.event.inputs.databaseType) }}
+        run: mvn -B -DargLine="-DdatabaseType=PostgreSQLContainer" test -pl mybatis-r2dbc-spring
+      - name: Run [mybatis-r2dbc-spring] Tests With MSSQLServerContainer
+        if: ${{ contains(fromJSON('["All", "MSSQL"]'), github.event.inputs.databaseType) }}
+        run: mvn -B -DargLine="-DdatabaseType=MSSQLServerContainer" test -pl mybatis-r2dbc-spring
+      - name: Run [mybatis-r2dbc-spring] Tests With OracleContainer
+        if: ${{ contains(fromJSON('["All", "Oracle"]'), github.event.inputs.databaseType) }}
+        run: mvn -B -DargLine="-DdatabaseType=OracleContainer" test -pl mybatis-r2dbc-spring
