@@ -273,7 +273,7 @@ public class MybatisR2dbcBaseTests {
         );
         for (Class<?> aClass : MybatisR2dbcBaseTests.databaseInitializationContainer.keySet()) {
             if (!aClass.getSimpleName().equalsIgnoreCase(envDatabaseType)) {
-                return;
+                continue;
             }
             log.info("⬇⬇⬇⬇⬇⬇ {} ----------------", aClass.getSimpleName());
             setUp(aClass, false, r2dbcProtocol -> new R2dbcMybatisConfiguration());

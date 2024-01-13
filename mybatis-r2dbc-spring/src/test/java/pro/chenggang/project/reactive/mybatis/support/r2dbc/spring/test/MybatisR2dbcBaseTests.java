@@ -98,12 +98,12 @@ public class MybatisR2dbcBaseTests {
             log.info("All testcontainers have already been validated.");
             return;
         }
+        String envDatabaseType = System.getProperty("databaseType",
+                MySQLContainer.class.getSimpleName()
+        );
         for (Class<?> aClass : MybatisR2dbcBaseTests.databaseInitializationContainer.keySet()) {
-            String envDatabaseType = System.getProperty("databaseType",
-                    MySQLContainer.class.getSimpleName()
-            );
             if (!aClass.getSimpleName().equalsIgnoreCase(envDatabaseType)) {
-                return;
+                continue;
             }
             log.info("⬇⬇⬇⬇⬇⬇ {} ----------------", aClass.getSimpleName());
             Hooks.onOperatorDebug();

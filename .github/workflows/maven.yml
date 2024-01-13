@@ -11,6 +11,9 @@ on:
 
 jobs:
   maven-build:
+    concurrency:
+      group: reactive-mybais-support
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
