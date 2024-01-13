@@ -17,6 +17,7 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.support;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.implementation.InvocationHandlerAdapter;
+import net.bytebuddy.matcher.ElementMatchers;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -61,6 +62,7 @@ public class ProxyInstanceFactory {
             return (T) new ByteBuddy()
                     .subclass(Object.class)
                     .implement(targetInterfaces)
+                    .method(ElementMatchers.isPublic())
                     .intercept(InvocationHandlerAdapter.of(invocationHandlerSupplier.get()))
                     .make()
                     .load(interfaceType.getClassLoader())

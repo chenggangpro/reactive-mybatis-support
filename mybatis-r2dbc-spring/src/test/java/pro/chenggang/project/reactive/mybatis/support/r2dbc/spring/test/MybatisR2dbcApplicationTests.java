@@ -24,11 +24,10 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.ReactiveTransactionManager;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
-import org.testcontainers.containers.MSSQLServerContainer;
+import org.testcontainers.containers.MySQLContainer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.UUID;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
@@ -40,12 +39,14 @@ public class MybatisR2dbcApplicationTests extends MybatisR2dbcBaseTests {
 
     @DynamicPropertySource
     static void postgresqlProperties(DynamicPropertyRegistry registry) {
-        // FIXME setup target testcontainer that worked around current test
-//        setUp(MySQLContainer.class, false);
-//        setUp(MariaDBContainer.class, false);
-//        setUp(PostgreSQLContainer.class, false);
-        setUp(MSSQLServerContainer.class, false);
-//        setUp(OracleContainer.class, false);
+        String envDatabaseType = System.getProperty("databaseType",
+                MySQLContainer.class.getSimpleName()
+        );
+        databaseInitializationContainer.keySet()
+                .stream()
+                .filter(databaseType -> databaseType.getSimpleName().equalsIgnoreCase(envDatabaseType))
+                .findFirst()
+                .ifPresent(databaseType -> setUp(databaseType, false));
         registry.add("spring.r2dbc.mybatis.r2dbc-url", r2dbcProtocol::getProtocolUrl);
         registry.add("spring.r2dbc.mybatis.password", r2dbcProtocol.getDatabaseConfig()::getPassword);
         registry.add("spring.r2dbc.mybatis.username", r2dbcProtocol.getDatabaseConfig()::getUsername);
@@ -58,7 +59,6 @@ public class MybatisR2dbcApplicationTests extends MybatisR2dbcBaseTests {
     protected TransactionalOperator transactionalOperator() {
         DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
         definition.setPropagationBehavior(PROPAGATION_REQUIRES_NEW);
-        definition.setName(UUID.randomUUID().toString());
         return TransactionalOperator.create(transactionManager, definition);
     }
 

@@ -206,7 +206,7 @@
                 <version>2.22.2</version>
                 <configuration>
                     <includes>
-                        <include>pro/chenggang/project/reactive/mybatis/support/r2dbc/spring/test/**/*Tests.java</include>
+                        <include>pro/chenggang/project/reactive/mybatis/support/r2dbc/**/*Tests.java</include>
                     </includes>
                 </configuration>
             </plugin>
@@ -244,6 +244,5 @@
             </plugin>
         </plugins>
     </build>
-
 
 </project>

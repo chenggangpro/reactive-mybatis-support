@@ -45,7 +45,6 @@ public class ApplicationServiceTests extends MybatisR2dbcApplicationTests {
     @Test
     void runWithTransactionCommit() {
         applicationService.runWithTransactionCommit()
-                .as(super::withRollback)
                 .as(StepVerifier::create)
                 .verifyComplete();
     }

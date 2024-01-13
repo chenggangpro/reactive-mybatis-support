@@ -306,7 +306,7 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
          * @return
          */
         private String proxyToString(Object proxy) {
-            return "Transaction-support proxy for target Connection [" + this.connection.toString() + "],Original Proxy [" + proxy + "]";
+            return "Transaction-support proxy for target Connection [" + this.connection.toString() + "]";
         }
 
     }

@@ -23,6 +23,8 @@ import io.r2dbc.spi.ValidationDepth;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.io.Resources;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.containers.MariaDBContainer;
@@ -266,13 +268,20 @@ public class MybatisR2dbcBaseTests {
         return new MybatisR2dbcTestRunner<>();
     }
 
-//    @Test
+    @Disabled
+    @Test
     void validateTestcontainers() {
         if (!validateTestcontainersFlag.compareAndSet(false, true)) {
             log.info("All testcontainers have already been validated.");
             return;
         }
+        String envDatabaseType = System.getProperty("databaseType",
+                MySQLContainer.class.getSimpleName()
+        );
         for (Class<?> aClass : MybatisR2dbcBaseTests.databaseInitializationContainer.keySet()) {
+            if (!aClass.getSimpleName().equalsIgnoreCase(envDatabaseType)) {
+                continue;
+            }
             log.info("⬇⬇⬇⬇⬇⬇ {} ----------------", aClass.getSimpleName());
             setUp(aClass, false, r2dbcProtocol -> new R2dbcMybatisConfiguration());
             destroy(aClass, false);
@@ -346,8 +355,12 @@ public class MybatisR2dbcBaseTests {
         }
 
         public void run() {
+            String envDatabaseType = System.getProperty("databaseType",
+                    MySQLContainer.class.getSimpleName()
+            );
             databaseInitializationContainer.keySet()
                     .stream()
+                    .filter(databaseType -> databaseType.getSimpleName().equalsIgnoreCase(envDatabaseType))
                     .filter(databaseFilter)
                     .forEach(databaseClass -> {
                         log.info("⬇⬇⬇⬇⬇⬇ {} ----------------", databaseClass.getSimpleName());
