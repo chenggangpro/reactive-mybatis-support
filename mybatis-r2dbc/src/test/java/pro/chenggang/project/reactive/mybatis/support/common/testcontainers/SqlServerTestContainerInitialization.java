@@ -27,6 +27,7 @@ import java.time.Duration;
 import static org.testcontainers.containers.MSSQLServerContainer.DEFAULT_TAG;
 import static org.testcontainers.containers.MSSQLServerContainer.IMAGE;
 import static org.testcontainers.containers.MSSQLServerContainer.MS_SQL_SERVER_PORT;
+import static pro.chenggang.project.reactive.mybatis.support.common.testcontainers.DatabaseInitialization.initScriptWithCustomizedScriptRunner;
 
 /**
  * The postgresql test container initialization
@@ -68,10 +69,11 @@ public class SqlServerTestContainerInitialization implements DatabaseInitializat
                 .acceptLicense()
                 .withStartupCheckStrategy(new MinimumDurationRunningStartupCheckStrategy(Duration.ofSeconds(10)))
                 .withPassword(specificDatabaseConfig.getPassword())
-                .withUrlParam("encrypt", "false")
-                .withInitScript("sql-script/init_mssql.sql");
+                .withUrlParam("encrypt", "false");
         sqlServerTestContainer = jdbcDatabaseContainer;
         sqlServerTestContainer.start();
+        initScriptWithCustomizedScriptRunner((JdbcDatabaseContainer<?>) this.sqlServerTestContainer,
+                "sql-script/init_mssql.sql");
         R2dbcProtocol r2dbcProtocol = R2dbcProtocol.builder()
                 .databaseConfig(specificDatabaseConfig)
                 .protocolSymbol("mssql")

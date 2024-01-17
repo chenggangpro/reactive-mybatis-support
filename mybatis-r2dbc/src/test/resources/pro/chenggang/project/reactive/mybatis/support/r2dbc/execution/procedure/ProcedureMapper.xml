@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.procedure.ProcedureMapper">
+
+    <update id="callInoutProcedureUsingUpdate" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.procedure.SimpleRowProcedureData">
+        <choose>
+            <when test="_databaseId == 'mariadb' ">
+                call inout_procedure(#{empNo, mode=IN},#{deptNo, mode=INOUT})
+            </when>
+            <otherwise/>
+        </choose>
+    </update>
+
+    <select id="callInoutProcedureUsingSelect" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.procedure.SimpleRowProcedureData">
+        <choose>
+            <when test="_databaseId == 'mariadb' ">
+                call inout_procedure(#{empNo, mode=IN},#{deptNo, mode=INOUT})
+            </when>
+            <otherwise/>
+        </choose>
+    </select>
+    
+    <update id="callOutputProcedureUsingUpdate" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.procedure.SimpleRowProcedureData">
+        <choose>
+            <when test="_databaseId == 'mariadb' ">
+                call output_procedure(#{empNo, mode=IN},#{deptNo, mode=IN},#{deptName, mode=OUT},#{location, mode=OUT})
+            </when>
+            <otherwise/>
+        </choose>
+    </update>
+
+    <select id="callOutputProcedureUsingSelect" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.procedure.SimpleRowProcedureData">
+        <choose>
+            <when test="_databaseId == 'mariadb' ">
+                call output_procedure(#{empNo, mode=IN},#{deptNo, mode=IN},#{deptName, mode=OUT},#{location, mode=OUT})
+            </when>
+            <otherwise/>
+        </choose>
+    </select>
+
+    <select id="callSingleRowProcedureUsingSelect" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.procedure.SimpleRowProcedureData" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
+        <choose>
+            <when test="_databaseId == 'mariadb' ">
+                call single_row_procedure(#{empNo},#{deptNo})
+            </when>
+            <otherwise/>
+        </choose>
+    </select>
+
+    <select id="callMultipleRowProcedureUsingSelect" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.Emp">
+        <choose>
+            <when test="_databaseId == 'mariadb' ">
+                call multiple_row_procedure(#{deptNo})
+            </when>
+            <otherwise/>
+        </choose>
+    </select>
+    
+
+</mapper>

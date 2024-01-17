@@ -23,6 +23,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import static org.testcontainers.containers.PostgreSQLContainer.IMAGE;
 import static org.testcontainers.containers.PostgreSQLContainer.POSTGRESQL_PORT;
+import static pro.chenggang.project.reactive.mybatis.support.common.testcontainers.DatabaseInitialization.initScriptWithCustomizedScriptRunner;
 
 /**
  * The postgresql test container initialization
@@ -59,10 +60,11 @@ public class PostgresqlTestContainerInitialization implements DatabaseInitializa
                 .withDatabaseName(databaseConfig.getDatabaseName())
                 .withUsername(databaseConfig.getUsername())
                 .withPassword(databaseConfig.getPassword())
-                .withUrlParam("useSSL", "false")
-                .withInitScript("sql-script/init_postgresql.sql");
+                .withUrlParam("useSSL", "false");
         postgresqlTestContainer = jdbcDatabaseContainer;
         postgresqlTestContainer.start();
+        initScriptWithCustomizedScriptRunner((JdbcDatabaseContainer<?>) this.postgresqlTestContainer,
+                "sql-script/init_postgresql.sql");
         R2dbcProtocol r2dbcProtocol = R2dbcProtocol.builder()
                 .databaseConfig(databaseConfig)
                 .protocolSymbol("postgresql")

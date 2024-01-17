@@ -13,27 +13,24 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.procedure;
 
-import io.r2dbc.spi.Readable;
-import org.apache.ibatis.type.TypeHandler;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
- * The interface Type handle context.
- *
  * @author Gang Cheng
- * @version 2.0.0
+ * @version 1.0.0
  * @since 1.0.0
  */
-public interface TypeHandleContext {
+@Getter
+@Setter
+@ToString
+public class SimpleRowProcedureData {
 
-    /**
-     * Set delegated type handler
-     *
-     * @param targetType           the target type
-     * @param delegatedTypeHandler the delegated type handler
-     * @param readableResultWrapper     the row result wrapper
-     */
-    void contextWith(Class<?> targetType, TypeHandler<?> delegatedTypeHandler, ReadableResultWrapper<? extends Readable> readableResultWrapper);
-
+    private Long empNo;
+    private Long deptNo;
+    private String deptName;
+    private String location;
 }

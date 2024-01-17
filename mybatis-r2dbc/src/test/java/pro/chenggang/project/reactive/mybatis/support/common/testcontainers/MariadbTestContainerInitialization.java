@@ -22,6 +22,7 @@ import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import static org.testcontainers.containers.MySQLContainer.MYSQL_PORT;
+import static pro.chenggang.project.reactive.mybatis.support.common.testcontainers.DatabaseInitialization.initScriptWithCustomizedScriptRunner;
 
 /**
  * The mariadb test container initialization
@@ -57,10 +58,11 @@ public class MariadbTestContainerInitialization implements DatabaseInitializatio
                 .withDatabaseName(databaseConfig.getDatabaseName())
                 .withUsername(databaseConfig.getUsername())
                 .withPassword(databaseConfig.getPassword())
-                .withUrlParam("useSSL", "false")
-                .withInitScript("sql-script/init_mysql.sql");
+                .withUrlParam("useSSL", "false");
         mariadbTestContainer = jdbcDatabaseContainer;
         mariadbTestContainer.start();
+        initScriptWithCustomizedScriptRunner((JdbcDatabaseContainer<?>) this.mariadbTestContainer,
+                "sql-script/init_mariadb.sql");
         R2dbcProtocol r2dbcProtocol = R2dbcProtocol.builder()
                 .databaseConfig(databaseConfig)
                 .protocolSymbol("mariadb")

@@ -65,6 +65,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -124,7 +125,7 @@ public class MybatisR2dbcBaseTests {
     private ConnectionFactory connectionFactory;
     private ReactiveSqlSessionFactory reactiveSqlSessionFactory;
 
-    protected void setUp(Class<?> testContainerClass, boolean dryRun) {
+    protected R2dbcProtocol setUp(Class<?> testContainerClass, boolean dryRun) {
         Hooks.onOperatorDebug();
         Hooks.enableContextLossTracking();
         DatabaseInitialization databaseInitialization = databaseInitializationContainer.get(testContainerClass);
@@ -133,7 +134,7 @@ public class MybatisR2dbcBaseTests {
                 .username(USERNAME)
                 .password(PASSWORD)
                 .build();
-        databaseInitialization.startup(databaseConfig, dryRun);
+        return databaseInitialization.startup(databaseConfig, dryRun);
     }
 
     protected ReactiveSqlSessionFactory setUp(Class<?> testContainerClass,
@@ -171,6 +172,11 @@ public class MybatisR2dbcBaseTests {
             reactiveSqlSessionFactory.close();
         } catch (Exception e) {
             // ignore
+        }
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException e) {
+            // sleep 1 seconds to try to make sure connectionFactory closed
         }
         DatabaseInitialization databaseInitialization = databaseInitializationContainer.get(testContainerClass);
         databaseInitialization.destroy();

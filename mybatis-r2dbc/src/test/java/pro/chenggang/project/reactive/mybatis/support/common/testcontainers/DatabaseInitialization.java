@@ -19,10 +19,18 @@ import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.JdbcDatabaseContainer;
+import org.testcontainers.ext.ScriptUtils;
+import pro.chenggang.project.reactive.mybatis.support.common.testcontainers.support.ScriptRunner;
 
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Objects;
 
 /**
@@ -62,6 +70,35 @@ public interface DatabaseInitialization {
      * Destroy test container.
      */
     void destroy();
+
+    /**
+     * Init script with customized script runner.
+     *
+     * @param jdbcDatabaseContainer the jdbc database container
+     * @param scriptFileName        the script file name
+     */
+    static void initScriptWithCustomizedScriptRunner(JdbcDatabaseContainer<?> jdbcDatabaseContainer,String scriptFileName) {
+        try (Connection connection = (jdbcDatabaseContainer.createConnection(""))) {
+            URL resource = Thread.currentThread().getContextClassLoader().getResource(scriptFileName);
+            if (resource == null) {
+                resource = ScriptUtils.class.getClassLoader().getResource(scriptFileName);
+                if (resource == null) {
+                    throw new ScriptUtils.ScriptLoadException(
+                            "Could not load classpath init script: " + scriptFileName + ". Resource not found."
+                    );
+                }
+            }
+            // use ScriptRunner from mybatis instead of the original StringUtils
+            ScriptRunner scriptRunner = new ScriptRunner(connection);
+            scriptRunner.setLogWriter(null);
+            scriptRunner.setStopOnError(true);
+            scriptRunner.runScript(new FileReader(resource.getFile()));
+        } catch (IOException e) {
+            throw new ScriptUtils.ScriptLoadException("Could not load classpath init script: " + scriptFileName, e);
+        } catch (SQLException e) {
+            throw new ScriptUtils.ScriptLoadException("Could not execute classpath init script: " + scriptFileName, e);
+        }
+    }
 
     /**
      * The database config.

@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaults;
 
 import io.r2dbc.spi.Blob;
-import io.r2dbc.spi.Row;
-import io.r2dbc.spi.RowMetadata;
+import io.r2dbc.spi.Readable;
+import io.r2dbc.spi.ReadableMetadata;
 import io.r2dbc.spi.Statement;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.parameter.ParameterHandlerContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
@@ -40,12 +40,12 @@ public class R2dbcBlobTypeHandlerAdapter implements R2dbcTypeHandlerAdapter<Blob
     }
 
     @Override
-    public Blob getResult(Row row, RowMetadata rowMetadata, String columnName) {
-        return row.get(columnName, Blob.class);
+    public Blob getResult(Readable readable, ReadableMetadata readableMetadata, String columnName) {
+        return readable.get(columnName, Blob.class);
     }
 
     @Override
-    public Blob getResult(Row row, RowMetadata rowMetadata, int columnIndex) {
-        return row.get(columnIndex, Blob.class);
+    public Blob getResult(Readable readable, ReadableMetadata readableMetadata, int columnIndex) {
+        return readable.get(columnIndex, Blob.class);
     }
 }

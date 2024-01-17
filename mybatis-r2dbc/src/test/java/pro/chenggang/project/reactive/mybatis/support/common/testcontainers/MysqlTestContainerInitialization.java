@@ -22,6 +22,7 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import static org.testcontainers.containers.MySQLContainer.MYSQL_PORT;
+import static pro.chenggang.project.reactive.mybatis.support.common.testcontainers.DatabaseInitialization.initScriptWithCustomizedScriptRunner;
 
 /**
  * The mysql test container initialization
@@ -58,10 +59,11 @@ public class MysqlTestContainerInitialization implements DatabaseInitialization 
                 .withUsername(databaseConfig.getUsername())
                 .withPassword(databaseConfig.getPassword())
                 .withUrlParam("useSSL", "false")
-                .withCommand("--default-authentication-plugin=mysql_native_password")
-                .withInitScript("sql-script/init_mysql.sql");
+                .withCommand("--default-authentication-plugin=mysql_native_password");
         mysqlTestContainer = jdbcDatabaseContainer;
         mysqlTestContainer.start();
+        initScriptWithCustomizedScriptRunner((JdbcDatabaseContainer<?>) this.mysqlTestContainer,
+                "sql-script/init_mysql.sql");
         R2dbcProtocol r2dbcProtocol = R2dbcProtocol.builder()
                 .databaseConfig(databaseConfig)
                 .protocolSymbol("mysql")
