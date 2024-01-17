@@ -15,11 +15,13 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults;
 
+import io.r2dbc.spi.ConnectionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.DefaultReactiveMybatisExecutor;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveMybatisExecutor;
+import reactor.core.Disposable;
 
 import java.io.Closeable;
 import java.util.Objects;
@@ -63,9 +65,17 @@ public class DefaultReactiveSqlSessionFactory implements ReactiveSqlSessionFacto
 
     @Override
     public void close() throws Exception {
-        if (this.configuration.getR2dbcEnvironment().getConnectionFactory() instanceof Closeable) {
-            Closeable closeableConnectionFactory = ((Closeable) this.configuration.getR2dbcEnvironment().getConnectionFactory());
+        ConnectionFactory connectionFactory = this.configuration.getR2dbcEnvironment().getConnectionFactory();
+        if (connectionFactory instanceof Closeable) {
+            Closeable closeableConnectionFactory = ((Closeable) connectionFactory);
             closeableConnectionFactory.close();
+            return;
+        }
+        if(connectionFactory instanceof Disposable){
+            Disposable disposable = (Disposable) connectionFactory;
+            if(!(disposable).isDisposed()){
+                (disposable).dispose();
+            }
         }
     }
 

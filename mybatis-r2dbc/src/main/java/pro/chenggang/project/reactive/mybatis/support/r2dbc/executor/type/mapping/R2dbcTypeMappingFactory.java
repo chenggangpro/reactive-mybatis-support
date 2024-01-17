@@ -13,27 +13,34 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.mapping;
 
-import io.r2dbc.spi.Readable;
-import org.apache.ibatis.type.TypeHandler;
+import io.r2dbc.spi.R2dbcType;
+import org.apache.ibatis.type.JdbcType;
 
 /**
- * The interface Type handle context.
+ * The r2dbc type mapping factory
  *
  * @author Gang Cheng
- * @version 2.0.0
- * @since 1.0.0
+ * @version 1.0.0
+ * @since 2.0.0
  */
-public interface TypeHandleContext {
+public interface R2dbcTypeMappingFactory {
 
     /**
-     * Set delegated type handler
+     * Register or replace JdbcType to R2dbcType 's mapping relationship.
      *
-     * @param targetType           the target type
-     * @param delegatedTypeHandler the delegated type handler
-     * @param readableResultWrapper     the row result wrapper
+     * @param jdbcType  the jdbc type
+     * @param r2dbcType the r2dbc type
      */
-    void contextWith(Class<?> targetType, TypeHandler<?> delegatedTypeHandler, ReadableResultWrapper<? extends Readable> readableResultWrapper);
+    void registerOrReplace(JdbcType jdbcType, R2dbcType r2dbcType);
+
+    /**
+     * Mapping JdbcType to R2dbcType.
+     *
+     * @param jdbcType the jdbc type
+     * @return the r2dbc type could be null if no mapping exist or jdbcType is null
+     */
+    R2dbcType mapping(JdbcType jdbcType);
 
 }

@@ -15,8 +15,9 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key;
 
+import io.r2dbc.spi.Readable;
 import org.apache.ibatis.mapping.MappedStatement;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowResultWrapper;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper;
 import reactor.core.publisher.Mono;
 
 /**
@@ -48,9 +49,9 @@ public interface R2dbcKeyGenerator {
     /**
      * Process generated key result mono.
      *
-     * @param rowResultWrapper the row result wrapper
+     * @param readableResultWrapper the row result wrapper
      * @param parameter        the parameter
      * @return the mono
      */
-    Long processGeneratedKeyResult(RowResultWrapper rowResultWrapper, Object parameter);
+    Long processGeneratedKeyResult(ReadableResultWrapper<? extends Readable> readableResultWrapper, Object parameter);
 }

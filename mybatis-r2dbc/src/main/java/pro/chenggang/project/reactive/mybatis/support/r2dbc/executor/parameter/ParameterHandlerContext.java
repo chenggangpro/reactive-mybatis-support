@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,7 +15,8 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.parameter;
 
-import org.apache.ibatis.type.JdbcType;
+import io.r2dbc.spi.R2dbcType;
+import org.apache.ibatis.mapping.ParameterMode;
 
 /**
  * The type Parameter handler context.
@@ -26,8 +27,9 @@ import org.apache.ibatis.type.JdbcType;
 public class ParameterHandlerContext {
 
     private int index;
-    private JdbcType jdbcType;
+    private R2dbcType r2dbcType;
     private Class<?> javaType;
+    private ParameterMode parameterMode;
 
 
     /**
@@ -49,21 +51,21 @@ public class ParameterHandlerContext {
     }
 
     /**
-     * Gets jdbc type.
+     * Gets r2dbc type.
      *
-     * @return the jdbc type
+     * @return the r2dbc type
      */
-    public JdbcType getJdbcType() {
-        return jdbcType;
+    public R2dbcType getR2dbcType() {
+        return r2dbcType;
     }
 
     /**
-     * Sets jdbc type.
+     * Sets r2dbc type.
      *
-     * @param jdbcType the jdbc type
+     * @param r2dbcType the r2dbc type
      */
-    public void setJdbcType(JdbcType jdbcType) {
-        this.jdbcType = jdbcType;
+    public void setR2dbcType(R2dbcType r2dbcType) {
+        this.r2dbcType = r2dbcType;
     }
 
     /**
@@ -82,5 +84,23 @@ public class ParameterHandlerContext {
      */
     public void setJavaType(Class<?> javaType) {
         this.javaType = javaType;
+    }
+
+    /**
+     * Gets parameter mode.
+     *
+     * @return the parameter mode
+     */
+    public ParameterMode getParameterMode() {
+        return parameterMode;
+    }
+
+    /**
+     * Sets parameter mode.
+     *
+     * @param parameterMode the parameter mode
+     */
+    public void setParameterMode(ParameterMode parameterMode) {
+        this.parameterMode = parameterMode;
     }
 }

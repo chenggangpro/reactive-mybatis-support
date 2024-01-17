@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type;
 
-import io.r2dbc.spi.Row;
-import io.r2dbc.spi.RowMetadata;
+import io.r2dbc.spi.Readable;
+import io.r2dbc.spi.ReadableMetadata;
 import io.r2dbc.spi.Statement;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.parameter.ParameterHandlerContext;
 
@@ -48,20 +48,20 @@ public interface R2dbcTypeHandlerAdapter<T> {
     /**
      * get result by columnName
      *
-     * @param row         the row
-     * @param rowMetadata the row metadata
+     * @param readable         the row
+     * @param readableMetadata the row metadata
      * @param columnName  the column name
      * @return result
      */
-    T getResult(Row row, RowMetadata rowMetadata, String columnName);
+    T getResult(Readable readable, ReadableMetadata readableMetadata, String columnName);
 
     /**
      * get result by columnIndex
      *
-     * @param row         the row
-     * @param rowMetadata the row metadata
+     * @param readable         the row
+     * @param readableMetadata the row metadata
      * @param columnIndex the column index
      * @return result
      */
-    T getResult(Row row, RowMetadata rowMetadata, int columnIndex);
+    T getResult(Readable readable, ReadableMetadata readableMetadata, int columnIndex);
 }

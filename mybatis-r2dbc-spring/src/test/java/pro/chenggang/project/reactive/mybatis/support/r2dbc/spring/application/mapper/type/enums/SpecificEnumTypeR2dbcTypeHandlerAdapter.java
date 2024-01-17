@@ -15,8 +15,8 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.application.mapper.type.enums;
 
-import io.r2dbc.spi.Row;
-import io.r2dbc.spi.RowMetadata;
+import io.r2dbc.spi.Readable;
+import io.r2dbc.spi.ReadableMetadata;
 import io.r2dbc.spi.Statement;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.parameter.ParameterHandlerContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
@@ -36,14 +36,14 @@ public class SpecificEnumTypeR2dbcTypeHandlerAdapter implements R2dbcTypeHandler
     }
 
     @Override
-    public SpecificEnumType getResult(Row row, RowMetadata rowMetadata, String columnName) {
-        Integer result = row.get(columnName, Integer.class);
+    public SpecificEnumType getResult(Readable readable, ReadableMetadata readableMetadata, String columnName) {
+        Integer result = readable.get(columnName, Integer.class);
         return result == null ? null : SpecificEnumType.fromValue(result);
     }
 
     @Override
-    public SpecificEnumType getResult(Row row, RowMetadata rowMetadata, int columnIndex) {
-        Integer result = row.get(columnIndex, Integer.class);
+    public SpecificEnumType getResult(Readable readable, ReadableMetadata readableMetadata, int columnIndex) {
+        Integer result = readable.get(columnIndex, Integer.class);
         return result == null ? null : SpecificEnumType.fromValue(result);
     }
 }

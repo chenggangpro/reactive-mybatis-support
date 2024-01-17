@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaults;
 
-import io.r2dbc.spi.Row;
-import io.r2dbc.spi.RowMetadata;
+import io.r2dbc.spi.Readable;
+import io.r2dbc.spi.ReadableMetadata;
 import io.r2dbc.spi.Statement;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.parameter.ParameterHandlerContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
@@ -50,14 +50,14 @@ public class EnumR2dbcTypeHandlerAdapter<E extends Enum<E>> implements R2dbcType
     }
 
     @Override
-    public E getResult(Row row, RowMetadata rowMetadata, String columnName) {
-        String result = row.get(columnName, String.class);
+    public E getResult(Readable readable, ReadableMetadata readableMetadata, String columnName) {
+        String result = readable.get(columnName, String.class);
         return result == null ? null : Enum.valueOf(type, result);
     }
 
     @Override
-    public E getResult(Row row, RowMetadata rowMetadata, int columnIndex) {
-        String result = row.get(columnIndex, String.class);
+    public E getResult(Readable readable, ReadableMetadata readableMetadata, int columnIndex) {
+        String result = readable.get(columnIndex, String.class);
         return result == null ? null : Enum.valueOf(type, result);
     }
 }

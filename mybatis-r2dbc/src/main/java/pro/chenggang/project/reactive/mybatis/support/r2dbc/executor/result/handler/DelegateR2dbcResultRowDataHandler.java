@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,11 +15,12 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler;
 
+import io.r2dbc.spi.Readable;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeReference;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowResultWrapper;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapterRegistry;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.support.ForceToUseR2dbcTypeHandlerAdapter;
@@ -46,7 +47,7 @@ public class DelegateR2dbcResultRowDataHandler implements InvocationHandler {
     private final Set<Class<?>> notSupportedDataTypes;
     private final R2dbcTypeHandlerAdapterRegistry r2dbcTypeHandlerAdapterRegistry;
     private TypeHandler<?> delegatedTypeHandler;
-    private RowResultWrapper rowResultWrapper;
+    private ReadableResultWrapper<? extends Readable> readableResultWrapper;
     private Class<?> targetType;
     private boolean forceToUseR2dbcTypeHandlerAdapter = false;
 
@@ -66,7 +67,7 @@ public class DelegateR2dbcResultRowDataHandler implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if ("contextWith".equals(method.getName())) {
             this.delegatedTypeHandler = (TypeHandler<?>) args[1];
-            this.rowResultWrapper = (RowResultWrapper) args[2];
+            this.readableResultWrapper = (ReadableResultWrapper<? extends Readable>) args[2];
             this.forceToUseR2dbcTypeHandlerAdapter = false;
             Optional<Class<?>> typeHandlerArgumentType = this.getTypeHandlerArgumentType(delegatedTypeHandler);
             if (!typeHandlerArgumentType.isPresent()) {
@@ -101,11 +102,11 @@ public class DelegateR2dbcResultRowDataHandler implements InvocationHandler {
             R2dbcTypeHandlerAdapter<?> r2dbcTypeHandlerAdapter = r2dbcTypeHandlerAdapterRegistry.getR2dbcTypeHandlerAdapter(this.targetType);
             // T getResult(ResultSet rs, String columnName)
             if (secondArg instanceof String) {
-                return r2dbcTypeHandlerAdapter.getResult(rowResultWrapper.getRow(), rowResultWrapper.getRowMetadata(), (String) secondArg);
+                return r2dbcTypeHandlerAdapter.getResult(readableResultWrapper.getReadable(), readableResultWrapper.getReadableMetadataByName((String) secondArg), (String) secondArg);
             }
             // T getResult(ResultSet rs, int columnIndex)
             if (secondArg instanceof Integer) {
-                return r2dbcTypeHandlerAdapter.getResult(rowResultWrapper.getRow(), rowResultWrapper.getRowMetadata(), (Integer) secondArg - 1);
+                return r2dbcTypeHandlerAdapter.getResult(readableResultWrapper.getReadable(), readableResultWrapper.getReadableMetadataByIndex((Integer) secondArg - 1), (Integer) secondArg - 1);
             }
         }
         if(forceToUseR2dbcTypeHandlerAdapter){
@@ -118,11 +119,11 @@ public class DelegateR2dbcResultRowDataHandler implements InvocationHandler {
         }
         // T getResult(ResultSet rs, String columnName)
         if (secondArg instanceof String) {
-            return rowResultWrapper.getRow().get((String) secondArg, targetType);
+            return readableResultWrapper.getReadable().get((String) secondArg, targetType);
         }
         // T getResult(ResultSet rs, int columnIndex)
         if (secondArg instanceof Integer) {
-            return rowResultWrapper.getRow().get((Integer) secondArg - 1, targetType);
+            return readableResultWrapper.getReadable().get((Integer) secondArg - 1, targetType);
         }
         return null;
     }

@@ -18,8 +18,8 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.transacti
 import io.r2dbc.spi.IsolationLevel;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.MSSQLServerContainer;
 import org.testcontainers.containers.MariaDBContainer;
+import org.testcontainers.containers.MySQLContainer;
 import pro.chenggang.project.reactive.mybatis.support.MybatisR2dbcBaseTests;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.Dept;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionOperator;
@@ -59,7 +59,7 @@ class ParallelTransactionTest extends MybatisR2dbcBaseTests {
                  * 2. oracle jdbc doesn't support IsolationLevel.READ_UNCOMMITTED
                  * 3. postgresql server treat READ_UNCOMMITTED as READ_COMMITTED
                  */
-                .filterDatabases(databaseType -> MSSQLServerContainer.class.equals(databaseType)
+                .filterDatabases(databaseType -> MySQLContainer.class.equals(databaseType)
                         || MariaDBContainer.class.equals(databaseType)
                 )
                 .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {

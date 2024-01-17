@@ -17,6 +17,7 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate;
 
 import io.r2dbc.spi.Blob;
 import io.r2dbc.spi.Clob;
+import io.r2dbc.spi.R2dbcType;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.type.JdbcType;
@@ -30,6 +31,8 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.R2d
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapterRegistry;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.converter.MybatisTypeHandlerConverter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.mapping.DefaultR2DbcTypeMappingFactory;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.mapping.R2dbcTypeMappingFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.support.ForceToUseR2dbcTypeHandlerAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.mapping.R2dbcEnvironment;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.mapping.R2dbcVendorDatabaseIdProvider;
@@ -54,14 +57,42 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class R2dbcMybatisConfiguration extends Configuration {
 
+    /**
+     * The r2dbc mapper registry.
+     */
     protected final R2dbcMapperRegistry r2dbcMapperRegistry = new R2dbcMapperRegistry(this);
+    /**
+     * The r2dbc type handler adapter registry.
+     */
     protected final R2dbcTypeHandlerAdapterRegistry r2dbcTypeHandlerAdapterRegistry = new R2dbcTypeHandlerAdapterRegistry(
             this);
+    /**
+     * The r2dbc statement log factory.
+     */
     protected final R2dbcStatementLogFactory r2dbcStatementLogFactory = new R2dbcStatementLogFactory(this);
+    /**
+     * The Placeholder dialect registry.
+     */
     protected final PlaceholderDialectRegistry placeholderDialectRegistry = new DefaultPlaceholderDialectRegistry();
+    /**
+     * The r2dbc type mapping.
+     */
+    protected R2dbcTypeMappingFactory r2DbcTypeMappingFactory = new DefaultR2DbcTypeMappingFactory();
+    /**
+     * The Not supported data types.
+     */
     protected final Set<Class<?>> notSupportedDataTypes = new HashSet<>();
+    /**
+     * The Initialized flag.
+     */
     protected final AtomicBoolean initializedFlag = new AtomicBoolean(false);
+    /**
+     * The Formatted dialect sql cache max size.
+     */
     protected Integer formattedDialectSqlCacheMaxSize = 10_000;
+    /**
+     * The Formatted dialect sql cache expire duration.
+     */
     protected Duration formattedDialectSqlCacheExpireDuration = Duration.ofHours(6);
 
     private R2dbcEnvironment r2dbcEnvironment;
@@ -297,6 +328,39 @@ public class R2dbcMybatisConfiguration extends Configuration {
             throw new IllegalArgumentException("Formatted dialect sql cache's expire duration must greater than 0");
         }
         this.formattedDialectSqlCacheExpireDuration = formattedDialectSqlCacheExpireDuration;
+    }
+
+    /**
+     * Register r2dbc type mapping.
+     *
+     * @param jdbcType  the jdbc type
+     * @param r2dbcType the r2dbc type
+     */
+    public void registerR2dbcTypeMapping(JdbcType jdbcType, R2dbcType r2dbcType) {
+        Objects.requireNonNull(jdbcType, "The JdbcType can not be null");
+        Objects.requireNonNull(r2dbcType, "The R2dbcType can not be null");
+        this.r2DbcTypeMappingFactory.registerOrReplace(jdbcType, r2dbcType);
+    }
+
+
+    /**
+     * Sets r2dbc type mapping factory.
+     *
+     * @param r2DbcTypeMappingFactory the r2dbc type mapping factory
+     */
+    public void setR2DbcTypeMappingFactory(R2dbcTypeMappingFactory r2DbcTypeMappingFactory) {
+        Objects.requireNonNull(r2DbcTypeMappingFactory, "The R2dbcTypeMappingFactory can not be null");
+        this.r2DbcTypeMappingFactory = r2DbcTypeMappingFactory;
+    }
+
+    /**
+     * Mapping r2dbc type from jdbc type.
+     *
+     * @param jdbcType the jdbc type
+     * @return the r2dbc type
+     */
+    public R2dbcType mappingR2dbcTypeFrom(JdbcType jdbcType) {
+        return this.r2DbcTypeMappingFactory.mapping(jdbcType);
     }
 
     /**

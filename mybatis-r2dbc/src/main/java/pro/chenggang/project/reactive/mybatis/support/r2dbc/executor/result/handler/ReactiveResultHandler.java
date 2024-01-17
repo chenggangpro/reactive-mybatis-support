@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,7 +15,8 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler;
 
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowResultWrapper;
+import io.r2dbc.spi.Readable;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper;
 
 import java.util.List;
 
@@ -44,10 +45,17 @@ public interface ReactiveResultHandler {
      * handle result with RowResultWrapper
      *
      * @param <T>              the type parameter
-     * @param rowResultWrapper the row result wrapper
+     * @param readableResultWrapper the row result wrapper
      * @return list
      */
-    <T> T handleResult(RowResultWrapper rowResultWrapper);
+    <T> T handleResult(ReadableResultWrapper<? extends Readable> readableResultWrapper);
+
+    /**
+     * Handle output parameters.
+     *
+     * @param readableResultWrapper the row result wrapper
+     */
+    <T> T handleOutputParameters(ReadableResultWrapper<? extends Readable> readableResultWrapper);
 
     /**
      * get remained result or empty list

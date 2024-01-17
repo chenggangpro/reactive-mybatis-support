@@ -109,3 +109,27 @@ CREATE TABLE `subject_content`
 
 INSERT INTO `subject_content` VALUES (1, BINARY 'This is a blob content1','This is a clob content1');
 INSERT INTO `subject_content` VALUES (2, BINARY 'This is a blob content2','This is a clob content2');
+
+-- @DELIMITER /
+
+CREATE PROCEDURE inout_procedure(in empNo BIGINT(20), inout deptNo BIGINT(20))
+BEGIN
+    SELECT dept.dept_no + 1 into deptNo FROM dept INNER JOIN emp ON dept.dept_no = emp.dept_no where emp.emp_no=empNo and emp.dept_no=deptNo;
+END /
+
+CREATE PROCEDURE output_procedure(in empNo BIGINT(20), in deptNo BIGINT(20), out deptName varchar(64),out location varchar(100))
+BEGIN
+    SELECT dept.dept_name,dept.location into deptName,location FROM dept INNER JOIN emp ON dept.dept_no = emp.dept_no where emp.emp_no=empNo and emp.dept_no=deptNo;
+END /
+
+CREATE PROCEDURE single_row_procedure(in empNo BIGINT(20), in deptNo BIGINT(20))
+BEGIN
+    SELECT dept.* FROM dept INNER JOIN emp ON dept.dept_no = emp.dept_no where emp.emp_no=empNo and emp.dept_no=deptNo;
+END /
+
+CREATE PROCEDURE multiple_row_procedure(in deptNo BIGINT(20))
+BEGIN
+    SELECT emp.* FROM dept INNER JOIN emp ON dept.dept_no = emp.dept_no where emp.dept_no=deptNo;
+END /
+
+-- @DELIMITER ;

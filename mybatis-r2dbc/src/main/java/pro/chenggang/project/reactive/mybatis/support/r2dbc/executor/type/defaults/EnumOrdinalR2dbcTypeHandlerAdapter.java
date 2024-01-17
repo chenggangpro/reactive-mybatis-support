@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaults;
 
-import io.r2dbc.spi.Row;
-import io.r2dbc.spi.RowMetadata;
+import io.r2dbc.spi.Readable;
+import io.r2dbc.spi.ReadableMetadata;
 import io.r2dbc.spi.Statement;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.parameter.ParameterHandlerContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
@@ -55,14 +55,14 @@ public class EnumOrdinalR2dbcTypeHandlerAdapter<E extends Enum<E>> implements R2
     }
 
     @Override
-    public E getResult(Row row, RowMetadata rowMetadata, String columnName) {
-        Integer ordinal = row.get(columnName, Integer.class);
+    public E getResult(Readable readable, ReadableMetadata readableMetadata, String columnName) {
+        Integer ordinal = readable.get(columnName, Integer.class);
         return ordinal == null ? null : toOrdinalEnum(ordinal);
     }
 
     @Override
-    public E getResult(Row row, RowMetadata rowMetadata, int columnIndex) {
-        Integer ordinal = row.get(columnIndex, Integer.class);
+    public E getResult(Readable readable, ReadableMetadata readableMetadata, int columnIndex) {
+        Integer ordinal = readable.get(columnIndex, Integer.class);
         return ordinal == null ? null : toOrdinalEnum(ordinal);
     }
 

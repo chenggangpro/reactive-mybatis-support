@@ -19,15 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.JdbcDatabaseContainer;
 import org.testcontainers.containers.OracleContainer;
-import org.testcontainers.ext.ScriptUtils;
 import org.testcontainers.utility.DockerImageName;
-import pro.chenggang.project.reactive.mybatis.support.common.testcontainers.support.ScriptRunner;
 
-import java.io.FileReader;
-import java.io.IOException;
-import java.net.URL;
-import java.sql.Connection;
-import java.sql.SQLException;
+import static pro.chenggang.project.reactive.mybatis.support.common.testcontainers.DatabaseInitialization.initScriptWithCustomizedScriptRunner;
 
 /**
  * The postgresql test container initialization
@@ -69,7 +63,8 @@ public class OracleTestContainerInitialization implements DatabaseInitialization
                 .withConnectTimeoutSeconds(10);
         oracleTestContainer = jdbcDatabaseContainer;
         oracleTestContainer.start();
-        initScriptWithCustomizedScriptRunner("sql-script/init_oracle.sql");
+        initScriptWithCustomizedScriptRunner((JdbcDatabaseContainer<?>) this.oracleTestContainer,
+                "sql-script/init_oracle.sql");
         R2dbcProtocol r2dbcProtocol = R2dbcProtocol.builder()
                 .databaseConfig(specificDatabaseConfig)
                 .protocolSymbol("oracle")
@@ -94,29 +89,4 @@ public class OracleTestContainerInitialization implements DatabaseInitialization
         }
     }
 
-    private void initScriptWithCustomizedScriptRunner(String scriptFileName) {
-        try (Connection connection = ((JdbcDatabaseContainer<?>) this.oracleTestContainer).createConnection("")) {
-            URL resource = Thread.currentThread().getContextClassLoader().getResource(scriptFileName);
-            if (resource == null) {
-                resource = ScriptUtils.class.getClassLoader().getResource(scriptFileName);
-                if (resource == null) {
-                    log.warn("Could not load classpath init script: {}", scriptFileName);
-                    throw new ScriptUtils.ScriptLoadException(
-                            "Could not load classpath init script: " + scriptFileName + ". Resource not found."
-                    );
-                }
-            }
-            // use ScriptRunner from mybatis instead of the original StringUtils
-            ScriptRunner scriptRunner = new ScriptRunner(connection);
-            scriptRunner.setLogWriter(null);
-            scriptRunner.setStopOnError(true);
-            scriptRunner.runScript(new FileReader(resource.getFile()));
-        } catch (IOException e) {
-            log.warn("Could not load classpath init script: {}", scriptFileName);
-            throw new ScriptUtils.ScriptLoadException("Could not load classpath init script: " + scriptFileName, e);
-        } catch (SQLException e) {
-            log.warn("Could not execute classpath init script: {}", scriptFileName);
-            throw new ScriptUtils.ScriptLoadException("Could not execute classpath init script: " + scriptFileName, e);
-        }
-    }
 }

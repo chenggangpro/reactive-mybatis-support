@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,8 +15,10 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result;
 
+import io.r2dbc.spi.OutParameters;
+import io.r2dbc.spi.Readable;
+import io.r2dbc.spi.ReadableMetadata;
 import io.r2dbc.spi.Row;
-import io.r2dbc.spi.RowMetadata;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.mapping.ResultMap;
 import org.apache.ibatis.type.ObjectTypeHandler;
@@ -33,38 +35,97 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * The type Row result wrapper.
  * <p>
  * {@link org.apache.ibatis.executor.resultset.ResultSetWrapper}
  *
- * @author Iwao AVE!
+ * @param <T> the type parameter
+ * @author Gang Cheng
  */
-public class RowResultWrapper {
+public class ReadableResultWrapper<T extends Readable> {
 
-    private final Row row;
-    private final RowMetadata rowMetadata;
+    /**
+     * The RowResultWrapper Support Functions.
+     *
+     * @author Gang Cheng
+     */
+    public abstract static class Functions {
+
+        /**
+         * The constant ROW_METADATA_EXTRACTOR.
+         * {@code Function<Row, List<? extends ReadableMetadata>>}
+         */
+        public static final Function<Row, List<? extends ReadableMetadata>> ROW_METADATA_EXTRACTOR
+                = row -> row.getMetadata().getColumnMetadatas();
+        /**
+         * The constant OUT_PARAMETERS_METADATA_EXTRACTOR.
+         * {@code Function<Row, List<? extends ReadableMetadata>>}
+         */
+        public static final Function<OutParameters, List<? extends ReadableMetadata>> OUT_PARAMETERS_METADATA_EXTRACTOR
+                = outParameters -> outParameters.getMetadata().getParameterMetadatas();
+
+        /**
+         * The constant ROW_METADATA_EXTRACTOR_BY_INDEX.
+         * {@code BiFunction<Row, Integer, ReadableMetadata>}
+         */
+        public static final BiFunction<Row, Integer, ReadableMetadata> ROW_METADATA_EXTRACTOR_BY_INDEX
+                = (row, index) -> row.getMetadata().getColumnMetadata(index);
+        /**
+         * The constant ROW_METADATA_EXTRACTOR_BY_NAME.
+         * {@code BiFunction<Row, String, ReadableMetadata>}
+         */
+        public static final BiFunction<Row, String, ReadableMetadata> ROW_METADATA_EXTRACTOR_BY_NAME
+                = (row, name) -> row.getMetadata().getColumnMetadata(name);
+        /**
+         * The constant OUT_PARAMETERS_METADATA_EXTRACTOR_BY_INDEX.
+         * {@code BiFunction<OutParameters, Integer, ReadableMetadata>}
+         */
+        public static final BiFunction<OutParameters, Integer, ReadableMetadata> OUT_PARAMETERS_METADATA_EXTRACTOR_BY_INDEX
+                = (outParameters, index) -> outParameters.getMetadata().getParameterMetadata(index);
+        /**
+         * The constant OUT_PARAMETERS_METADATA_EXTRACTOR_BY_NAME.
+         * {@code BiFunction<OutParameters, String, ReadableMetadata>}
+         */
+        public static final BiFunction<OutParameters, String, ReadableMetadata> OUT_PARAMETERS_METADATA_EXTRACTOR_BY_NAME
+                = (outParameters, name) -> outParameters.getMetadata().getParameterMetadata(name);
+    }
+
+
+    private final T readable;
+    private final BiFunction<T, Integer, ReadableMetadata> metadataExtractorByIndex;
+    private final BiFunction<T, String, ReadableMetadata> metadataExtractorByName;
     private final TypeHandlerRegistry typeHandlerRegistry;
     private final List<String> columnNames = new ArrayList<>();
-    private final List<Class> javaTypes = new ArrayList<>();
+    private final List<Class<?>> javaTypes = new ArrayList<>();
     private final List<String> classNames = new ArrayList<>();
     private final Map<String, Map<Class<?>, TypeHandler<?>>> typeHandlerMap = new HashMap<>();
     private final Map<String, List<String>> mappedColumnNamesMap = new HashMap<>();
     private final Map<String, List<String>> unMappedColumnNamesMap = new HashMap<>();
 
+
     /**
      * Instantiates a new Row result wrapper.
      *
-     * @param row           the row
-     * @param rowMetadata   the row metadata
-     * @param configuration the configuration
+     * @param readable                 the readable
+     * @param allMetadataExtractor     all metadata extra
+     * @param metadataExtractorByIndex the metadata extractor by index
+     * @param metadataExtractorByName  the metadata extractor by name
+     * @param configuration            the configuration
      */
-    public RowResultWrapper(Row row, RowMetadata rowMetadata, R2dbcMybatisConfiguration configuration) {
+    public ReadableResultWrapper(T readable,
+                                 Function<T, List<? extends ReadableMetadata>> allMetadataExtractor,
+                                 BiFunction<T, Integer, ReadableMetadata> metadataExtractorByIndex,
+                                 BiFunction<T, String, ReadableMetadata> metadataExtractorByName,
+                                 R2dbcMybatisConfiguration configuration) {
+        this.readable = readable;
+        this.metadataExtractorByIndex = metadataExtractorByIndex;
+        this.metadataExtractorByName = metadataExtractorByName;
         this.typeHandlerRegistry = configuration.getTypeHandlerRegistry();
-        this.row = row;
-        this.rowMetadata = rowMetadata;
-        rowMetadata.getColumnMetadatas().forEach(columnMetadata -> {
+        allMetadataExtractor.apply(readable).forEach(columnMetadata -> {
             //jdbc provide ResultSetMetaData#getColumnLabel(int index) to get column label
             //bug r2dbc ColumnMetadata doesn't provide any method to get column label
             columnNames.add(columnMetadata.getName());
@@ -77,22 +138,34 @@ public class RowResultWrapper {
         });
     }
 
+
     /**
-     * Gets row.
+     * Gets readable.
      *
-     * @return the row
+     * @return the readable
      */
-    public Row getRow() {
-        return row;
+    public Readable getReadable() {
+        return readable;
     }
 
     /**
-     * Gets row metadata.
+     * Gets readable metadata by index.
      *
-     * @return the row metadata
+     * @param index the index
+     * @return the readable metadata by index
      */
-    public RowMetadata getRowMetadata() {
-        return rowMetadata;
+    public ReadableMetadata getReadableMetadataByIndex(int index) {
+        return this.metadataExtractorByIndex.apply(this.readable, index);
+    }
+
+    /**
+     * Gets readable metadata by name.
+     *
+     * @param name the name
+     * @return the readable metadata by name
+     */
+    public ReadableMetadata getReadableMetadataByName(String name) {
+        return this.metadataExtractorByName.apply(this.readable, name);
     }
 
     /**
@@ -118,7 +191,7 @@ public class RowResultWrapper {
      *
      * @return the java types
      */
-    public List<Class> getJavaTypes() {
+    public List<Class<?>> getJavaTypes() {
         return javaTypes;
     }
 

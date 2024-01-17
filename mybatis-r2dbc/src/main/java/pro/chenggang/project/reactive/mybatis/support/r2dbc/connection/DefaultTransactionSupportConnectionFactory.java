@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2024 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.connection;
 
-import io.r2dbc.pool.ConnectionPool;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryMetadata;
@@ -25,9 +24,11 @@ import org.apache.ibatis.logging.LogFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextManager;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
+import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -72,12 +73,16 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
      * close connection factory
      */
     @Override
-    public void close() {
-        if (this.targetConnectionFactory instanceof ConnectionPool) {
-            ConnectionPool connectionPool = ((ConnectionPool) this.targetConnectionFactory);
-            if (!connectionPool.isDisposed()) {
-                connectionPool.dispose();
+    public void close() throws IOException{
+        if (this.targetConnectionFactory instanceof Disposable) {
+            Disposable disposable = ((Disposable) this.targetConnectionFactory);
+            if (!disposable.isDisposed()) {
+                disposable.dispose();
             }
+            return;
+        }
+        if (this.targetConnectionFactory instanceof Closeable) {
+            ((Closeable) this.targetConnectionFactory).close();
         }
     }
 

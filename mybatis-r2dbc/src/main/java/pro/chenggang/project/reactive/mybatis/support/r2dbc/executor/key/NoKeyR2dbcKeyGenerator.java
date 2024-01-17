@@ -15,12 +15,13 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key;
 
+import io.r2dbc.spi.Readable;
 import org.apache.ibatis.mapping.MappedStatement;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowResultWrapper;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper;
 import reactor.core.publisher.Mono;
 
 /**
- * The type No key r 2 dbc key generator.
+ * The type No key r2dbc key generator.
  *
  * @author Gang Cheng
  * @version 1.0.2
@@ -51,7 +52,7 @@ public class NoKeyR2dbcKeyGenerator implements R2dbcKeyGenerator {
     }
 
     @Override
-    public Long processGeneratedKeyResult(RowResultWrapper rowResultWrapper, Object parameter) {
+    public Long processGeneratedKeyResult(ReadableResultWrapper<? extends Readable> readableResultWrapper, Object parameter) {
         return 0L;
     }
 
