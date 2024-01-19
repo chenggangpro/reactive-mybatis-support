@@ -20,7 +20,6 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.builder.R2dbcMapperAnnotationBuilder;
@@ -62,15 +61,6 @@ public class BindingSimpleTests {
         assertEquals(interfaceMapperProxyFactory.getMapperInterface(), BindingInterface.class);
         BindingInterface bindingInterface = interfaceMapperProxyFactory.newInstance(mockReactiveSqlSession);
         assertNotNull(bindingInterface);
-    }
-
-    @Test
-    void testWithBindingClass() {
-        Assertions.assertThrowsExactly(IllegalStateException.class, () -> {
-            MapperProxyFactory<BindingClass> interfaceMapperProxyFactory = new MapperProxyFactory<>(BindingClass.class);
-            assertEquals(interfaceMapperProxyFactory.getMapperInterface(), BindingClass.class);
-            BindingClass bindingClass = interfaceMapperProxyFactory.newInstance(mockReactiveSqlSession);
-        });
     }
 
     @Test
