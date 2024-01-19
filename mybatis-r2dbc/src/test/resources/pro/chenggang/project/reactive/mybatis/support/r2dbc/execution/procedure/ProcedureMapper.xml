@@ -38,6 +38,15 @@
         </choose>
     </select>
 
+    <select id="callOutputAndMultipleRowProcedureUsingSelect" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.procedure.SimpleRowProcedureData" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.Emp">
+        <choose>
+            <when test="_databaseId == 'mariadb' ">
+                call output_and_multiple_row_procedure(#{empNo, mode=IN},#{deptNo, mode=IN},#{deptName, mode=OUT},#{location, mode=OUT})
+            </when>
+            <otherwise/>
+        </choose>
+    </select>
+
     <select id="callSingleRowProcedureUsingSelect" parameterType="pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.procedure.SimpleRowProcedureData" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
         <choose>
             <when test="_databaseId == 'mariadb' ">

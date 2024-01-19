@@ -122,6 +122,12 @@ BEGIN
     SELECT dept.dept_name,dept.location into deptName,location FROM dept INNER JOIN emp ON dept.dept_no = emp.dept_no where emp.emp_no=empNo and emp.dept_no=deptNo;
 END /
 
+CREATE PROCEDURE output_and_multiple_row_procedure(in empNo BIGINT(20), in deptNo BIGINT(20), out deptName varchar(64),out location varchar(100))
+BEGIN
+    SELECT dept.dept_name,dept.location into deptName,location FROM dept INNER JOIN emp ON dept.dept_no = emp.dept_no where emp.emp_no=empNo and emp.dept_no=deptNo;
+    SELECT emp.* FROM dept INNER JOIN emp ON dept.dept_no = emp.dept_no where emp.dept_no=deptNo;
+END /
+
 CREATE PROCEDURE single_row_procedure(in empNo BIGINT(20), in deptNo BIGINT(20))
 BEGIN
     SELECT dept.* FROM dept INNER JOIN emp ON dept.dept_no = emp.dept_no where emp.emp_no=empNo and emp.dept_no=deptNo;
