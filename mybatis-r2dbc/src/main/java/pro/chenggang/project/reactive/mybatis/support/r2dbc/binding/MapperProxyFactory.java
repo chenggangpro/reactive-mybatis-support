@@ -16,9 +16,9 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.binding;
 
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -68,10 +68,8 @@ public class MapperProxyFactory<T> {
      * @return the t
      */
     protected T newInstance(MapperProxy<T> mapperProxy) {
-        return ProxyInstanceFactory.newInstanceOfInterfaces(
-                mapperInterface,
-                () -> mapperProxy
-        );
+        // #139 To ensure compatibility with Spring proxy, using JDK proxy instead of Byte Buddy when creating the mapper proxy.
+        return (T) Proxy.newProxyInstance(mapperInterface.getClassLoader(), new Class[] { mapperInterface }, mapperProxy);
     }
 
     /**
