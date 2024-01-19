@@ -20,6 +20,10 @@ import org.testcontainers.containers.MariaDBContainer;
 import pro.chenggang.project.reactive.mybatis.support.MybatisR2dbcBaseTests;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.Dept;
 import pro.chenggang.project.reactive.mybatis.support.common.entity.Emp;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -74,7 +78,6 @@ public class ProcedureMapperTests extends MybatisR2dbcBaseTests {
                 .verifyWith(firstStep -> firstStep
                         .assertNext(result -> {
                             assertEquals(3L, result.getDeptNo());
-                            assertEquals(3L, result.getDeptNo());
                         })
                         .verifyComplete()
                 )
@@ -99,7 +102,7 @@ public class ProcedureMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(result -> {
-                            assertEquals(2L, result.getDeptNo());
+                            assertEquals("RESEARCH", result.getDeptName());
                             assertEquals("DALLAS", result.getLocation());
                         })
                         .verifyComplete()
@@ -125,8 +128,41 @@ public class ProcedureMapperTests extends MybatisR2dbcBaseTests {
                 })
                 .verifyWith(firstStep -> firstStep
                         .assertNext(result -> {
-                            assertEquals(2L, result.getDeptNo());
+                            assertEquals("RESEARCH", result.getDeptName());
                             assertEquals("DALLAS", result.getLocation());
+                        })
+                        .verifyComplete()
+                )
+                .run();
+    }
+
+    @Test
+    void callOutputAndMultipleRowProcedureUsingSelect() {
+        super.<Tuple2<List<Emp>, SimpleRowProcedureData>>newTestRunner()
+                .filterDatabases(MariaDBContainer.class::equals)
+                .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
+                    r2dbcMybatisConfiguration.addMapper(ProcedureMapper.class);
+                    r2dbcMybatisConfiguration.setMapUnderscoreToCamelCase(true);
+                })
+                .runWith((type, reactiveSqlSession) -> {
+                    ProcedureMapper procedureMapper = reactiveSqlSession.getMapper(ProcedureMapper.class);
+                    SimpleRowProcedureData simpleRowProcedureData = new SimpleRowProcedureData();
+                    simpleRowProcedureData.setEmpNo(1L);
+                    simpleRowProcedureData.setDeptNo(2L);
+                    return procedureMapper.callOutputAndMultipleRowProcedureUsingSelect(simpleRowProcedureData)
+                            .collectList()
+                            .map(empList -> Tuples.of(empList, simpleRowProcedureData));
+                })
+                .verifyWith(firstStep -> firstStep
+                        .assertNext(result -> {
+                            assertEquals("RESEARCH", result.getT2().getDeptName());
+                            assertEquals("DALLAS", result.getT2().getLocation());
+                            assertEquals(5, result.getT1().size());
+                            assertEquals(1L, result.getT1().get(0).getEmpNo());
+                            assertEquals(4L, result.getT1().get(1).getEmpNo());
+                            assertEquals(8L, result.getT1().get(2).getEmpNo());
+                            assertEquals(11L, result.getT1().get(3).getEmpNo());
+                            assertEquals(13L, result.getT1().get(4).getEmpNo());
                         })
                         .verifyComplete()
                 )

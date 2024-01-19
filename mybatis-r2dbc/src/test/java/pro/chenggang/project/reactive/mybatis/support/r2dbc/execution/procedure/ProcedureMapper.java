@@ -38,6 +38,8 @@ public interface ProcedureMapper {
 
     Mono<Void> callOutputProcedureUsingSelect(SimpleRowProcedureData simpleRowProcedureData);
 
+    Flux<Emp> callOutputAndMultipleRowProcedureUsingSelect(SimpleRowProcedureData simpleRowProcedureData);
+
     Mono<Dept> callSingleRowProcedureUsingSelect(SimpleRowProcedureData simpleRowProcedureData);
 
     Flux<Emp> callMultipleRowProcedureUsingSelect(@Param("deptNo") Long deptNo);
