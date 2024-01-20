@@ -131,6 +131,7 @@ public class R2dbcMybatisConfiguration extends Configuration {
      */
     private void registerInternalTypeAlias() {
         typeAliasRegistry.registerAlias("R2DBC_VENDOR", R2dbcVendorDatabaseIdProvider.class);
+        typeAliasRegistry.registerAlias("ForceToUseR2dbcTypeHandlerAdapter", ForceToUseR2dbcTypeHandlerAdapter.class);
     }
 
     /**
