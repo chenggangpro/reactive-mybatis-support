@@ -1,8 +1,23 @@
+/*
+ *    Copyright 2009-2023 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package pro.chenggang.project.reactive.mybatis.support.generator.properties;
 
+import org.mybatis.generator.api.dom.java.JavaVisibility;
 import pro.chenggang.project.reactive.mybatis.support.generator.core.MybatisDynamicCodeGenerator.Configurer;
 import pro.chenggang.project.reactive.mybatis.support.generator.option.GeneratorType;
-import pro.chenggang.project.reactive.mybatis.support.generator.option.LombokConfig;
 import pro.chenggang.project.reactive.mybatis.support.generator.plugin.type.GeneratedJavaTypeModifier;
 import pro.chenggang.project.reactive.mybatis.support.generator.properties.GeneratorProperties.TargetConnection;
 import pro.chenggang.project.reactive.mybatis.support.generator.properties.GeneratorProperties.TargetLocation;
@@ -30,8 +45,10 @@ public class GeneratorPropertiesBuilder {
     private String tableNameTrimPattern;
     private String columnNameTrimPattern;
     private Class<? extends GeneratedJavaTypeModifier> generatedJavaTypeModifierClass;
-    private Set<LombokConfig> lombokConfigs = new HashSet<>();
+    private Set<String> lombokConfigs = new HashSet<>();
     private Set<String> tableNames;
+    private boolean finalField = false;
+    private JavaVisibility fieldVisibility = JavaVisibility.PROTECTED;
     private TargetLocation targetLocation;
     private TargetPackage targetPackage;
     private TargetConnection targetConnection;
@@ -47,10 +64,12 @@ public class GeneratorPropertiesBuilder {
         this.overwrite = generatorProperties.isOverwrite();
         this.generateReturnedKey = generatorProperties.isGenerateReturnedKey();
         this.generateComment = generatorProperties.isGenerateComment();
+        this.finalField = generatorProperties.isFinalField();
+        this.fieldVisibility = generatorProperties.getFieldVisibility();
         this.tableNameTrimPattern = generatorProperties.getTableNameTrimPattern();
         this.columnNameTrimPattern = generatorProperties.getColumnNameTrimPattern();
         this.generatedJavaTypeModifierClass = generatorProperties.getGeneratedJavaTypeModifierClass();
-        this.lombokConfigs = generatorProperties.getLombokConfigs();
+        this.lombokConfigs = generatorProperties.getLombokAnnotations();
         this.tableNames = generatorProperties.getTableNames();
         this.targetLocation = generatorProperties.getTargetLocation();
         this.targetPackage = generatorProperties.getTargetPackage();
@@ -124,6 +143,28 @@ public class GeneratorPropertiesBuilder {
     }
 
     /**
+     * Set generated class's field to be final.
+     *
+     * @param finalField the final field
+     * @return the generator properties builder
+     */
+    public GeneratorPropertiesBuilder finalField(boolean finalField) {
+        this.finalField = finalField;
+        return this;
+    }
+
+    /**
+     * Set field visibility
+     *
+     * @param fieldVisibility the field visibility
+     * @return the generator properties builder
+     */
+    public GeneratorPropertiesBuilder fieldVisibility(JavaVisibility fieldVisibility) {
+        this.fieldVisibility = fieldVisibility;
+        return this;
+    }
+
+    /**
      * The table name trim regex pattern
      * Setting '^Sys' will replace the generated table name start with Sys
      * available when table name is specific
@@ -161,23 +202,23 @@ public class GeneratorPropertiesBuilder {
     }
 
     /**
-     * The Lombok configs
+     * The lombok annotations
      *
-     * @param lombokConfigs the lombok configs
+     * @param lombokConfigs The lombok annotations
      * @return the generator properties builder
      */
-    public GeneratorPropertiesBuilder lombokConfigs(LombokConfig... lombokConfigs) {
+    public GeneratorPropertiesBuilder lombokConfigs(String... lombokConfigs) {
         this.lombokConfigs.addAll(Arrays.asList(lombokConfigs));
         return this;
     }
 
     /**
-     * The Lombok configs
+     * The lombok annotations
      *
-     * @param lombokConfigs the lombok configs
+     * @param lombokConfigs The lombok annotations
      * @return the generator properties builder
      */
-    public GeneratorPropertiesBuilder lombokConfigs(Set<LombokConfig> lombokConfigs) {
+    public GeneratorPropertiesBuilder lombokConfigs(Set<String> lombokConfigs) {
         this.lombokConfigs = lombokConfigs;
         return this;
     }
@@ -242,6 +283,8 @@ public class GeneratorPropertiesBuilder {
                 overwrite,
                 generateReturnedKey,
                 generateComment,
+                finalField,
+                fieldVisibility,
                 tableNameTrimPattern,
                 columnNameTrimPattern,
                 generatedJavaTypeModifierClass,

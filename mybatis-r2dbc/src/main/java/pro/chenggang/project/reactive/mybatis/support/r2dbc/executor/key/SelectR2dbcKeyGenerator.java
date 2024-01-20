@@ -1,5 +1,21 @@
+/*
+ *    Copyright 2009-2024 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key;
 
+import io.r2dbc.spi.Readable;
 import org.apache.ibatis.executor.ExecutorException;
 import org.apache.ibatis.executor.keygen.SelectKeyGenerator;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -7,7 +23,7 @@ import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.session.RowBounds;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.ReactiveMybatisExecutor;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowResultWrapper;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Field;
@@ -36,7 +52,9 @@ public class SelectR2dbcKeyGenerator implements R2dbcKeyGenerator {
      * @param r2dbcMybatisConfiguration the r2dbc mybatis configuration
      * @param reactiveMybatisExecutor   the reactive mybatis executor
      */
-    public SelectR2dbcKeyGenerator(SelectKeyGenerator selectKeyGenerator, R2dbcMybatisConfiguration r2dbcMybatisConfiguration, ReactiveMybatisExecutor reactiveMybatisExecutor) {
+    public SelectR2dbcKeyGenerator(SelectKeyGenerator selectKeyGenerator,
+                                   R2dbcMybatisConfiguration r2dbcMybatisConfiguration,
+                                   ReactiveMybatisExecutor reactiveMybatisExecutor) {
         this.executeBefore = SelectKeyGeneratorFieldContainer.getOriginalExecuteBefore(selectKeyGenerator);
         this.keyStatement = SelectKeyGeneratorFieldContainer.getOriginalKeyStatement(selectKeyGenerator);
         this.r2dbcMybatisConfiguration = r2dbcMybatisConfiguration;
@@ -85,14 +103,16 @@ public class SelectR2dbcKeyGenerator implements R2dbcKeyGenerator {
 
             }
         } catch (Exception e) {
-            return Mono.error(new ExecutorException("Error selecting key or setting result to parameter object. Cause: " + e, e));
+            return Mono.error(new ExecutorException("Error selecting key or setting result to parameter object. Cause: " + e,
+                    e
+            ));
         }
         return Mono.just(false);
     }
 
     @Override
-    public Integer processGeneratedKeyResult(RowResultWrapper rowResultWrapper, Object parameter) {
-        return 0;
+    public Long processGeneratedKeyResult(ReadableResultWrapper<? extends Readable> readableResultWrapper, Object parameter) {
+        return 0L;
     }
 
     private void handleMultipleProperties(String[] keyProperties,
@@ -106,7 +126,8 @@ public class SelectR2dbcKeyGenerator implements R2dbcKeyGenerator {
             }
         } else {
             if (keyColumns.length != keyProperties.length) {
-                throw new ExecutorException("If SelectKey has key columns, the number must match the number of key properties.");
+                throw new ExecutorException(
+                        "If SelectKey has key columns, the number must match the number of key properties.");
             }
             for (int i = 0; i < keyProperties.length; i++) {
                 setValue(metaParam, keyProperties[i], metaResult.getValue(keyColumns[i]));
@@ -118,12 +139,15 @@ public class SelectR2dbcKeyGenerator implements R2dbcKeyGenerator {
         if (metaParam.hasSetter(property)) {
             metaParam.setValue(property, value);
         } else {
-            throw new ExecutorException("No setter found for the keyProperty '" + property + "' in " + metaParam.getOriginalObject().getClass().getName() + ".");
+            throw new ExecutorException("No setter found for the keyProperty '" + property + "' in " + metaParam.getOriginalObject()
+                    .getClass()
+                    .getName() + ".");
         }
     }
 
     /**
      * SelectKeyGenerator original field container ,only initialize once
+     *
      * @version 1.0.3
      * @since 1.0.3
      */

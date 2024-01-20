@@ -1,5 +1,21 @@
+/*
+ *    Copyright 2009-2024 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.parameter;
 
+import io.r2dbc.spi.R2dbcType;
 import io.r2dbc.spi.Statement;
 import org.apache.ibatis.executor.parameter.ParameterHandler;
 import org.apache.ibatis.logging.Log;
@@ -15,6 +31,7 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.R2dbcStatementLog;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapterRegistry;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
 
 import java.lang.reflect.Field;
@@ -30,6 +47,10 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static org.apache.ibatis.mapping.ParameterMode.IN;
+import static org.apache.ibatis.mapping.ParameterMode.OUT;
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ParameterBindingHelper.toParameter;
 
 /**
  * The type Delegate R2dbc parameter handler.
@@ -51,16 +72,16 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
     /**
      * Instantiates a new Delegate R2dbc parameter handler.
      *
-     * @param r2DbcMybatisConfiguration the R2dbc mybatis configuration
+     * @param r2dbcMybatisConfiguration the R2dbc mybatis configuration
      * @param parameterHandler          the parameter handler
      * @param statement                 the statement
      * @param r2dbcStatementLog         the statement log helper
      */
-    public DelegateR2dbcParameterHandler(R2dbcMybatisConfiguration r2DbcMybatisConfiguration,
+    public DelegateR2dbcParameterHandler(R2dbcMybatisConfiguration r2dbcMybatisConfiguration,
                                          ParameterHandler parameterHandler,
                                          Statement statement,
                                          R2dbcStatementLog r2dbcStatementLog) {
-        this.configuration = r2DbcMybatisConfiguration;
+        this.configuration = r2dbcMybatisConfiguration;
         this.parameterHandler = parameterHandler;
         this.delegateStatement = statement;
         this.r2dbcStatementLog = r2dbcStatementLog;
@@ -85,7 +106,6 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
                 PreparedStatement.class,
                 () -> new DelegateR2dbcStatement(
                         this.delegateStatement,
-                        this.configuration.getR2dbcTypeHandlerAdapterRegistry().getR2dbcTypeHandlerAdapters(),
                         this.configuration.getNotSupportedDataTypes()
                 )
         );
@@ -127,6 +147,7 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
     public void setParameters(PreparedStatement ps) {
         BoundSql boundSql = this.getField(this.parameterHandler, BoundSql.class);
         TypeHandlerRegistry typeHandlerRegistry = this.getField(this.parameterHandler, TypeHandlerRegistry.class);
+        R2dbcTypeHandlerAdapterRegistry r2dbcTypeHandlerAdapterRegistry = configuration.getR2dbcTypeHandlerAdapterRegistry();
         Object parameterObject = parameterHandler.getParameterObject();
         List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
         ParameterHandlerContext parameterHandlerContext = new ParameterHandlerContext();
@@ -135,39 +156,64 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
         if (parameterMappings != null) {
             for (int i = 0; i < parameterMappings.size(); i++) {
                 ParameterMapping parameterMapping = parameterMappings.get(i);
-                if (parameterMapping.getMode() != ParameterMode.OUT) {
-                    Object value;
-                    String propertyName = parameterMapping.getProperty();
-                    // issue #448 ask first for additional params
-                    if (boundSql.hasAdditionalParameter(propertyName)) {
-                        value = boundSql.getAdditionalParameter(propertyName);
-                    } else if (parameterObject == null) {
-                        value = null;
-                    } else if (typeHandlerRegistry.hasTypeHandler(parameterObject.getClass())) {
-                        value = parameterObject;
+                ParameterMode parameterMode = parameterMapping.getMode();
+                JdbcType jdbcType = parameterMapping.getJdbcType();
+                if (OUT.equals(parameterMode)) {
+                    R2dbcType r2dbcType = this.configuration.mappingR2dbcTypeFrom(jdbcType);
+                    this.delegateStatement.bind(i,
+                            toParameter(OUT, parameterMapping.getJavaType(), r2dbcType, null)
+                    );
+                    columnValues.add(null);
+                    continue;
+                }
+                Object value;
+                String propertyName = parameterMapping.getProperty();
+                // issue #448 ask first for additional params
+                if (boundSql.hasAdditionalParameter(propertyName)) {
+                    value = boundSql.getAdditionalParameter(propertyName);
+                } else if (parameterObject == null) {
+                    value = null;
+                } else if (typeHandlerRegistry.hasTypeHandler(parameterObject.getClass())) {
+                    value = parameterObject;
+                } else {
+                    MetaObject metaObject = configuration.newMetaObject(parameterObject);
+                    value = metaObject.getValue(propertyName);
+                }
+                if (value == null && jdbcType == null) {
+                    jdbcType = configuration.getJdbcTypeForNull();
+                }
+                R2dbcType r2dbcType = this.configuration.mappingR2dbcTypeFrom(jdbcType);
+                try {
+                    if (value == null) {
+                        this.delegateStatement.bind(i,
+                                toParameter(parameterMode, parameterMapping.getJavaType(), r2dbcType, null)
+                        );
+                        columnValues.add(null);
+                        continue;
+                    }
+                    // if parameterMapping's javaType isn't Object.class
+                    // then set it into context
+                    // otherwise use value's class as javaType of context
+                    Class<?> referredJavaType = Objects.equals(parameterMapping.getJavaType(), Object.class)
+                            ? value.getClass() : parameterMapping.getJavaType();
+                    parameterHandlerContext.setIndex(i);
+                    parameterHandlerContext.setJavaType(referredJavaType);
+                    parameterHandlerContext.setR2dbcType(r2dbcType);
+                    parameterHandlerContext.setParameterMode(parameterMode);
+                    if (r2dbcTypeHandlerAdapterRegistry.hasR2dbcTypeHandlerAdapter(value.getClass())) {
+                        log.debug("Found r2dbc type handler adapter for type : " + value.getClass());
+                        R2dbcTypeHandlerAdapter r2dbcTypeHandlerAdapter = r2dbcTypeHandlerAdapterRegistry.getR2dbcTypeHandlerAdapter(
+                                value.getClass());
+                        r2dbcTypeHandlerAdapter.setParameter(delegateStatement, parameterHandlerContext, value);
                     } else {
-                        MetaObject metaObject = configuration.newMetaObject(parameterObject);
-                        value = metaObject.getValue(propertyName);
+                        TypeHandler typeHandler = parameterMapping.getTypeHandler();
+                        typeHandler.setParameter(ps, i, value, jdbcType);
                     }
-                    TypeHandler typeHandler = parameterMapping.getTypeHandler();
-                    JdbcType jdbcType = parameterMapping.getJdbcType();
-                    if (value == null && jdbcType == null) {
-                        jdbcType = configuration.getJdbcTypeForNull();
-                    }
-                    try {
-                        if (value == null && jdbcType != null) {
-                            this.delegateStatement.bindNull(i, parameterMapping.getJavaType());
-                            columnValues.add(null);
-                        } else {
-                            parameterHandlerContext.setIndex(i);
-                            parameterHandlerContext.setJavaType(parameterMapping.getJavaType());
-                            parameterHandlerContext.setJdbcType(jdbcType);
-                            typeHandler.setParameter(ps, i, value, jdbcType);
-                            columnValues.add(value);
-                        }
-                    } catch (TypeException | SQLException e) {
-                        throw new TypeException("Could not set parameters for mapping: " + parameterMapping + ". Cause: " + e, e);
-                    }
+                    columnValues.add(value);
+                } catch (TypeException | SQLException e) {
+                    throw new TypeException("Could not set parameters for mapping: " + parameterMapping + ". Cause: " + e,
+                            e
+                    );
                 }
             }
         }
@@ -181,19 +227,16 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
     private class DelegateR2dbcStatement implements InvocationHandler {
 
         private final Statement statement;
-        private final Map<Class<?>, R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapters;
         private final Set<Class<?>> notSupportedDataTypes;
 
         /**
          * Instantiates a new Delegate R2dbc statement.
          *
          * @param statement                the statement
-         * @param r2dbcTypeHandlerAdapters the R2dbc type handler adapters
          * @param notSupportedDataTypes    the not supported data types
          */
-        DelegateR2dbcStatement(Statement statement, Map<Class<?>, R2dbcTypeHandlerAdapter> r2dbcTypeHandlerAdapters, Set<Class<?>> notSupportedDataTypes) {
+        DelegateR2dbcStatement(Statement statement,Set<Class<?>> notSupportedDataTypes) {
             this.statement = statement;
-            this.r2dbcTypeHandlerAdapters = r2dbcTypeHandlerAdapters;
             this.notSupportedDataTypes = notSupportedDataTypes;
         }
 
@@ -214,16 +257,33 @@ public class DelegateR2dbcParameterHandler implements InvocationHandler {
             if (notSupportedDataTypes.contains(parameterClass)) {
                 throw new IllegalArgumentException("Unsupported Parameter type : " + parameterClass);
             }
-            // using adapter
-            if (r2dbcTypeHandlerAdapters.containsKey(parameterClass)) {
-                log.debug("Found r2dbc type handler adapter for type : " + parameterClass);
-                R2dbcTypeHandlerAdapter r2dbcTypeHandlerAdapter = r2dbcTypeHandlerAdapters.get(parameterClass);
-                ParameterHandlerContext parameterHandlerContext = DelegateR2dbcParameterHandler.this.parameterHandlerContextReference.get();
-                r2dbcTypeHandlerAdapter.setParameter(statement, parameterHandlerContext, parameter);
+            ParameterHandlerContext parameterHandlerContext = DelegateR2dbcParameterHandler.this.parameterHandlerContextReference.get();
+            // for r2dbc-mssql with 0.9 version of r2dbc-spi, there is a bug fixed with 1.0 version of r2dbc-spi
+            // link source src/main/java/io/r2dbc/mssql/codec/DefaultCodecs.java#getServerType(Parameter parameter) in r2dbc-mssql
+            if (IN.equals(parameterHandlerContext.getParameterMode())) {
+                // if r2dbc type is not null ,then use binding with Parameter method
+                // otherwise use binding with value method directly
+                if(Objects.nonNull(parameterHandlerContext.getR2dbcType())){
+                    statement.bind(index,
+                            toParameter(parameterHandlerContext.getParameterMode(),
+                                    parameterHandlerContext.getJavaType(),
+                                    parameterHandlerContext.getR2dbcType(),
+                                    parameter
+                            )
+                    );
+                }else{
+                    statement.bind(index, parameter);
+                }
                 return null;
             }
-            //default set
-            statement.bind(index, parameter);
+            //INOUT
+            statement.bind(index,
+                    toParameter(parameterHandlerContext.getParameterMode(),
+                            parameterHandlerContext.getJavaType(),
+                            parameterHandlerContext.getR2dbcType(),
+                            parameter
+                    )
+            );
             return null;
         }
 

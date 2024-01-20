@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pro.chenggang.project.reactive.mybatis.support.common.mapper.DeptMapper">
+  <resultMap id="BaseResultMap" type="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
+    <id column="dept_no" jdbcType="BIGINT" property="deptNo" />
+    <result column="dept_name" jdbcType="VARCHAR" property="deptName" />
+    <result column="location" jdbcType="VARCHAR" property="location" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+  </resultMap>
+  <resultMap id="TableResultMap" type="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
+    <id column="dept_dept_no" jdbcType="BIGINT" property="deptNo" />
+    <result column="dept_dept_name" jdbcType="VARCHAR" property="deptName" />
+    <result column="dept_location" jdbcType="VARCHAR" property="location" />
+    <result column="dept_create_time" jdbcType="TIMESTAMP" property="createTime" />
+  </resultMap>
+  <resultMap id="DeptConstructorResultMap" type="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
+    <constructor>
+      <idArg column="dept_no" jdbcType="BIGINT" name="deptNo" javaType="java.lang.Long" />
+      <arg column="dept_name" jdbcType="VARCHAR" name="deptName" javaType="java.lang.String" />
+      <arg column="location" jdbcType="VARCHAR" name="location" javaType="java.lang.String" />
+      <arg column="create_time" jdbcType="TIMESTAMP" name="createTime" javaType="java.time.LocalDateTime"/>
+    </constructor>
+  </resultMap>
+  <resultMap id="DeptWithEmpList" type="pro.chenggang.project.reactive.mybatis.support.common.entity.extend.DeptWithEmpList" >
+    <id column="dept_no" jdbcType="BIGINT" property="deptNo" />
+    <result column="dept_name" jdbcType="VARCHAR" property="deptName" />
+    <result column="location" jdbcType="VARCHAR" property="location" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <collection property="empList" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.EmpMapper.TableResultMap" />
+  </resultMap>
+  <sql id="columnNameWithTable">
+    dept.dept_no AS dept_dept_no, 
+    dept.dept_name AS dept_dept_name, 
+    dept.location AS dept_location, 
+    dept.create_time AS dept_create_time
+  </sql>
+
+  <select id="countAll" resultType="java.lang.Long">
+    SELECT COUNT(*) FROM dept;
+  </select>
+
+  <select id="selectAll" resultType="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept">
+    SELECT * FROM dept
+  </select>
+</mapper>

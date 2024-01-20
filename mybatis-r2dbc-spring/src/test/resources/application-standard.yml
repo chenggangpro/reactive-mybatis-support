@@ -1,0 +1,25 @@
+server:
+  port: 0
+  netty:
+    connection-timeout: PT120S
+r2dbc:
+  mybatis:
+    mapper-locations: classpath:mapper/**/*.xml
+    configuration-properties:
+      "MySQL": "mysql"
+      "MariaDB": "mariadb"
+      "PostgreSQL": "postgresql"
+      "[Microsoft SQL Server]": "mssql"
+      "[Oracle Database]": "oracle"
+    configuration:
+      map-underscore-to-camel-case: true
+spring:
+  r2dbc:
+    mybatis:
+      pool:
+        max-idle-time: PT3M
+        initial-size: 3
+        max-size: 16
+        acquire-retry: 3
+        validation-depth: REMOTE
+        max-create-connection-time: PT30S

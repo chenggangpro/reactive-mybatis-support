@@ -18,6 +18,10 @@ overwrite: false
 generateReturnedKey: false
 # Whether generate column comment,default is true
 generateComment: true
+# Field is final or not, default is false
+finalField: false
+# Entity field's visibility (org.mybatis.generator.api.dom.java.JavaVisibility)
+fieldVisibility: PROTECTED
 # The table name trim regex pattern
 # Setting '^Sys' will replace the generated table name start with Sys
 tableNameTrimPattern: ""
@@ -50,16 +54,14 @@ targetConnection:
   username: "root"
   # The jdbc password
   password: "123456"
-# The Lombok configs if needed
-lombokConfigs:
-  - ToString
-  - Getter
-  - Setter
-  - AccessorsChain
-  - NoArgsConstructor
-  - AllArgsConstructor
-  - Builder
-  - EqualsAndHashCode
-# The target table names,if empty then generate all tables
+# The lombok annotations if needed
+lombokAnnotations:
+  - lombok.extern.jackson.Jacksonized
+  - lombok.Builder(toBuilder = true)
+  - lombok.Getter
+  - lombok.RequiredArgsConstructor(access = lombok.AccessLevel.PRIVATE)
+  - lombok.EqualsAndHashCode
+  - lombok.ToString
+# The target table names,or "%" to generate all tables
 tableNames:
   - table_name

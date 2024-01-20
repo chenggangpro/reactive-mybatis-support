@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pro.chenggang.project.reactive.mybatis.support.common.mapper.SubjectDataMapper">
+  <resultMap id="BaseResultMap" type="pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectData">
+    <result column="aByte" jdbcType="TINYINT" property="abyte" />
+    <result column="aShort" jdbcType="SMALLINT" property="ashort" />
+    <result column="aChar" jdbcType="CHAR" property="achar" />
+    <result column="anInt" jdbcType="INTEGER" property="anint" />
+    <result column="aLong" jdbcType="BIGINT" property="along" />
+    <result column="aFloat" jdbcType="REAL" property="afloat" />
+    <result column="aDouble" jdbcType="DOUBLE" property="adouble" />
+    <result column="aBoolean" jdbcType="BIT" property="aboolean" />
+    <result column="aString" jdbcType="VARCHAR" property="astring" />
+    <result column="anEnum" jdbcType="VARCHAR" property="anenum" />
+    <result column="aDecimal" jdbcType="DECIMAL" property="adecimal" />
+    <result column="aTimestamp" jdbcType="TIMESTAMP" property="atimestamp" />
+    <result column="aDate" jdbcType="DATE" property="adate" />
+    <result column="aDateTime" jdbcType="TIMESTAMP" property="adatetime" />
+  </resultMap>
+  <resultMap id="TableResultMap" type="pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectData">
+    <result column="subject_data_aByte" jdbcType="TINYINT" property="abyte" />
+    <result column="subject_data_aShort" jdbcType="SMALLINT" property="ashort" />
+    <result column="subject_data_aChar" jdbcType="CHAR" property="achar" />
+    <result column="subject_data_anInt" jdbcType="INTEGER" property="anint" />
+    <result column="subject_data_aLong" jdbcType="BIGINT" property="along" />
+    <result column="subject_data_aFloat" jdbcType="REAL" property="afloat" />
+    <result column="subject_data_aDouble" jdbcType="DOUBLE" property="adouble" />
+    <result column="subject_data_aBoolean" jdbcType="BIT" property="aboolean" />
+    <result column="subject_data_aString" jdbcType="VARCHAR" property="astring" />
+    <result column="subject_data_anEnum" jdbcType="VARCHAR" property="anenum" />
+    <result column="subject_data_aDecimal" jdbcType="DECIMAL" property="adecimal" />
+    <result column="subject_data_aTimestamp" jdbcType="TIMESTAMP" property="atimestamp" />
+    <result column="subject_data_aDate" jdbcType="DATE" property="adate" />
+    <result column="subject_data_aDateTime" jdbcType="TIMESTAMP" property="adatetime" />
+  </resultMap>
+  <sql id="columnNameWithTable">
+    subject_data.aByte AS subject_data_aByte, 
+    subject_data.aShort AS subject_data_aShort, 
+    subject_data.aChar AS subject_data_aChar, 
+    subject_data.anInt AS subject_data_anInt, 
+    subject_data.aLong AS subject_data_aLong, 
+    subject_data.aFloat AS subject_data_aFloat, 
+    subject_data.aDouble AS subject_data_aDouble, 
+    subject_data.aBoolean AS subject_data_aBoolean, 
+    subject_data.aString AS subject_data_aString, 
+    subject_data.anEnum AS subject_data_anEnum, 
+    subject_data.aDecimal AS subject_data_aDecimal, 
+    subject_data.aTimestamp AS subject_data_aTimestamp, 
+    subject_data.aDate AS subject_data_aDate, 
+    subject_data.aDateTime AS subject_data_aDateTime
+  </sql>
+</mapper>

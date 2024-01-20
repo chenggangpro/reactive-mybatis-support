@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+
+       Copyright 2009-2022 the original author or authors.
+
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+
+          https://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing, software
+       distributed under the License is distributed on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+       See the License for the specific language governing permissions and
+       limitations under the License.
+
+-->
+<!DOCTYPE configuration
+    PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+
+  <properties resource="mybatis-config.properties">
+    <!-- other properties-->
+  </properties>
+
+  <settings>
+    <setting name="mapUnderscoreToCamelCase" value="true"/>
+  </settings>
+
+  <typeAliases>
+    <typeAlias alias="Dept" type="pro.chenggang.project.reactive.mybatis.support.common.entity.Dept"/>
+    <typeAlias alias="Emp" type="pro.chenggang.project.reactive.mybatis.support.common.entity.Emp"/>
+    <typeAlias alias="Subject" type="pro.chenggang.project.reactive.mybatis.support.common.entity.Subject"/>
+    <typeAlias alias="SubjectContent" type="pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectContent"/>
+    <typeAlias alias="SubjectData" type="pro.chenggang.project.reactive.mybatis.support.common.entity.SubjectData"/>
+  </typeAliases>
+
+  <environments default="r2dbc-test">
+    <environment id="mysql">
+      <transactionManager type="NOT_USED" />
+      <dataSource type="POOLED">
+        <!--connection pool configuration-->
+        <property name="pool.name" value="mysql-connection-pool" />
+        <property name="pool.maxSize" value="16" />
+        <property name="pool.initialSize" value="4" />
+        <property name="pool.maxIdleTime" value="PT1M" />
+        <property name="pool.acquireRetry" value="1" />
+        <property name="pool.backgroundEvictionInterval" value="-PT1S" />
+        <property name="pool.maxAcquireTime" value="PT-1S" />
+        <property name="pool.maxCreateConnectionTime" value="PT-1S" />
+        <property name="pool.maxLifeTime" value="PT-1S" />
+        <property name="pool.validationDepth" value="REMOTE" />
+        <property name="pool.validationQuery" value="SELECT 1" />
+        <property name="pool.configurer" value="${mysql.pool.configurer}" />
+        <!--connection factory configuration-->
+        <property name="driver" value="${mysql.driver}"/>
+        <property name="host" value="${mysql.host}"/>
+        <property name="port" value="${mysql.port}"/>
+        <property name="user" value="${mysql.user}"/>
+        <property name="password" value="${mysql.password}"/>
+        <property name="database" value="${mysql.database}"/>
+        <property name="@configurer" value="${mysql.configurer}"/>
+        <property name="@defaultTransactionProxy" value="false"/>
+      </dataSource>
+    </environment>
+    <environment id="postgresql">
+      <transactionManager type="UNPOOLED" />
+      <dataSource type="NOT_USED">
+        <property name="driver" value="${postgresql.driver}"/>
+        <property name="host" value="${postgresql.host}"/>
+        <property name="port" value="${postgresql.port}"/>
+        <property name="user" value="${postgresql.user}"/>
+        <property name="password" value="${postgresql.password}"/>
+        <property name="database" value="${postgresql.database}"/>
+        <property name="@configurer" value="${postgresql.configurer}"/>
+        <property name="@defaultTransactionProxy" value="true"/>
+      </dataSource>
+    </environment>
+  </environments>
+
+
+  <databaseIdProvider type="DB_VENDOR">
+    <property name="MySQL" value="mysql"/>
+    <property name="MariaDB" value="mariadb"/>
+    <property name="PostgreSQL" value="postgresql"/>
+    <property name="Microsoft SQL Server" value="mssql"/>
+    <property name="Oracle Database" value="oracle"/>
+  </databaseIdProvider>
+
+  <mappers>
+    <mapper resource="pro/chenggang/project/reactive/mybatis/support/common/DeptMapper.xml"/>
+    <mapper resource="pro/chenggang/project/reactive/mybatis/support/common/EmpMapper.xml"/>
+    <mapper resource="pro/chenggang/project/reactive/mybatis/support/common/SubjectMapper.xml"/>
+    <mapper resource="pro/chenggang/project/reactive/mybatis/support/common/SubjectDataMapper.xml"/>
+  </mappers>
+
+</configuration>

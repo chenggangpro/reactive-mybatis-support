@@ -1,3 +1,18 @@
+/*
+ *    Copyright 2009-2023 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.binding;
 
 import org.apache.ibatis.reflection.ExceptionUtil;
@@ -16,7 +31,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 /**
- * The type Mapper proxy.
+ * The Mapper proxy.
  *
  * @param <T> the type parameter
  * @author Clinton Begin
@@ -48,8 +63,10 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
                 lookup.setAccessible(true);
             } catch (NoSuchMethodException e) {
                 throw new IllegalStateException(
-                        "There is neither 'privateLookupIn(Class, Lookup)' nor 'Lookup(Class, int)' method in java.lang.invoke.MethodHandles.",
-                        e);
+                        "There is neither 'privateLookupIn(Class, Lookup)' nor 'Lookup(Class, int)' method " +
+                                "in java.lang.invoke.MethodHandles.",
+                        e
+                );
             } catch (Exception e) {
                 lookup = null;
             }
@@ -68,7 +85,9 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
      * @param mapperInterface    the mapper interface
      * @param methodCache        the method cache
      */
-    public MapperProxy(ReactiveSqlSession reactiveSqlSession, Class<T> mapperInterface, Map<Method, MapperMethodInvoker> methodCache) {
+    public MapperProxy(ReactiveSqlSession reactiveSqlSession,
+                       Class<T> mapperInterface,
+                       Map<Method, MapperMethodInvoker> methodCache) {
         this.reactiveSqlSession = reactiveSqlSession;
         this.mapperInterface = mapperInterface;
         this.methodCache = methodCache;
@@ -79,9 +98,8 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
         try {
             if (Object.class.equals(method.getDeclaringClass())) {
                 return method.invoke(this, args);
-            } else {
-                return cachedInvoker(method).invoke(proxy, method, args, reactiveSqlSession);
             }
+            return cachedInvoker(method).invoke(proxy, method, args, reactiveSqlSession);
         } catch (Throwable t) {
             throw ExceptionUtil.unwrapThrowable(t);
         }
@@ -94,15 +112,17 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
                     try {
                         if (privateLookupInMethod == null) {
                             return new DefaultMethodInvoker(getMethodHandleJava8(method));
-                        } else {
-                            return new DefaultMethodInvoker(getMethodHandleJava9(method));
                         }
+                        return new DefaultMethodInvoker(getMethodHandleJava9(method));
                     } catch (IllegalAccessException | InstantiationException | InvocationTargetException
                             | NoSuchMethodException e) {
                         throw new RuntimeException(e);
                     }
                 } else {
-                    return new PlainMethodInvoker(new MapperMethod(mapperInterface, method, reactiveSqlSession.getConfiguration()));
+                    return new PlainMethodInvoker(new MapperMethod(mapperInterface,
+                            method,
+                            reactiveSqlSession.getConfiguration()
+                    ));
                 }
             });
         } catch (RuntimeException re) {
@@ -115,14 +135,18 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
             throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         final Class<?> declaringClass = method.getDeclaringClass();
         return ((Lookup) privateLookupInMethod.invoke(null, declaringClass, MethodHandles.lookup())).findSpecial(
-                declaringClass, method.getName(), MethodType.methodType(method.getReturnType(), method.getParameterTypes()),
-                declaringClass);
+                declaringClass,
+                method.getName(),
+                MethodType.methodType(method.getReturnType(), method.getParameterTypes()),
+                declaringClass
+        );
     }
 
     private MethodHandle getMethodHandleJava8(Method method)
             throws IllegalAccessException, InstantiationException, InvocationTargetException {
         final Class<?> declaringClass = method.getDeclaringClass();
-        return lookupConstructor.newInstance(declaringClass, ALLOWED_MODES).unreflectSpecial(method, declaringClass);
+        return lookupConstructor.newInstance(declaringClass, ALLOWED_MODES)
+                .unreflectSpecial(method, declaringClass);
     }
 
     /**
@@ -156,12 +180,16 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
         }
 
         @Override
-        public Object invoke(Object proxy, Method method, Object[] args, ReactiveSqlSession sqlSession) throws Throwable {
+        public Object invoke(Object proxy,
+                             Method method,
+                             Object[] args,
+                             ReactiveSqlSession sqlSession) throws Throwable {
             return mapperMethod.execute(sqlSession, args);
         }
     }
 
     private static class DefaultMethodInvoker implements MapperMethodInvoker {
+
         private final MethodHandle methodHandle;
 
         /**
@@ -175,7 +203,10 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
         }
 
         @Override
-        public Object invoke(Object proxy, Method method, Object[] args, ReactiveSqlSession sqlSession) throws Throwable {
+        public Object invoke(Object proxy,
+                             Method method,
+                             Object[] args,
+                             ReactiveSqlSession sqlSession) throws Throwable {
             return methodHandle.bindTo(proxy).invokeWithArguments(args);
         }
     }

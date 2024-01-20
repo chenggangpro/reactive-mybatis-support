@@ -17,11 +17,10 @@
 
 -->
 <xsd:schema xmlns="http://mybatis.org/schema/mybatis-spring"
-  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  xmlns:beans="http://www.springframework.org/schema/beans"
-  xmlns:tool="http://www.springframework.org/schema/tool"
-  targetNamespace="http://mybatis.org/schema/mybatis-spring"
-  elementFormDefault="qualified" attributeFormDefault="unqualified">
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:tool="http://www.springframework.org/schema/tool"
+            targetNamespace="http://mybatis.org/schema/mybatis-spring"
+            elementFormDefault="qualified" attributeFormDefault="unqualified">
 
   <xsd:element name="scan">
     <xsd:annotation>

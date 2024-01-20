@@ -1,8 +1,24 @@
+/*
+ *    Copyright 2009-2024 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler;
 
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.RowResultWrapper;
-
-import java.util.List;
+import io.r2dbc.spi.Readable;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * The interface Reactive result handler.
@@ -12,11 +28,6 @@ import java.util.List;
  * @since 1.0.0
  */
 public interface ReactiveResultHandler {
-
-    /**
-     * deferred object
-     */
-    Object DEFERRED = new Object();
 
     /**
      * get result row total count
@@ -29,10 +40,17 @@ public interface ReactiveResultHandler {
      * handle result with RowResultWrapper
      *
      * @param <T>              the type parameter
-     * @param rowResultWrapper the row result wrapper
+     * @param readableResultWrapper the row result wrapper
      * @return list
      */
-    <T> T handleResult(RowResultWrapper rowResultWrapper);
+    <T> Mono<T> handleResult(ReadableResultWrapper<? extends Readable> readableResultWrapper);
+
+    /**
+     * Handle output parameters.
+     *
+     * @param readableResultWrapper the row result wrapper
+     */
+    <T> Mono<T> handleOutputParameters(ReadableResultWrapper<? extends Readable> readableResultWrapper);
 
     /**
      * get remained result or empty list
@@ -40,5 +58,10 @@ public interface ReactiveResultHandler {
      * @param <T> the type parameter
      * @return remained results
      */
-    <T> List<T> getRemainedResults();
+    <T> Flux<T> getRemainedResults();
+
+    /**
+     * Clean up
+     */
+    void cleanup();
 }

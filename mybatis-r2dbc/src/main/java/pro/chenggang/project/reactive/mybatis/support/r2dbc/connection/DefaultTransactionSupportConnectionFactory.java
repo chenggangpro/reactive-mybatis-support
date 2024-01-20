@@ -1,6 +1,20 @@
+/*
+ *    Copyright 2009-2024 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.connection;
 
-import io.r2dbc.pool.ConnectionPool;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryMetadata;
@@ -10,9 +24,11 @@ import org.apache.ibatis.logging.LogFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextManager;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
+import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -57,12 +73,16 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
      * close connection factory
      */
     @Override
-    public void close() {
-        if (this.targetConnectionFactory instanceof ConnectionPool) {
-            ConnectionPool connectionPool = ((ConnectionPool) this.targetConnectionFactory);
-            if (!connectionPool.isDisposed()) {
-                connectionPool.dispose();
+    public void close() throws IOException{
+        if (this.targetConnectionFactory instanceof Disposable) {
+            Disposable disposable = ((Disposable) this.targetConnectionFactory);
+            if (!disposable.isDisposed()) {
+                disposable.dispose();
             }
+            return;
+        }
+        if (this.targetConnectionFactory instanceof Closeable) {
+            ((Closeable) this.targetConnectionFactory).close();
         }
     }
 
@@ -86,23 +106,19 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
                             reactiveExecutorContext.bindConnection(transactionConnection);
                         })
                         //if using transaction then force set auto commit to false
-                        .flatMap(newConnection -> Mono.justOrEmpty(reactiveExecutorContext.getIsolationLevel())
-                                .flatMap(isolationLevel -> {
-                                    log.debug("[Get connection]Transaction isolation level exist : " + isolationLevel);
-                                    return Mono.from(newConnection.setTransactionIsolationLevel(isolationLevel))
-                                            .then(Mono.defer(() -> {
-                                                log.debug("[Get connection]Force set autocommit to false");
-                                                return Mono.from(newConnection.setAutoCommit(reactiveExecutorContext.isAutoCommit()));
-                                            }));
-                                })
-                                .switchIfEmpty(Mono.from(newConnection.setAutoCommit(reactiveExecutorContext.isAutoCommit())))
-                                .then(Mono.defer(() -> {
-                                    if (reactiveExecutorContext.setActiveTransaction()) {
-                                        return Mono.from(newConnection.beginTransaction())
-                                                .then(Mono.defer(() -> Mono.just(newConnection)));
-                                    }
-                                    return Mono.just(newConnection);
-                                })))
+                        .flatMap(newConnection -> {
+                            if (reactiveExecutorContext.setActiveTransaction()) {
+                                return Mono.justOrEmpty(reactiveExecutorContext.getIsolationLevel())
+                                        .flatMap(isolationLevel -> {
+                                            log.debug("[Get connection]Transaction isolation level exist : " + isolationLevel);
+                                            return Mono.from(newConnection.setTransactionIsolationLevel(isolationLevel));
+                                        })
+                                        .then(Mono.from(newConnection.setAutoCommit(reactiveExecutorContext.isAutoCommit())))
+                                        .then(Mono.from(newConnection.beginTransaction()))
+                                        .thenReturn(newConnection);
+                            }
+                            return Mono.just(newConnection);
+                        })
                 );
     }
 
@@ -295,7 +311,7 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
          * @return
          */
         private String proxyToString(Object proxy) {
-            return "Transaction-support proxy for target Connection [" + this.connection.toString() + "],Original Proxy [" + proxy + "]";
+            return "Transaction-support proxy for target Connection [" + this.connection.toString() + "]";
         }
 
     }

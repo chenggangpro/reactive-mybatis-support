@@ -1,0 +1,15 @@
+server:
+  port: 0
+  netty:
+    connection-timeout: PT120S
+spring:
+  r2dbc:
+    mybatis:
+      pool:
+        max-idle-time: PT3M
+        validation-query: SELECT 1
+        initial-size: 3
+        max-size: 16
+        acquire-retry: 3
+        validation-depth: REMOTE
+        max-create-connection-time: PT30S

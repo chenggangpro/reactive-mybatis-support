@@ -1,6 +1,20 @@
+/*
+ *    Copyright 2009-2024 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults;
 
-import io.r2dbc.spi.IsolationLevel;
 import org.apache.ibatis.exceptions.TooManyResultsException;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
@@ -23,7 +37,7 @@ import java.util.Optional;
  * The type Default reactive sql session.
  *
  * @author Gang Cheng
- * @version 1.0.0
+ * @version 2.0.0
  */
 public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisReactiveContextManager {
 
@@ -31,9 +45,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
 
     private final R2dbcMybatisConfiguration configuration;
     private final ReactiveMybatisExecutor reactiveMybatisExecutor;
-    private boolean autoCommit = false;
-    private IsolationLevel isolationLevel;
-    private boolean withTransaction = false;
+    private final ReactiveSqlSessionProfile reactiveSqlSessionProfile;
 
     /**
      * Instantiates a new Default reactive sql session.
@@ -41,47 +53,19 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
      * @param configuration           the configuration
      * @param reactiveMybatisExecutor the reactive mybatis executor
      */
-    public DefaultReactiveSqlSession(R2dbcMybatisConfiguration configuration, ReactiveMybatisExecutor reactiveMybatisExecutor) {
+    public DefaultReactiveSqlSession(R2dbcMybatisConfiguration configuration,
+                                     ReactiveMybatisExecutor reactiveMybatisExecutor,
+                                     ReactiveSqlSessionProfile reactiveSqlSessionProfile) {
         this.configuration = configuration;
         this.reactiveMybatisExecutor = reactiveMybatisExecutor;
-    }
-
-    @Override
-    public ReactiveSqlSession setAutoCommit(boolean autoCommit) {
-        if (!withTransaction && autoCommit) {
-            this.autoCommit = true;
-        }
-        return this;
-    }
-
-    @Override
-    public ReactiveSqlSession setIsolationLevel(IsolationLevel isolationLevel) {
-        this.isolationLevel = isolationLevel;
-        return this;
-    }
-
-    @Override
-    public ReactiveSqlSession usingTransaction(boolean usingTransactionSupport) {
-        this.withTransaction = usingTransactionSupport;
-        if (this.withTransaction) {
-            this.autoCommit = false;
-        }
-        return this;
+        this.reactiveSqlSessionProfile = reactiveSqlSessionProfile;
     }
 
     @Override
     public <T> Mono<T> selectOne(String statement, Object parameter) {
         return this.<T>selectList(statement, parameter)
-                .buffer(2)
-                .flatMap(results -> {
-                    if (results.isEmpty()) {
-                        return Mono.empty();
-                    }
-                    if (results.size() > 1) {
-                        return Mono.error(new TooManyResultsException("Expected one result (or null) to be returned by selectOne()"));
-                    }
-                    return Mono.justOrEmpty(results.get(0));
-                }).singleOrEmpty();
+                .singleOrEmpty()
+                .onErrorMap(IndexOutOfBoundsException.class, ex -> new TooManyResultsException("Expected one result (or null) to be returned by selectOne()"));
     }
 
     @Override
@@ -93,12 +77,12 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
     }
 
     @Override
-    public Mono<Integer> insert(String statement, Object parameter) {
+    public Mono<Long> insert(String statement, Object parameter) {
         return this.update(statement, parameter);
     }
 
     @Override
-    public Mono<Integer> update(String statement, Object parameter) {
+    public Mono<Long> update(String statement, Object parameter) {
         MappedStatement mappedStatement = configuration.getMappedStatement(statement);
         return reactiveMybatisExecutor.update(mappedStatement, this.wrapCollection(parameter))
                 .contextWrite(context -> initReactiveExecutorContext(context, this.configuration.getR2dbcStatementLog(mappedStatement)))
@@ -106,7 +90,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
     }
 
     @Override
-    public Mono<Integer> delete(String statement, Object parameter) {
+    public Mono<Long> delete(String statement, Object parameter) {
         return this.update(statement, parameter);
     }
 
@@ -151,15 +135,17 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
                 .map(ReactiveExecutorContext.class::cast);
         if (optionalContext.isPresent()) {
             ReactiveExecutorContext reactiveExecutorContext = optionalContext.get();
-            if (this.withTransaction) {
+            if (this.reactiveSqlSessionProfile.isEnableTransaction()) {
                 reactiveExecutorContext.setWithTransaction();
             }
             reactiveExecutorContext.setR2dbcStatementLog(r2dbcStatementLog);
             return context;
         }
-        ReactiveExecutorContext newContext = new ReactiveExecutorContext(autoCommit, isolationLevel);
+        ReactiveExecutorContext newContext = new ReactiveExecutorContext(this.reactiveSqlSessionProfile.isAutoCommit(),
+                this.reactiveSqlSessionProfile.getIsolationLevel()
+        );
         newContext.setR2dbcStatementLog(r2dbcStatementLog);
-        if (this.withTransaction) {
+        if (this.reactiveSqlSessionProfile.isEnableTransaction()) {
             newContext.setWithTransaction();
         }
         return context.put(ReactiveExecutorContext.class, newContext);
@@ -178,8 +164,10 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
         if (log.isTraceEnabled()) {
             log.trace("Initialize reactive executor context,context not exist,create new one");
         }
-        ReactiveExecutorContext newContext = new ReactiveExecutorContext(autoCommit, isolationLevel);
-        if (this.withTransaction) {
+        ReactiveExecutorContext newContext = new ReactiveExecutorContext(this.reactiveSqlSessionProfile.isAutoCommit(),
+                this.reactiveSqlSessionProfile.getIsolationLevel()
+        );
+        if (this.reactiveSqlSessionProfile.isEnableTransaction()) {
             newContext.setWithTransaction();
         }
         return context.put(ReactiveExecutorContext.class, newContext);
