@@ -54,6 +54,8 @@ public class DefaultR2DbcTypeMappingFactory implements R2dbcTypeMappingFactory {
                 })
                 .filter(Objects::nonNull)
                 .forEach(tuple2 -> this.mappings.put(tuple2.getT1(), tuple2.getT2()));
+        this.mappings.put(JdbcType.TIME_WITH_TIMEZONE,R2dbcType.TIME_WITH_TIME_ZONE);
+        this.mappings.put(JdbcType.TIMESTAMP_WITH_TIMEZONE,R2dbcType.TIMESTAMP_WITH_TIME_ZONE);
     }
 
     @Override
