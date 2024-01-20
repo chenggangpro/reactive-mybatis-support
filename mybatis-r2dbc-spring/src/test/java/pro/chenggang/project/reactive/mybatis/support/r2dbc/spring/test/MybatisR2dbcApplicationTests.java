@@ -24,7 +24,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.ReactiveTransactionManager;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
-import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.MariaDBContainer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -38,9 +38,9 @@ import static org.springframework.transaction.TransactionDefinition.PROPAGATION_
 public class MybatisR2dbcApplicationTests extends MybatisR2dbcBaseTests {
 
     @DynamicPropertySource
-    static void postgresqlProperties(DynamicPropertyRegistry registry) {
+    static void configureProperties(DynamicPropertyRegistry registry) {
         String envDatabaseType = System.getProperty("databaseType",
-                MySQLContainer.class.getSimpleName()
+                MariaDBContainer.class.getSimpleName()
         );
         databaseInitializationContainer.keySet()
                 .stream()
