@@ -53,7 +53,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -61,13 +60,6 @@ import java.util.stream.Stream;
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SELECT_KEY_AFTER;
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SELECT_KEY_BEFORE;
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SIMPLE_RETURN;
-import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper.Functions.OUT_PARAMETERS_METADATA_EXTRACTOR;
-import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper.Functions.OUT_PARAMETERS_METADATA_EXTRACTOR_BY_INDEX;
-import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper.Functions.OUT_PARAMETERS_METADATA_EXTRACTOR_BY_NAME;
-import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper.Functions.ROW_METADATA_EXTRACTOR;
-import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper.Functions.ROW_METADATA_EXTRACTOR_BY_INDEX;
-import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper.Functions.ROW_METADATA_EXTRACTOR_BY_NAME;
-import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.ReactiveResultHandler.DEFERRED;
 
 /**
  * The type Default reactive mybatis executor.
@@ -126,17 +118,11 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                                     )
                                                     .checkpoint("[DefaultReactiveExecutor] SQL: \"" + boundSqlStatement + "\" ")
                                                     .concatMap(result -> result.map((row, rowMetadata) -> {
-                                                        ReadableResultWrapper<Row> readableResultWrapper = new ReadableResultWrapper<>(
-                                                                row,
-                                                                ROW_METADATA_EXTRACTOR,
-                                                                ROW_METADATA_EXTRACTOR_BY_INDEX,
-                                                                ROW_METADATA_EXTRACTOR_BY_NAME,
-                                                                configuration
-                                                        );
+                                                        ReadableResultWrapper<Row> readableResultWrapper = ReadableResultWrapper.ofRow(row,configuration);
                                                         return r2dbcKeyGenerator.processGeneratedKeyResult(readableResultWrapper, parameter);
                                                     }));
                                         }
-                                        ReactiveResultHandler reactiveResultHandler = new DefaultReactiveResultHandler(configuration, mappedStatement, boundSql, parameterHandler);
+                                        final ReactiveResultHandler reactiveResultHandler = new DefaultReactiveResultHandler(configuration, mappedStatement, boundSql, parameterHandler);
                                         boolean anyOutParameterExist = boundSql.getParameterMappings()
                                                 .stream()
                                                 .anyMatch(parameterMapping ->
@@ -165,15 +151,12 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                                                     }
                                                                     // output parameters
                                                                     if (segment instanceof Result.OutSegment) {
-                                                                        ReadableResultWrapper<OutParameters> readableResultWrapper = new ReadableResultWrapper<>(
+                                                                        ReadableResultWrapper<OutParameters> readableResultWrapper = ReadableResultWrapper.ofOutParameters(
                                                                                 ((Result.OutSegment) segment).outParameters(),
-                                                                                OUT_PARAMETERS_METADATA_EXTRACTOR,
-                                                                                OUT_PARAMETERS_METADATA_EXTRACTOR_BY_INDEX,
-                                                                                OUT_PARAMETERS_METADATA_EXTRACTOR_BY_NAME,
                                                                                 configuration
                                                                         );
-                                                                        reactiveResultHandler.handleOutputParameters(readableResultWrapper);
-                                                                        return Mono.just(1);
+                                                                        return reactiveResultHandler.handleOutputParameters(readableResultWrapper)
+                                                                                .thenReturn(1);
                                                                     }
                                                                     log.trace("[DoUpdate]Ignore process result's segment : " + segment.getClass());
                                                                     return Mono.empty();
@@ -208,7 +191,7 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                             StatementHandler handler = configuration.newStatementHandler(null, mappedStatement, parameter, rowBounds, null, null);
                             ParameterHandler parameterHandler = handler.getParameterHandler();
                             Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameterHandler, rowBounds, false, attribute, r2dbcStatementLog);
-                            ReactiveResultHandler reactiveResultHandler = new DefaultReactiveResultHandler(configuration, mappedStatement, boundSql, parameterHandler);
+                            final ReactiveResultHandler reactiveResultHandler = new DefaultReactiveResultHandler(configuration, mappedStatement, boundSql, parameterHandler);
                             boolean anyOutParameterExist = boundSql.getParameterMappings()
                                     .stream()
                                     .anyMatch(parameterMapping ->
@@ -231,28 +214,22 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                                         }
                                                         // row data
                                                         if (segment instanceof Result.RowSegment) {
-                                                            ReadableResultWrapper<Row> readableResultWrapper = new ReadableResultWrapper<>(
+                                                            ReadableResultWrapper<Row> readableResultWrapper = ReadableResultWrapper.ofRow(
                                                                     ((Result.RowSegment) segment).row(),
-                                                                    ROW_METADATA_EXTRACTOR,
-                                                                    ROW_METADATA_EXTRACTOR_BY_INDEX,
-                                                                    ROW_METADATA_EXTRACTOR_BY_NAME,
                                                                     configuration
                                                             );
-                                                            return Mono.just((E) reactiveResultHandler.handleResult(readableResultWrapper));
+                                                            return reactiveResultHandler.handleResult(readableResultWrapper);
                                                         }
                                                         // output parameters
                                                         if (segment instanceof Result.OutSegment) {
-                                                            ReadableResultWrapper<OutParameters> readableResultWrapper = new ReadableResultWrapper<>(
+                                                            ReadableResultWrapper<OutParameters> readableResultWrapper = ReadableResultWrapper.ofOutParameters(
                                                                     ((Result.OutSegment) segment).outParameters(),
-                                                                    OUT_PARAMETERS_METADATA_EXTRACTOR,
-                                                                    OUT_PARAMETERS_METADATA_EXTRACTOR_BY_INDEX,
-                                                                    OUT_PARAMETERS_METADATA_EXTRACTOR_BY_NAME,
                                                                     configuration
                                                             );
-                                                            return Mono.just(reactiveResultHandler.handleOutputParameters(readableResultWrapper));
+                                                            return reactiveResultHandler.handleOutputParameters(readableResultWrapper);
                                                         }
                                                         log.trace("[DoQuery]Ignore process result's segment : " + segment.getClass());
-                                                        return Mono.empty();
+                                                        return Mono.<E>empty();
                                                     });
                                         }
                                         return result.filter(segment -> segment instanceof Result.Message
@@ -262,21 +239,14 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                                     if (segment instanceof Result.Message) {
                                                         return Mono.error(((Result.Message) segment).exception());
                                                     }
-                                                    ReadableResultWrapper<Row> readableResultWrapper = new ReadableResultWrapper<>(
+                                                    ReadableResultWrapper<Row> readableResultWrapper = ReadableResultWrapper.ofRow(
                                                             ((Result.RowSegment) segment).row(),
-                                                            ROW_METADATA_EXTRACTOR,
-                                                            ROW_METADATA_EXTRACTOR_BY_INDEX,
-                                                            ROW_METADATA_EXTRACTOR_BY_NAME,
                                                             configuration
                                                     );
-                                                    return Mono.just(reactiveResultHandler.handleResult(readableResultWrapper));
+                                                    return reactiveResultHandler.handleResult(readableResultWrapper);
                                                 });
                                     })
-                                    .concatWith(Flux.defer(() -> Flux
-                                            .fromIterable((Collection<E>)reactiveResultHandler.getRemainedResults())
-                                            .filter(Objects::nonNull))
-                                    )
-                                    .filter(data -> !Objects.equals(data, DEFERRED))
+                                    .concatWith(Flux.defer(reactiveResultHandler::getRemainedResults))
                                     .doOnCancel(() -> {
                                         //clean up reactiveResultHandler
                                         reactiveResultHandler.cleanup();

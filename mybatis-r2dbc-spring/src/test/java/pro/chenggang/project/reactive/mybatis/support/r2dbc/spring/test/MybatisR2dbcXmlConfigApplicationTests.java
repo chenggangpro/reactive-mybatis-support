@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 public class MybatisR2dbcXmlConfigApplicationTests extends MybatisR2dbcBaseTests {
 
     @DynamicPropertySource
-    static void postgresqlProperties(DynamicPropertyRegistry registry) {
+    static void configureProperties(DynamicPropertyRegistry registry) {
         String envDatabaseType = System.getProperty("databaseType",
                 MySQLContainer.class.getSimpleName()
         );

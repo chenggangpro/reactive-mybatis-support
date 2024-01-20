@@ -47,6 +47,8 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.exception.R2dbcResul
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.TypeHandleContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
@@ -60,6 +62,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
@@ -120,12 +123,12 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T handleResult(ReadableResultWrapper<? extends Readable> readableResultWrapper) {
+    public <T> Mono<T> handleResult(ReadableResultWrapper<? extends Readable> readableResultWrapper) {
         List<ResultMap> resultMaps = mappedStatement.getResultMaps();
         int resultMapCount = resultMaps.size();
         if (resultMapCount < 1) {
-            throw new ExecutorException("A query was run and no Result Maps were found for the Mapped Statement '" + mappedStatement.getId()
-                    + "'.  It's likely that neither a Result Type nor a Result Map was specified.");
+            return Mono.error(new ExecutorException("A query was run and no Result Maps were found for the Mapped Statement '" + mappedStatement.getId()
+                    + "'.  It's likely that neither a Result Type nor a Result Map was specified."));
         }
         ResultMap resultMap = resultMaps.get(0);
         if (!resultMap.hasNestedResultMaps()) {
@@ -133,57 +136,57 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
                 ResultMap discriminatedResultMap = resolveDiscriminatedResultMap(readableResultWrapper, resultMap, null);
                 Object rowValue = getRowValueForSimpleResultMap(readableResultWrapper, discriminatedResultMap, null);
                 totalCount.increment();
-                return (T) (rowValue == null ? DEFERRED : rowValue);
+                return Mono.justOrEmpty((T) rowValue);
             } catch (SQLException e) {
-                throw new R2dbcResultException(e);
+                return Mono.error(new R2dbcResultException(e));
             }
         }
         try {
             Object rowValue = handleRowValuesForNestedResultMap(readableResultWrapper, resultMap);
             totalCount.increment();
-            return (T) (rowValue == null ? DEFERRED : rowValue);
+            return Mono.justOrEmpty((T) rowValue);
         } catch (SQLException e) {
-            throw new R2dbcResultException(e);
+            return Mono.error(new R2dbcResultException(e));
         }
     }
 
     @Override
-    public <T> T handleOutputParameters(ReadableResultWrapper<? extends Readable> readableResultWrapper) {
+    public <T> Mono<T> handleOutputParameters(ReadableResultWrapper<? extends Readable> readableResultWrapper) {
         final Object parameterObject = parameterHandler.getParameterObject();
         final MetaObject metaParam = r2dbcMybatisConfiguration.newMetaObject(parameterObject);
         final List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
-        TypeHandler<?> outputDelegatedTypeHandler = this.initDelegateTypeHandler();
-        try {
-            for (final ParameterMapping parameterMapping : parameterMappings) {
-                if (parameterMapping.getMode() == ParameterMode.OUT || parameterMapping.getMode() == ParameterMode.INOUT) {
+        final TypeHandler<?> outputDelegatedTypeHandler = this.initDelegateTypeHandler();
+        return Flux.fromIterable(parameterMappings)
+                .filter(parameterMapping -> parameterMapping.getMode() == ParameterMode.OUT || parameterMapping.getMode() == ParameterMode.INOUT)
+                .concatMap(parameterMapping -> {
                     if (ResultSet.class.equals(parameterMapping.getJavaType())
                             || Row.class.equals(parameterMapping.getJavaType())
                             || Result.class.equals(parameterMapping.getJavaType())) {
-                        throw new UnsupportedOperationException(
+                        return Mono.error(new UnsupportedOperationException(
                                 "Unsupported Java type encountered: '" + parameterMapping.getJavaType() + "' during output parameter mapping." +
                                         " To handle multiple rows of output parameters, " +
                                         "consider using a query operation rather than an update operation." +
-                                        " Receiving output parameters with an update operation is only effective for single-row results.");
-                    } else {
+                                        " Receiving output parameters with an update operation is only effective for single-row results."));
+                    }
+                    try {
                         final TypeHandler<?> typeHandler = parameterMapping.getTypeHandler();
-                        ((TypeHandleContext) outputDelegatedTypeHandler)
-                                .contextWith(parameterMapping.getJavaType(), typeHandler, readableResultWrapper);
+                        ((TypeHandleContext) outputDelegatedTypeHandler).contextWith(parameterMapping.getJavaType(), typeHandler, readableResultWrapper);
                         Object value = outputDelegatedTypeHandler.getResult(null, parameterMapping.getProperty());
                         metaParam.setValue(parameterMapping.getProperty(), value);
+                    }catch (SQLException e) {
+                        return Mono.error(new R2dbcResultException(e));
                     }
-                }
-            }
-        }catch (SQLException e) {
-            throw new R2dbcResultException(e);
-        }
-        return (T) DEFERRED;
+                    return Mono.empty();
+                })
+                .then(Mono.empty());
     }
 
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> List<T> getRemainedResults() {
-        return (List<T>) this.resultHolder;
+    public <T> Flux<T> getRemainedResults() {
+        return (Flux<T>) Flux.fromIterable(this.resultHolder)
+                .filter(Objects::nonNull);
     }
 
     @Override
@@ -238,12 +241,12 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         }
         List<Object> resultList = resultHandler.getResultList();
         if(resultList == null || resultList.isEmpty()){
-            return DEFERRED;
+            return null;
         }
         // if result is not ordered , then hold all results for nested result mapping
         if(!mappedStatement.isResultOrdered()){
             this.resultHolder.addAll(resultList);
-            return DEFERRED;
+            return null;
         }
         // result is ordered,then hold before next nested result mapping
 
@@ -256,7 +259,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         }
         // result holder is empty then hold result
         this.resultHolder.addAll(resultList);
-        return DEFERRED;
+        return null;
     }
 
     private boolean applyNestedResultMappings(ReadableResultWrapper<? extends Readable> readableResultWrapper, ResultMap resultMap, MetaObject metaObject, String parentPrefix, CacheKey parentRowKey, boolean newObject) {
@@ -345,9 +348,6 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
                 // issue #541 make property optional
                 final String property = propertyMapping.getProperty();
                 if (property == null) {
-                    continue;
-                } else if (value == DEFERRED) {
-                    foundValues = true;
                     continue;
                 }
                 if (value != null) {

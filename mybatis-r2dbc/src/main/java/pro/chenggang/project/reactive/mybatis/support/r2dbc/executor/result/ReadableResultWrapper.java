@@ -38,6 +38,13 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper.Functions.OUT_PARAMETERS_METADATA_EXTRACTOR;
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper.Functions.OUT_PARAMETERS_METADATA_EXTRACTOR_BY_INDEX;
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper.Functions.OUT_PARAMETERS_METADATA_EXTRACTOR_BY_NAME;
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper.Functions.ROW_METADATA_EXTRACTOR;
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper.Functions.ROW_METADATA_EXTRACTOR_BY_INDEX;
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper.Functions.ROW_METADATA_EXTRACTOR_BY_NAME;
+
 /**
  * The type Row result wrapper.
  * <p>
@@ -94,6 +101,40 @@ public class ReadableResultWrapper<T extends Readable> {
                 = (outParameters, name) -> outParameters.getMetadata().getParameterMetadata(name);
     }
 
+    /**
+     * New result wrapper of row readable.
+     *
+     * @param row                       the row
+     * @param r2dbcMybatisConfiguration the r2dbc mybatis configuration
+     * @return the readable result wrapper
+     */
+    public static ReadableResultWrapper<Row> ofRow(Row row, R2dbcMybatisConfiguration r2dbcMybatisConfiguration) {
+        return new ReadableResultWrapper<>(
+                row,
+                ROW_METADATA_EXTRACTOR,
+                ROW_METADATA_EXTRACTOR_BY_INDEX,
+                ROW_METADATA_EXTRACTOR_BY_NAME,
+                r2dbcMybatisConfiguration
+        );
+    }
+
+    /**
+     * New result wrapper of out parameters.
+     *
+     * @param outParameters             the out parameters
+     * @param r2dbcMybatisConfiguration the r2dbc mybatis configuration
+     * @return the readable result wrapper
+     */
+    public static ReadableResultWrapper<OutParameters> ofOutParameters(OutParameters outParameters,
+                                                                       R2dbcMybatisConfiguration r2dbcMybatisConfiguration) {
+        return new ReadableResultWrapper<>(
+                outParameters,
+                OUT_PARAMETERS_METADATA_EXTRACTOR,
+                OUT_PARAMETERS_METADATA_EXTRACTOR_BY_INDEX,
+                OUT_PARAMETERS_METADATA_EXTRACTOR_BY_NAME,
+                r2dbcMybatisConfiguration
+        );
+    }
 
     private final T readable;
     private final BiFunction<T, Integer, ReadableMetadata> metadataExtractorByIndex;

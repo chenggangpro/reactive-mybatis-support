@@ -56,7 +56,7 @@ import static org.springframework.transaction.TransactionDefinition.PROPAGATION_
 public class MybatisR2dbcRoutingApplicationTests extends MybatisR2dbcBaseTests {
 
     @DynamicPropertySource
-    static void postgresqlProperties(DynamicPropertyRegistry registry) {
+    static void configureProperties(DynamicPropertyRegistry registry) {
         R2dbcProtocol mysqlR2dbcProtocol = setUp(MySQLContainer.class, false);
         registry.add("spring.r2dbc.mybatis.routing.definitions[0].name", MySQLContainer.class::getSimpleName);
         registry.add("spring.r2dbc.mybatis.routing.definitions[0].as-default", () -> Boolean.TRUE);

@@ -275,7 +275,7 @@ public class MybatisR2dbcBaseTests {
             return;
         }
         String envDatabaseType = System.getProperty("databaseType",
-                MySQLContainer.class.getSimpleName()
+                MariaDBContainer.class.getSimpleName()
         );
         for (Class<?> aClass : MybatisR2dbcBaseTests.databaseInitializationContainer.keySet()) {
             if (!aClass.getSimpleName().equalsIgnoreCase(envDatabaseType)) {
@@ -355,7 +355,7 @@ public class MybatisR2dbcBaseTests {
 
         public void run() {
             String envDatabaseType = System.getProperty("databaseType",
-                    MySQLContainer.class.getSimpleName()
+                    MariaDBContainer.class.getSimpleName()
             );
             databaseInitializationContainer.keySet()
                     .stream()

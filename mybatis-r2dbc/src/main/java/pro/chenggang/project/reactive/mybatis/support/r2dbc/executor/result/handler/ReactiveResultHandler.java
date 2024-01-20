@@ -17,8 +17,8 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.han
 
 import io.r2dbc.spi.Readable;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * The interface Reactive result handler.
@@ -28,11 +28,6 @@ import java.util.List;
  * @since 1.0.0
  */
 public interface ReactiveResultHandler {
-
-    /**
-     * deferred object
-     */
-    Object DEFERRED = new Object();
 
     /**
      * get result row total count
@@ -48,14 +43,14 @@ public interface ReactiveResultHandler {
      * @param readableResultWrapper the row result wrapper
      * @return list
      */
-    <T> T handleResult(ReadableResultWrapper<? extends Readable> readableResultWrapper);
+    <T> Mono<T> handleResult(ReadableResultWrapper<? extends Readable> readableResultWrapper);
 
     /**
      * Handle output parameters.
      *
      * @param readableResultWrapper the row result wrapper
      */
-    <T> T handleOutputParameters(ReadableResultWrapper<? extends Readable> readableResultWrapper);
+    <T> Mono<T> handleOutputParameters(ReadableResultWrapper<? extends Readable> readableResultWrapper);
 
     /**
      * get remained result or empty list
@@ -63,7 +58,7 @@ public interface ReactiveResultHandler {
      * @param <T> the type parameter
      * @return remained results
      */
-    <T> List<T> getRemainedResults();
+    <T> Flux<T> getRemainedResults();
 
     /**
      * Clean up
