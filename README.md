@@ -1,73 +1,33 @@
-[![Java CI with Maven](https://github.com/chenggangpro/reactive-mybatis-support/actions/workflows/maven.yml/badge.svg?branch=main)](https://github.com/chenggangpro/reactive-mybatis-support/actions/workflows/maven.yml)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Pom Maven Central](https://maven-badges.herokuapp.com/maven-central/pro.chenggang/reactive-mybatis-support/badge.svg)](https://maven-badges.herokuapp.com/maven-central/pro.chenggang/reactive-mybatis-support)
-# Reactive-Mybatis-Support
+# [Reactive Mybatis Support](https://github.com/chenggangpro/reactive-mybatis-support/wiki)
 
-> Note: if you want to use this repository,please keep the version above `1.1.0.RELEASE`.
+* [![Build and Test With Maven [2.x]](https://github.com/chenggangpro/reactive-mybatis-support/actions/workflows/workflow-2.x.yml/badge.svg?branch=2.x)](https://github.com/chenggangpro/reactive-mybatis-support/actions/workflows/workflow-2.x.yml)
+* [![Build and Test With Maven [3.x]](https://github.com/chenggangpro/reactive-mybatis-support/actions/workflows/workflow-3.x.yml/badge.svg?branch=3.x)](https://github.com/chenggangpro/reactive-mybatis-support/actions/workflows/workflow-3.x.yml)
 
-#### Description of applicable version
+## JDK/R2DBC-SPI/Spring-Boot Compatibility
 
-|project-version|reactor-bom|r2dbc-bom|spring-boot|
-|:--|:--|:--|:--|
-|`1.1.x`| `>= 2020.0.17` |`Arabba-SRxxx`|`2.6.x`|
-|`1.2.x`| `>= 2020.0.21` |`Borca-SR1`|`>=2.7.0 && <=2.7.x`|
+| JDK | r2dbc-spi     | mybatis-r2dbc               | mybatis-r2dbc-generator     | mybatis-r2dbc-spring        | Spring Boot       |
+|-----|---------------|-----------------------------|-----------------------------|-----------------------------|-------------------|
+| 8   | 0.9.1.RELEASE | 2.x.x (compiled with jdk8)  | 2.x.x (compiled with jdk8)  | 2.x.x (compiled with jdk8)  | [`2.7.x`,`3.0.0`) |
+| 11  | 1.0.0.RELEASE | 3.x.x (compiled with jdk11) | 3.x.x (compiled with jdk11) | --                          | --                |
+| 17  | 1.0.0.RELEASE | 3.x.x (compiled with jdk11) | 3.x.x (compiled with jdk11) | 3.x.x (compiled with jdk17) | [`3.0.0`,`~`)     |
 
-> The `[Borca-SR1,~)` is based on `r2dbc-spi`[0.9.1.RELEASE]
-> Since `r2dbc-spi` is changed in `1.0.0.RELEASE`, `Borca-SR1`'s future versions need to be re-adapted.
 
-This project has met the general business usage scenarios, including:
-* 1 . Parameter parsing and mapping
-* 2 . One-to-many associative relationships for result mapping
-* 3 . Result mapping for one-to-one relationships
-* 4 . Returning a generated key
-* 5 . generated key by nested query (`@SelectKey`/`<selectKey>`)
-* 6 . Manual transaction operation
-* 7 . Adaptation of parameter binding placeholders for different r2dbc drivers
-* 8 . SpringBoot transaction Integration
-* 9 . Supported drivers:
-  * mysql
-  * h2
-  * mssql
-  * postgresql
-  * oracle
+* The whole project `reactive-mybatis-support(2.x.x)` is compiled with `JDK8` and `SpringBoot(2.7.x)`, aka `r2dbc-spi(0.9.1.RELEASE)`
+* The `mybatis-r2dbc(3.x.x)` and `mybatis-r2dbc-generator(3.x.x)` are compiled with `JDK11`, aka `r2dbc-spi(1.0.0.RELEASE)`.
+* The `mybatis-r2dbc-spring(3.x.x)` is compiled with `JDK17` and  `SpringBoot(3.x.x)`, aka `r2dbc-spi(1.0.0.RELEASE)`.
 
 #### Instruction
 
-* This project is aimed to adapt mybatis to reactive project (aka WebFlux/Reactor3)
-* `mybatis-r2dbc` module is inspired by [linux-china/mybatis-r2dbc](https://github.com/linux-china/mybatis-r2dbc) and based on `mybatis3`'s original source code
-* `mybatis-generator` module is used to adapt `mybatis-dynamic-sql` to reactive project
-* Support SpringBoot AutoConfiguration, `@R2dbcMapperScan`/`@R2dbcMapperScans` for scan `@Mapper`, Spring XML bean config .
-* Support Spring's Transaction.
-* Unsupported mybatis3 feature:
+* Reactive Mybatis Support is aimed to adapt original mybatis to reactive project (aka WebFlux/Reactor3) with r2dbc drivers.
+* `mybatis-r2dbc` module is inspired by [linux-china/mybatis-r2dbc](https://github.com/linux-china/mybatis-r2dbc) and based on `mybatis3`'s original source code.
+* `mybatis-generator` module is used to adapt `mybatis-dynamic-sql` to reactive project.
+* Most of the MyBatis3 features are applicable, but there are a few features that are not supported:
     * ❌ 1 . mybatis-plugin
-    * ❌ 2 . multi resultSet and `resultOrdered = true` in mapper.XML
-    * ❌ 3 . nested query with multi SQL
-    * ⚠️ 4 . blocking java type (aka: InputStream .eg)
-* ⚠️ Mapper Method's return type only support `Flux<T>`/`Mono<T>`/`Mono<Void>`/`Flux<Void>`, and not support `void`
-* Using Reactor's Context and dynamic proxy to implement Transaction
-* More detail, please see source code and test suits, tests use MySQL database with `test-prepare.sql` schema setup
-* It has been piloted in a small scale within my company, and any bugs found will be updated at any time
-
-#### ⚠️ Known issues
-
-* ⚠️ When using `useGeneratedKeys="true"` in `insert` label of mapper-xml, the `keyColumns="xxxx"` must be set
-  * 1 . The `JDBC driver`'s`Connection` only provides a method defined as `PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException;` , the second parameter of this method indicates whether auto returns generatedKeys
-  * 2 . The `R2DBC driver`'s `Statement` does not provide any method to return generatedKeys automatically, the Statement only provides a method defined as `Statement returnGeneratedValues(String... columns)` to return generatedKeys,the columns is not nullable , so the key column name must be specific.
-  * Reference:
-    *  [JDBC's Connection](https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#prepareStatement-java.lang.String-int-)
-    *  [R2DBC's Statement](https://github.com/r2dbc/r2dbc-spi/blob/8e27a1df8caf4688942bef1fa60848967586c336/r2dbc-spi/src/main/java/io/r2dbc/spi/Statement.java#L115)
-
-* ⚠️ `r2dbc-mysql` driver
-  * when calling `Row#<T> T get(int index, Class<T> type)`,with jdbcType is `BIGINT` and javaType is `Long.class`
-  * the driver will occur an exception, because  the driver is deeply bound to `BitInteger.class`,and can't cast to `Long.class`
-  * MySQL-JDBC driver and `r2dbc-mariadb` driver don't have this issue 
-  * possible link  [r2dbc-mysql/issues/177](https://github.com/mirromutth/r2dbc-mysql/issues/177)
-  * This might be fixed in the next release of the driver
-  
-* ⚠️ `resultOrdered` in `select` label of mapper-xml
-  * Since r2dbc only return single `Result`(`ResultSet` in JDBC) , so I change the `resultOrdered` process for hold result data for nested result mapping in order to reduce the cache generated when nested-result-map processing as much as possible
-  * When using `resultOrdered="true"` in `select` label of mapper-xml, the `DefaultReactiveResultHandler` only hold the related result data for nested result mapping.
-  * When using `resultOrdered="false"` in `select` label of mapper-xml (by default), the `DefaultReactiveResultHandler` hold all related result data for nested result mapping.
+    * ❌ 2 . multi ResultSets or Results
+    * ❌ 3 . nested query with multi SQL statements
+    * ❌️ 4 . blocking java type (aka: InputStream .eg)
+* For more usage instructions, please refer to the wiki: [WIKI](https://github.com/chenggangpro/reactive-mybatis-support/wiki)
 
 #### Maven Central
 
@@ -78,185 +38,21 @@ This project has met the general business usage scenarios, including:
     <dependency>
       <groupId>pro.chenggang</groupId>
       <artifactId>mybatis-r2dbc</artifactId>
-      <version>${latest.version}</version>
+      <version>${compatible-version}</version>
     </dependency>
     <dependency>
       <groupId>pro.chenggang</groupId>
       <artifactId>mybatis-r2dbc-generator</artifactId>
-      <version>${latest.version}</version>
+      <version>${compatible-version}</version>
     </dependency>
     <dependency>
       <groupId>pro.chenggang</groupId>
       <artifactId>mybatis-r2dbc-spring</artifactId>
-      <version>${latest.version}</version>
+      <version>${compatible-version}</version>
     </dependency>
 </dependencies>
 
 ```
-
-#### Examples
-
-> [reactive-mybatis-support-examples](https://github.com/chenggangpro/reactive-mybatis-support-examples)
-
-* The example distinguish different databases by `reactive-mybatis-support-examples`'s branch
-  * mysql
-  * h2
-  * mssql
-  * postgresql
-  * oracle
-
-##### Using mybatis-dynamic-sql
-
-* Generate `mybatis-dynamic-sql` 
-
-> Note:
-> the generator is based on `mybatis-generator-core` ,therefor the generator is rely on `jdbc-driver`
-
-* import dependency
-
-```xml
-<dependencies>
-      <dependency>
-          <groupId>mysql</groupId>
-          <artifactId>mysql-connector-java</artifactId>
-          <scope>test</scope>
-      </dependency>
-      <dependency>
-          <groupId>org.apache.commons</groupId>
-          <artifactId>commons-pool2</artifactId>
-          <scope>test</scope>
-      </dependency>
-      <dependency>
-          <groupId>org.mybatis.dynamic-sql</groupId>
-          <artifactId>mybatis-dynamic-sql</artifactId>
-      </dependency>
-      <dependency>
-          <groupId>pro.chenggang</groupId>
-          <artifactId>mybatis-r2dbc-generator</artifactId>
-          <version>${latest.version}</version>
-          <scope>test</scope>
-      </dependency>
-</dependencies>
-```
-
-* copy `mybatis-generator.yml` form `source-code/mybatis-reactive-generator/resources/META-INF/mybatis-generator.yml`
-* modify source database settings in `mybatis-generator.yml`
-* add a test case or a main method
-
-```java
-public class MyBatisGeneratorAction {
-
-  /**
-   * generate through main method
-   *
-   * @param args args
-   */
-  public static void main(String[] args) {
-    String codeAbsoluteLocation = new File("").getAbsolutePath() + "/mybatis-r2dbc-generator";
-    MybatisDynamicCodeGenerator.withYamlConfiguration()
-            .customConfigure()
-            .configureGenerateBasePackage(codeAbsoluteLocation, "pro.chenggang.project.reactive.mybatis.support.generator")
-            .toGenerator()
-            .generate();
-  }
-
-  /**
-   * generate through junit test method
-   */
-  @Test
-  public void generateWithYamlWithJunitTestMethod() {
-    MybatisDynamicCodeGenerator.withYamlConfiguration()
-            .customConfigure()
-            .applyGenerateBasePackageFromClass(MyBatisGeneratorAction.class)
-            .toGenerator()
-            .generate();
-  }
-
-}
-```
-* run the test ,then it will generate the dynamic code ,mapper interface ,mapper xml
-* also see `mybatis-reactive-generator`'s test cases
-    
-#### Using in spring environment
-
-  * import dependency
-  
-  ```xml
-  <dependencies>
-      <dependency>
-          <groupId>org.mariadb</groupId>
-          <artifactId>r2dbc-mariadb</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-data-r2dbc</artifactId>
-      </dependency>
-      <dependency>
-          <groupId>org.mybatis.dynamic-sql</groupId>
-          <artifactId>mybatis-dynamic-sql</artifactId>
-          <version>${latest.version}</version>
-      </dependency>
-      <dependency>
-          <groupId>pro.chenggang</groupId>
-          <artifactId>mybatis-r2dbc-spring</artifactId>
-          <version>${latest.version}</version>
-      </dependency>
-  </dependencies>
-  
-  ```
-  
-  * then use in project as usual ,also support `@Transaction` and `TransactionalOperator`.
-  * other details sees the `mybatis-r2dbc-spring`'s test cases,the test case include mapper tests and service tests.
-  * before run the `mybatis-r2dbc-spring`'s test cases ,you should execute `test_prepare.sql` in the test resources.
-  * spring-boot-test is not support `@Transaction` in tests ,link [Spring Issue](https://github.com/spring-projects/spring-framework/issues/24226)
-  
-  * customize `ConnectionFactoryOptions`
-    
-    ```java
-    @Bean
-    public ConnectionFactoryOptionsCustomizer connectionFactoryOptionsCustomizer() {
-        return connectionFactoryOptionsBuilder -> connectionFactoryOptionsBuilder
-                .option(Option.valueOf("name"), "value");
-    }
-    ```
-    
-  * customize `R2dbcMybatisConfiguration`
-    
-    ```java
-    @Bean
-    public R2dbcMybatisConfigurationCustomizer r2dbcMybatisConfigurationCustomizer() {
-        return r2dbcMybatisConfiguration -> r2dbcMybatisConfiguration.setLogPrefix("mybatis-log");
-    }
-    ```
-  * custom mapper scan
-
-    * Original `@MapperScan` is replaced with `@R2dbcMapperScan`
-    * Original `@MapperScans` is replaced with `@R2dbcMapperScans`
-
-##### Using without mybatis-dynamic-sql
-
-* import dependency
-    
-    ```xml
-    <dependencies>
-        <dependency>
-            <groupId>org.mariadb</groupId>
-            <artifactId>r2dbc-mariadb</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>org.springframework.boot</groupId>
-          <artifactId>spring-boot-starter-data-r2dbc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>pro.chenggang</groupId>
-            <artifactId>mybatis-r2dbc-spring</artifactId>
-            <version>${latest.version}</version>
-        </dependency>
-    </dependencies>
-    
-    ```
-    
-    * then use in project as usual ,also support `@Transaction` and `TransactionalOperator`.
 
 #### Reference
 
