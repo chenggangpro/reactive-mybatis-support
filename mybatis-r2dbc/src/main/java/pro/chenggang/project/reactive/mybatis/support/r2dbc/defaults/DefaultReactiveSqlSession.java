@@ -39,7 +39,7 @@ import java.util.Optional;
  * @author Gang Cheng
  * @version 2.0.0
  */
-public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisReactiveContextManager {
+public class DefaultReactiveSqlSession implements ReactiveSqlSession {
 
     private static final Log log = LogFactory.getLog(DefaultReactiveSqlSession.class);
 
@@ -123,6 +123,11 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession, MybatisRea
         return reactiveMybatisExecutor.close(false)
                 .contextWrite(this::initReactiveExecutorContext)
                 .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
+    }
+
+    @Override
+    public ReactiveSqlSessionProfile getProfile() {
+        return this.reactiveSqlSessionProfile;
     }
 
     private Object wrapCollection(final Object object) {

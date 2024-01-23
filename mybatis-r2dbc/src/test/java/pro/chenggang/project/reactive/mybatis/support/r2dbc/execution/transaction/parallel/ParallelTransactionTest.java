@@ -80,9 +80,10 @@ class ParallelTransactionTest extends MybatisR2dbcBaseTests {
                                 if (loop % 2 == 0) {
                                     return Mono.fromCompletionStage(CompletableFuture
                                             .runAsync(() -> {
-                                                reactiveSqlSessionOperator.executeAndRollback(
+                                                reactiveSqlSessionOperator.executeMonoThenClose(
                                                                 ReactiveSqlSessionProfile.of(IsolationLevel.READ_COMMITTED),
-                                                                reactiveSqlSession -> {
+                                                                (reactiveSqlSession,reactiveSqlSessionProfile) -> {
+                                                                    reactiveSqlSessionProfile.forceToRollback();
                                                                     UpdateMapper updateMapper = reactiveSqlSession.getMapper(
                                                                             UpdateMapper.class);
                                                                     SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(
@@ -108,9 +109,10 @@ class ParallelTransactionTest extends MybatisR2dbcBaseTests {
                                 } else {
                                     return Mono.fromCompletionStage(CompletableFuture.runAsync(
                                             () -> {
-                                                reactiveSqlSessionOperator.executeAndRollback(
+                                                reactiveSqlSessionOperator.executeMonoThenClose(
                                                                 ReactiveSqlSessionProfile.of(IsolationLevel.READ_UNCOMMITTED),
-                                                                reactiveSqlSession -> {
+                                                                (reactiveSqlSession,reactiveSqlSessionProfile) -> {
+                                                                    reactiveSqlSessionProfile.forceToRollback();
                                                                     UpdateMapper updateMapper = reactiveSqlSession.getMapper(
                                                                             UpdateMapper.class);
                                                                     SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(
