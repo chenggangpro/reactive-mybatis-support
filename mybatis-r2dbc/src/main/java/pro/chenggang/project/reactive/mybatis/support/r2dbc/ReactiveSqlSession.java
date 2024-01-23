@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
  * @author Gang Cheng
  * @version 2.0.0
  */
-public interface ReactiveSqlSession {
+public interface ReactiveSqlSession extends MybatisReactiveContextManager {
 
     /**
      * The constant DEFAULT_PROFILE of ReactiveSqlSessionProfile.
@@ -194,6 +194,13 @@ public interface ReactiveSqlSession {
      * @return mono
      */
     Mono<Void> close();
+
+    /**
+     * Gets reactive sql session profile.
+     *
+     * @return the ReactiveSqlSessionProfile
+     */
+    ReactiveSqlSessionProfile getProfile();
 
     /**
      * Retrieves current configuration.

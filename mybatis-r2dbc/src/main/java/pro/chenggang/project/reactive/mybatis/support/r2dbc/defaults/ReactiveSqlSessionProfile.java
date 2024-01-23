@@ -29,6 +29,7 @@ public class ReactiveSqlSessionProfile {
     private final boolean autoCommit;
     private final IsolationLevel isolationLevel;
     private final boolean enableTransaction;
+    private boolean forceToRollback;
 
     /**
      * Is auto commit.
@@ -55,6 +56,22 @@ public class ReactiveSqlSessionProfile {
      */
     public boolean isEnableTransaction() {
         return enableTransaction;
+    }
+
+    /**
+     * Configure session force to rollback.
+     */
+    public void forceToRollback() {
+        this.forceToRollback = true;
+    }
+
+    /**
+     * Is force to rollback.
+     *
+     * @return the true or false
+     */
+    public boolean isForceToRollback() {
+        return this.forceToRollback;
     }
 
     private ReactiveSqlSessionProfile(boolean autoCommit, IsolationLevel isolationLevel, boolean enableTransaction) {

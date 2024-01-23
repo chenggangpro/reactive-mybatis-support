@@ -395,30 +395,40 @@ public class MybatisR2dbcBaseTests {
                             );
                         } else if (Objects.nonNull(this.reactiveSqlSessionTestRunner)) {
                             ReactiveSqlSession reactiveSqlSession = reactiveSqlSessionFactory.openSession();
-                            stepVerifierRunner.apply(StepVerifier.create(reactiveSqlSessionTestRunner.apply(
-                                    databaseClass,
-                                    reactiveSqlSession
-                            )));
+                            stepVerifierRunner.apply(ReactiveSqlSessionOperator.executeThenClose(reactiveSqlSession,
+                                                    (session, profile) -> reactiveSqlSessionTestRunner.apply(databaseClass, session)
+                                            )
+                                            .as(StepVerifier::create)
+                            );
                         } else if (Objects.nonNull(this.reactiveSqlSessionTestRollbackMonoRunner)) {
                             ReactiveSqlSessionOperator reactiveSqlSessionOperator = new DefaultReactiveSqlSessionOperator(
                                     reactiveSqlSessionFactory
                             );
-                            stepVerifierRunner.apply(StepVerifier.create(reactiveSqlSessionOperator.executeAndRollback(
-                                    reactiveSession -> reactiveSqlSessionTestRollbackMonoRunner.apply(databaseClass,
-                                            reactiveSession
-                                    ))
-                            ));
+                            stepVerifierRunner.apply(
+                                    reactiveSqlSessionOperator.executeMonoThenClose(
+                                                    (reactiveSqlSession, reactiveSqlSessionProfile) -> {
+                                                        reactiveSqlSessionProfile.forceToRollback();
+                                                        return reactiveSqlSessionTestRollbackMonoRunner.apply(databaseClass,
+                                                                reactiveSqlSession
+                                                        );
+                                                    }
+                                            )
+                                            .as(StepVerifier::create)
+                            );
                         } else if (Objects.nonNull(this.reactiveSqlSessionTestRollbackFluxRunner)) {
                             ReactiveSqlSessionOperator reactiveSqlSessionOperator = new DefaultReactiveSqlSessionOperator(
                                     reactiveSqlSessionFactory
                             );
                             stepVerifierRunner.apply(
-                                    StepVerifier.create(reactiveSqlSessionOperator.executeManyAndRollback(
-                                            reactiveSession -> reactiveSqlSessionTestRollbackFluxRunner.apply(
-                                                    databaseClass,
-                                                    reactiveSession
-                                            ))
-                                    ));
+                                    reactiveSqlSessionOperator.executeMonoThenClose(
+                                                    (reactiveSqlSession, reactiveSqlSessionProfile) -> {
+                                                        return reactiveSqlSessionTestRollbackMonoRunner.apply(databaseClass,
+                                                                reactiveSqlSession
+                                                        );
+                                                    }
+                                            )
+                                            .as(StepVerifier::create)
+                            );
                         } else {
                             log.info("None test runner configured");
                         }

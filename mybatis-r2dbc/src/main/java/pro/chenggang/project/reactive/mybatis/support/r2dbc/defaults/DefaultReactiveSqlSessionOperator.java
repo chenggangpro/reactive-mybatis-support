@@ -15,6 +15,7 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults;
 
+import org.reactivestreams.Publisher;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextManager;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionFactory;
@@ -22,7 +23,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionOp
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 /**
  * The type Default reactive sql session operator.
@@ -45,128 +46,50 @@ public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOper
     }
 
     @Override
-    public <T> Mono<T> execute(ReactiveSqlSessionProfile reactiveSqlSessionProfile,
-                               Function<ReactiveSqlSession, Mono<T>> monoExecution) {
+    public <T> Flux<T> executeThenClose(final ReactiveSqlSessionProfile reactiveSqlSessionProfile,
+                                        BiFunction<ReactiveSqlSession, ReactiveSqlSessionProfile, Publisher<T>> execution) {
         final ReactiveSqlSession reactiveSqlSession = this.reactiveSqlSessionFactory.openSession(
                 reactiveSqlSessionProfile);
         return MybatisReactiveContextManager.currentContext()
-                .flatMap(reactiveExecutorContext -> Mono.usingWhen(
-                        Mono.just(reactiveSqlSession),
-                        monoExecution,
-                        ReactiveSqlSession::close,
-                        (session, err) -> Mono.empty(),
-                        ReactiveSqlSession::close
-                ).onErrorResume(ex -> reactiveSqlSession.close()
-                        .then(Mono.defer(() -> Mono.error(ex)))
-                ))
-                .contextWrite(((MybatisReactiveContextManager) reactiveSqlSession)::initReactiveExecutorContext)
+                .flatMapMany(reactiveExecutorContext -> Flux
+                        .usingWhen(
+                                Mono.just(reactiveSqlSession),
+                                currentReactiveSqlSession -> execution.apply(currentReactiveSqlSession,
+                                        currentReactiveSqlSession.getProfile()
+                                ),
+                                currentReactiveSqlSession -> Mono.defer(
+                                                () -> {
+                                                    if (currentReactiveSqlSession.getProfile().isForceToRollback()) {
+                                                        return currentReactiveSqlSession.rollback(true);
+                                                    } else {
+                                                        return currentReactiveSqlSession.commit(true);
+                                                    }
+                                                })
+                                        .then(Mono.defer(currentReactiveSqlSession::close)),
+                                (currentReactiveSqlSession, err) -> currentReactiveSqlSession.rollback(true)
+                                        .then(Mono.defer(currentReactiveSqlSession::close)),
+                                currentReactiveSqlSession -> currentReactiveSqlSession.rollback(true)
+                                        .then(Mono.defer(currentReactiveSqlSession::close))
+                                        .onErrorMap(this::unwrapIfResourceCleanupFailure)
+                        )
+                )
+                .contextWrite(reactiveSqlSession::initReactiveExecutorContext)
                 .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
     }
 
-    @Override
-    public <T> Mono<T> executeAndCommit(ReactiveSqlSessionProfile reactiveSqlSessionProfile,
-                                        Function<ReactiveSqlSession, Mono<T>> monoExecution) {
-        final ReactiveSqlSession reactiveSqlSession = this.reactiveSqlSessionFactory.openSession(
-                reactiveSqlSessionProfile);
-        return MybatisReactiveContextManager.currentContext()
-                .flatMap(reactiveExecutorContext -> Mono.usingWhen(
-                        Mono.just(reactiveSqlSession),
-                        monoExecution,
-                        session -> session.commit(true)
-                                .then(Mono.defer(session::close)),
-                        (session, err) -> Mono.empty(),
-                        session -> session.rollback(true)
-                                .then(Mono.defer(session::close))
-                ).onErrorResume(ex -> reactiveSqlSession.rollback(true)
-                        .then(Mono.defer(reactiveSqlSession::close))
-                        .then(Mono.defer(() -> Mono.error(ex)))
-                ))
-                .contextWrite(((MybatisReactiveContextManager) reactiveSqlSession)::initReactiveExecutorContext)
-                .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
-    }
-
-    @Override
-    public <T> Mono<T> executeAndRollback(ReactiveSqlSessionProfile reactiveSqlSessionProfile,
-                                          Function<ReactiveSqlSession, Mono<T>> monoExecution) {
-        final ReactiveSqlSession reactiveSqlSession = this.reactiveSqlSessionFactory.openSession(
-                reactiveSqlSessionProfile);
-        return MybatisReactiveContextManager.currentContext()
-                .flatMap(reactiveExecutorContext -> Mono.usingWhen(
-                        Mono.just(reactiveSqlSession),
-                        monoExecution,
-                        session -> session.rollback(true)
-                                .then(Mono.defer(session::close)),
-                        (session, err) -> Mono.empty(),
-                        session -> session.rollback(true)
-                                .then(Mono.defer(session::close))
-                ).onErrorResume(ex -> reactiveSqlSession.rollback(true)
-                        .then(Mono.defer(reactiveSqlSession::close))
-                        .then(Mono.defer(() -> Mono.error(ex)))
-                ))
-                .contextWrite(((MybatisReactiveContextManager) reactiveSqlSession)::initReactiveExecutorContext)
-                .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
-    }
-
-    @Override
-    public <T> Flux<T> executeMany(ReactiveSqlSessionProfile reactiveSqlSessionProfile,
-                                   Function<ReactiveSqlSession, Flux<T>> fluxExecution) {
-        final ReactiveSqlSession reactiveSqlSession = this.reactiveSqlSessionFactory.openSession(
-                reactiveSqlSessionProfile);
-        return MybatisReactiveContextManager.currentContext()
-                .flatMapMany(reactiveExecutorContext -> Flux.usingWhen(
-                        Mono.just(reactiveSqlSession),
-                        fluxExecution,
-                        ReactiveSqlSession::close,
-                        (session, err) -> Mono.empty(),
-                        ReactiveSqlSession::close
-                ).onErrorResume(ex -> reactiveSqlSession.close()
-                        .then(Mono.defer(() -> Mono.error(ex)))
-                ))
-                .contextWrite(((MybatisReactiveContextManager) reactiveSqlSession)::initReactiveExecutorContext)
-                .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
-    }
-
-    @Override
-    public <T> Flux<T> executeManyAndCommit(ReactiveSqlSessionProfile reactiveSqlSessionProfile,
-                                            Function<ReactiveSqlSession, Flux<T>> fluxExecution) {
-        final ReactiveSqlSession reactiveSqlSession = this.reactiveSqlSessionFactory.openSession(
-                reactiveSqlSessionProfile);
-        return MybatisReactiveContextManager.currentContext()
-                .flatMapMany(reactiveExecutorContext -> Flux.usingWhen(
-                        Mono.just(reactiveSqlSession),
-                        fluxExecution,
-                        session -> session.commit(true)
-                                .then(Mono.defer(session::close)),
-                        (session, err) -> Mono.empty(),
-                        session -> session.rollback(true)
-                                .then(Mono.defer(session::close))
-                ).onErrorResume(ex -> reactiveSqlSession.rollback(true)
-                        .then(Mono.defer(reactiveSqlSession::close))
-                        .then(Mono.defer(() -> Mono.error(ex)))
-                ))
-                .contextWrite(((MybatisReactiveContextManager) reactiveSqlSession)::initReactiveExecutorContext)
-                .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
-    }
-
-    @Override
-    public <T> Flux<T> executeManyAndRollback(ReactiveSqlSessionProfile reactiveSqlSessionProfile,
-                                              Function<ReactiveSqlSession, Flux<T>> fluxExecution) {
-        final ReactiveSqlSession reactiveSqlSession = this.reactiveSqlSessionFactory.openSession(
-                reactiveSqlSessionProfile);
-        return MybatisReactiveContextManager.currentContext()
-                .flatMapMany(reactiveExecutorContext -> Flux.usingWhen(
-                        Mono.just(reactiveSqlSession),
-                        fluxExecution,
-                        session -> session.rollback(true)
-                                .then(Mono.defer(session::close)),
-                        (session, err) -> Mono.empty(),
-                        session -> session.rollback(true)
-                                .then(Mono.defer(session::close))
-                ).onErrorResume(ex -> reactiveSqlSession.rollback(true)
-                        .then(Mono.defer(reactiveSqlSession::close))
-                        .then(Mono.defer(() -> Mono.error(ex)))
-                ))
-                .contextWrite(((MybatisReactiveContextManager) reactiveSqlSession)::initReactiveExecutorContext)
-                .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
+    /**
+     * Unwrap the cause of a throwable, if produced by a failure
+     * during the async resource cleanup in {@link Flux#usingWhen}.
+     *
+     * @param ex the throwable to try to unwrap
+     */
+    private Throwable unwrapIfResourceCleanupFailure(Throwable ex) {
+        if (ex instanceof RuntimeException && ex.getCause() != null) {
+            String msg = ex.getMessage();
+            if (msg != null && msg.startsWith("Async resource cleanup failed")) {
+                return ex.getCause();
+            }
+        }
+        return ex;
     }
 }

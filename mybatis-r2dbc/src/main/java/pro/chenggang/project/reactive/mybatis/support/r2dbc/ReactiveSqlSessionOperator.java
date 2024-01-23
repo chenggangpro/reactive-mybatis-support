@@ -15,11 +15,12 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc;
 
+import org.reactivestreams.Publisher;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.ReactiveSqlSessionProfile;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSession.DEFAULT_PROFILE;
 
@@ -32,135 +33,153 @@ import static pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSe
 public interface ReactiveSqlSessionOperator {
 
     /**
-     * execute with Mono
+     * Execute then close.
+     * Configure {@code reactiveSqlSessionProfile.forceToRollback()} to require a rollback operation in BiFunction named as execution.
      *
      * @param <T>                       the type parameter
      * @param reactiveSqlSessionProfile the reactive sql session profile
-     * @param monoExecution             the mono execution
-     * @return mono
+     * @param execution                 the execution
+     * @return the flux
      */
-    <T> Mono<T> execute(ReactiveSqlSessionProfile reactiveSqlSessionProfile,
-                        Function<ReactiveSqlSession, Mono<T>> monoExecution);
+    <T> Flux<T> executeThenClose(final ReactiveSqlSessionProfile reactiveSqlSessionProfile,
+                                 BiFunction<ReactiveSqlSession, ReactiveSqlSessionProfile, Publisher<T>> execution);
 
     /**
-     * execute with Mono
-     *
-     * @param <T>           the type parameter
-     * @param monoExecution the mono execution
-     * @return mono
-     */
-    default <T> Mono<T> execute(Function<ReactiveSqlSession, Mono<T>> monoExecution) {
-        return execute(DEFAULT_PROFILE, monoExecution);
-    }
-
-    /**
-     * execute with Mono then commit
+     * Execute mono then close.
+     * Configure {@code reactiveSqlSessionProfile.forceToRollback()} to require a rollback operation in BiFunction named as execution.
      *
      * @param <T>                       the type parameter
      * @param reactiveSqlSessionProfile the reactive sql session profile
-     * @param monoExecution             the mono execution
-     * @return mono
-     */
-    <T> Mono<T> executeAndCommit(ReactiveSqlSessionProfile reactiveSqlSessionProfile,
-                                 Function<ReactiveSqlSession, Mono<T>> monoExecution);
-
-    /**
-     * execute with Mono then commit
-     *
-     * @param <T>           the type parameter
-     * @param monoExecution the mono execution
-     * @return mono
-     */
-    default <T> Mono<T> executeAndCommit(Function<ReactiveSqlSession, Mono<T>> monoExecution) {
-        return executeAndCommit(DEFAULT_PROFILE, monoExecution);
-    }
-
-    /**
-     * execute with Mono then rollback
-     *
-     * @param <T>                       the type parameter
-     * @param reactiveSqlSessionProfile the reactive sql session profile
-     * @param monoExecution             the mono execution
-     * @return mono
-     */
-    <T> Mono<T> executeAndRollback(ReactiveSqlSessionProfile reactiveSqlSessionProfile,
-                                   Function<ReactiveSqlSession, Mono<T>> monoExecution);
-
-    /**
-     * execute with Mono then rollback
-     *
-     * @param <T>           the type parameter
-     * @param monoExecution the mono execution
+     * @param execution                 the execution
      * @return the mono
      */
-    default <T> Mono<T> executeAndRollback(Function<ReactiveSqlSession, Mono<T>> monoExecution) {
-        return executeAndRollback(DEFAULT_PROFILE, monoExecution);
+    default <T> Mono<T> executeMonoThenClose(final ReactiveSqlSessionProfile reactiveSqlSessionProfile,
+                                             BiFunction<ReactiveSqlSession, ReactiveSqlSessionProfile, Mono<T>> execution) {
+        return executeThenClose(reactiveSqlSessionProfile, execution::apply).singleOrEmpty();
     }
 
     /**
-     * execute with Mono then commit
+     * Execute flux then close.
+     * Configure {@code reactiveSqlSessionProfile.forceToRollback()} to require a rollback operation in BiFunction named as execution.
      *
      * @param <T>                       the type parameter
      * @param reactiveSqlSessionProfile the reactive sql session profile
-     * @param fluxExecution             the flux execution
-     * @return flux
+     * @param execution                 the execution
+     * @return the flux
      */
-    <T> Flux<T> executeMany(ReactiveSqlSessionProfile reactiveSqlSessionProfile,
-                            Function<ReactiveSqlSession, Flux<T>> fluxExecution);
-
-    /**
-     * execute with Mono then commit
-     *
-     * @param <T>           the type parameter
-     * @param fluxExecution the flux execution
-     * @return flux
-     */
-    default <T> Flux<T> executeMany(Function<ReactiveSqlSession, Flux<T>> fluxExecution) {
-        return executeMany(DEFAULT_PROFILE, fluxExecution);
+    default <T> Flux<T> executeFluxThenClose(final ReactiveSqlSessionProfile reactiveSqlSessionProfile,
+                                             BiFunction<ReactiveSqlSession, ReactiveSqlSessionProfile, Flux<T>> execution) {
+        return executeThenClose(reactiveSqlSessionProfile, execution::apply);
     }
 
     /**
-     * execute with Flux
+     * Execute then close with default reactive sql session profile.
+     * Configure {@code reactiveSqlSessionProfile.forceToRollback()} to require a rollback operation in BiFunction named as execution.
      *
-     * @param <T>                       the type parameter
-     * @param reactiveSqlSessionProfile the reactive sql session profile
-     * @param fluxExecution             the flux execution
-     * @return flux
+     * @param <T>       the type parameter
+     * @param execution the execution
+     * @return the flux
      */
-    <T> Flux<T> executeManyAndCommit(ReactiveSqlSessionProfile reactiveSqlSessionProfile,
-                                     Function<ReactiveSqlSession, Flux<T>> fluxExecution);
-
-    /**
-     * execute with Flux
-     *
-     * @param <T>           the type parameter
-     * @param fluxExecution the flux execution
-     * @return flux
-     */
-    default <T> Flux<T> executeManyAndCommit(Function<ReactiveSqlSession, Flux<T>> fluxExecution) {
-        return executeManyAndCommit(DEFAULT_PROFILE, fluxExecution);
+    default <T> Flux<T> executeThenClose(BiFunction<ReactiveSqlSession, ReactiveSqlSessionProfile, Publisher<T>> execution) {
+        return executeThenClose(DEFAULT_PROFILE, execution);
     }
 
     /**
-     * execute with Flux then rollback
+     * Execute mono then close with default reactive sql session profile.
+     * Configure {@code reactiveSqlSessionProfile.forceToRollback()} to require a rollback operation in BiFunction named as execution.
      *
-     * @param <T>                       the type parameter
-     * @param reactiveSqlSessionProfile the reactive sql session profile
-     * @param fluxExecution             the flux execution
-     * @return flux
+     * @param <T>       the type parameter
+     * @param execution the execution
+     * @return the mono
      */
-    <T> Flux<T> executeManyAndRollback(ReactiveSqlSessionProfile reactiveSqlSessionProfile,
-                                       Function<ReactiveSqlSession, Flux<T>> fluxExecution);
+    default <T> Mono<T> executeMonoThenClose(BiFunction<ReactiveSqlSession, ReactiveSqlSessionProfile, Mono<T>> execution) {
+        return executeThenClose(DEFAULT_PROFILE, execution::apply).singleOrEmpty();
+    }
 
     /**
-     * execute with Flux then rollback
+     * Execute flux then close with default reactive sql session profile.
+     * Configure {@code reactiveSqlSessionProfile.forceToRollback()} to require a rollback operation in BiFunction named as execution.
      *
-     * @param <T>           the type parameter
-     * @param fluxExecution the flux execution
-     * @return flux
+     * @param <T>       the type parameter
+     * @param execution the execution
+     * @return the flux
      */
-    default <T> Flux<T> executeManyAndRollback(Function<ReactiveSqlSession, Flux<T>> fluxExecution) {
-        return executeManyAndRollback(DEFAULT_PROFILE, fluxExecution);
+    default <T> Flux<T> executeFluxThenClose(BiFunction<ReactiveSqlSession, ReactiveSqlSessionProfile, Flux<T>> execution) {
+        return executeThenClose(DEFAULT_PROFILE, execution::apply);
+    }
+
+    /**
+     * Execute then close with given reactive sql session.
+     * Configure {@code reactiveSqlSessionProfile.forceToRollback()} to require a rollback operation in BiFunction named as execution.
+     *
+     * @param <T>                the type parameter
+     * @param reactiveSqlSession the reactive sql session
+     * @param execution          the execution
+     * @return the flux
+     */
+    static <T> Flux<T> executeThenClose(final ReactiveSqlSession reactiveSqlSession,
+                                        BiFunction<ReactiveSqlSession, ReactiveSqlSessionProfile, Publisher<T>> execution) {
+        return MybatisReactiveContextManager.currentContext()
+                .flatMapMany(reactiveExecutorContext -> Flux
+                        .usingWhen(
+                                Mono.just(reactiveSqlSession),
+                                currentReactiveSqlSession -> execution.apply(currentReactiveSqlSession,
+                                        currentReactiveSqlSession.getProfile()
+                                ),
+                                currentReactiveSqlSession -> Mono.defer(
+                                                () -> {
+                                                    if (currentReactiveSqlSession.getProfile().isForceToRollback()) {
+                                                        return currentReactiveSqlSession.rollback(true);
+                                                    } else {
+                                                        return currentReactiveSqlSession.commit(true);
+                                                    }
+                                                })
+                                        .then(Mono.defer(currentReactiveSqlSession::close)),
+                                (currentReactiveSqlSession, err) -> currentReactiveSqlSession.rollback(true)
+                                        .then(Mono.defer(currentReactiveSqlSession::close)),
+                                currentReactiveSqlSession -> currentReactiveSqlSession.rollback(true)
+                                        .then(Mono.defer(currentReactiveSqlSession::close))
+                                        .onErrorMap(throwable -> {
+                                            if (throwable instanceof RuntimeException && throwable.getCause() != null) {
+                                                String msg = throwable.getMessage();
+                                                if (msg != null && msg.startsWith("Async resource cleanup failed")) {
+                                                    return throwable.getCause();
+                                                }
+                                            }
+                                            return throwable;
+                                        })
+                        )
+                )
+                .contextWrite(reactiveSqlSession::initReactiveExecutorContext)
+                .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);
+    }
+
+    /**
+     * Execute mono then close with given reactive sql session.
+     * Configure {@code reactiveSqlSessionProfile.forceToRollback()} to require a rollback operation in BiFunction named as execution.
+     *
+     * @param <T>                the type parameter
+     * @param reactiveSqlSession the reactive sql session
+     * @param execution          the execution
+     * @return the mono
+     */
+    static <T> Mono<T> executeMonoThenClose(final ReactiveSqlSession reactiveSqlSession,
+                                            BiFunction<ReactiveSqlSession, ReactiveSqlSessionProfile, Mono<T>> execution) {
+        return executeThenClose(reactiveSqlSession, execution::apply).singleOrEmpty();
+    }
+
+    /**
+     * Execute flux then close with given reactive sql session.
+     * Configure {@code reactiveSqlSessionProfile.forceToRollback()} to require a rollback operation in BiFunction named as execution.
+     *
+     * @param <T>                the type parameter
+     * @param reactiveSqlSession the reactive sql session
+     * @param execution          the execution
+     * @return the flux
+     */
+    static <T> Flux<T> executeFluxThenClose(final ReactiveSqlSession reactiveSqlSession,
+                                            BiFunction<ReactiveSqlSession, ReactiveSqlSessionProfile, Flux<T>> execution) {
+        return executeThenClose(reactiveSqlSession, execution::apply);
     }
 
 }
