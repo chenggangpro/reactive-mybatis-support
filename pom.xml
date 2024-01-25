@@ -23,7 +23,7 @@
 
     <groupId>pro.chenggang</groupId>
     <artifactId>reactive-mybatis-support</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>3.0.0.RELEASE</version>
     <packaging>pom</packaging>
 
     <name>reactive-mybatis-support</name>
