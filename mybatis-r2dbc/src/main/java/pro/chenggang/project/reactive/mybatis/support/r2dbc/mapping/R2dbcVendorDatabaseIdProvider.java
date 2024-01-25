@@ -16,6 +16,7 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.mapping;
 
 import io.r2dbc.spi.ConnectionFactory;
+import org.apache.ibatis.builder.BuilderException;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 
@@ -45,10 +46,9 @@ public class R2dbcVendorDatabaseIdProvider implements R2dbcDatabaseIdProvider {
     }
     try {
       return getDatabaseName(connectionFactory);
-    } catch (Exception e) {
-      LogHolder.log.error("Could not get a databaseId from connectionFactory", e);
+    } catch (SQLException e) {
+      throw new BuilderException("Error occurred when getting DB product name.", e);
     }
-    return null;
   }
 
   @Override
