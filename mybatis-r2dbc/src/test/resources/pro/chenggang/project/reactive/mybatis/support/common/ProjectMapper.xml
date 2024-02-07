@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pro.chenggang.project.reactive.mybatis.support.common.mapper.ProjectMapper">
+  <resultMap id="BaseResultMap" type="pro.chenggang.project.reactive.mybatis.support.common.entity.Project">
+    <id column="project_id" jdbcType="BIGINT" property="projectId" />
+    <result column="emp_no" jdbcType="BIGINT" property="empNo" />
+    <result column="start_date" jdbcType="DATE" property="startDate" />
+    <result column="end_date" jdbcType="DATE" property="endDate" />
+  </resultMap>
+  <resultMap id="TableResultMap" type="pro.chenggang.project.reactive.mybatis.support.common.entity.Project">
+    <id column="project_project_id" jdbcType="BIGINT" property="projectId" />
+    <result column="project_emp_no" jdbcType="BIGINT" property="empNo" />
+    <result column="project_start_date" jdbcType="DATE" property="startDate" />
+    <result column="project_end_date" jdbcType="DATE" property="endDate" />
+  </resultMap>
+  <sql id="columnNameWithTable">
+    project.project_id AS project_project_id,
+    project.emp_no AS project_emp_no,
+    project.start_date AS project_start_date,
+    project.end_date AS project_end_date
+  </sql>
+
+</mapper>

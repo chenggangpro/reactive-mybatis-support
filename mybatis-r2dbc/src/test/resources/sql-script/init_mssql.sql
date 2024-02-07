@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS project;
 DROP TABLE IF EXISTS emp;
 DROP TABLE IF EXISTS dept;
 --  DEMO *** or dept
@@ -75,7 +76,34 @@ INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create
 
 INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create_time) VALUES ( 'MILLER', 'CLERK', '7', '1982-01-23', '1300', '0.99', '1', GETDATE());
 
+-- Records of project
 
+CREATE TABLE [project] (
+    [project_id] BIGINT check ([project_id] > 0) NOT NULL,
+    [emp_no] BIGINT NOT NULL,
+    [start_date] date NOT NULL,
+    [end_date] date NOT NULL,
+    PRIMARY KEY ([project_id]),
+    CONSTRAINT [fk_EMPNO] FOREIGN KEY ([emp_no]) REFERENCES [emp] ([emp_no])
+    ON DELETE NO ACTION
+    ON UPDATE CASCADE
+);
+
+INSERT INTO [project] VALUES (1, 7, '2005-06-16', '2005-06-18');
+INSERT INTO [project] VALUES (4, 7, '2005-06-19', '2005-06-24');
+INSERT INTO [project] VALUES (7, 7, '2005-06-22', '2005-06-25');
+INSERT INTO [project] VALUES (10, 7, '2005-06-25', '2005-06-28');
+INSERT INTO [project] VALUES (13, 7, '2005-06-28', '2005-07-02');
+INSERT INTO [project] VALUES (2, 9, '2005-06-17', '2005-06-21');
+INSERT INTO [project] VALUES (8, 9, '2005-06-23', '2005-06-25');
+INSERT INTO [project] VALUES (14, 9, '2005-06-29', '2005-06-30');
+INSERT INTO [project] VALUES (11, 9, '2005-06-26', '2005-06-27');
+INSERT INTO [project] VALUES (5, 9, '2005-06-20', '2005-06-24');
+INSERT INTO [project] VALUES (3, 14, '2005-06-18', '2005-06-22');
+INSERT INTO [project] VALUES (12, 14, '2005-06-27', '2005-06-28');
+INSERT INTO [project] VALUES (15, 14, '2005-06-30', '2005-07-03');
+INSERT INTO [project] VALUES (9, 14, '2005-06-24', '2005-06-27');
+INSERT INTO [project] VALUES (6, 14, '2005-06-21', '2005-06-23');
 
 DROP TABLE IF EXISTS subject;
 DROP TABLE IF EXISTS subject_data;

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pro.chenggang.project.reactive.mybatis.support.r2dbc.execution.query.many.ResultOrderedQueryMapper">
+
+  <select id="selectEmpWithProjectListNotOrdered" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.EmpMapper.EmpWithProjectList">
+    SELECT emp.*,
+           <include refid="pro.chenggang.project.reactive.mybatis.support.common.mapper.ProjectMapper.columnNameWithTable" />
+    FROM emp
+        LEFT JOIN project
+            ON emp.emp_no = project.emp_no
+    ORDER BY emp_no
+  </select>
+  <select id="selectEmpWithProjectListOrdered" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.EmpMapper.EmpWithProjectList" resultOrdered="true">
+    SELECT emp.*,
+           <include refid="pro.chenggang.project.reactive.mybatis.support.common.mapper.ProjectMapper.columnNameWithTable" />
+    FROM emp
+        LEFT JOIN project
+            ON emp.emp_no = project.emp_no
+    ORDER BY emp_no
+  </select>
+
+  <select id="selectDeptWithEmpAndProjectListNotOrdered" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.DeptMapper.DeptWithEmpAndProjectList">
+    SELECT
+      dept.*,
+      <include refid="pro.chenggang.project.reactive.mybatis.support.common.mapper.EmpMapper.columnNameWithTable" />,
+      <include refid="pro.chenggang.project.reactive.mybatis.support.common.mapper.ProjectMapper.columnNameWithTable" />
+    FROM dept
+        LEFT JOIN emp
+            ON dept.dept_no = emp.dept_no
+        LEFT JOIN project
+            ON emp.emp_no = project.emp_no
+    ORDER BY dept.dept_no,emp.emp_no,project.project_id
+  </select>
+
+  <select id="selectDeptWithEmpAndProjectListOrdered" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.DeptMapper.DeptWithEmpAndProjectList" resultOrdered="true">
+    SELECT
+      dept.*,
+      <include refid="pro.chenggang.project.reactive.mybatis.support.common.mapper.EmpMapper.columnNameWithTable" />,
+      <include refid="pro.chenggang.project.reactive.mybatis.support.common.mapper.ProjectMapper.columnNameWithTable" />
+    FROM dept
+        LEFT JOIN emp
+            ON dept.dept_no = emp.dept_no
+        LEFT JOIN project
+            ON emp.emp_no = project.emp_no
+    ORDER BY dept.dept_no,emp.emp_no,project.project_id
+  </select>
+
+</mapper>

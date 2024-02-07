@@ -28,6 +28,20 @@
     <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
     <collection property="empList" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.EmpMapper.TableResultMap" />
   </resultMap>
+  <resultMap id="DeptWithSingleEmp" type="pro.chenggang.project.reactive.mybatis.support.common.entity.extend.DeptWithSingleEmp" >
+    <id column="dept_no" jdbcType="BIGINT" property="deptNo" />
+    <result column="dept_name" jdbcType="VARCHAR" property="deptName" />
+    <result column="location" jdbcType="VARCHAR" property="location" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <association property="emp" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.EmpMapper.TableResultMap" />
+  </resultMap>
+  <resultMap id="DeptWithEmpAndProjectList" type="pro.chenggang.project.reactive.mybatis.support.common.entity.extend.DeptWithEmpAndProjectList" >
+    <id column="dept_no" jdbcType="BIGINT" property="deptNo" />
+    <result column="dept_name" jdbcType="VARCHAR" property="deptName" />
+    <result column="location" jdbcType="VARCHAR" property="location" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <collection property="empWithProjectLists" resultMap="pro.chenggang.project.reactive.mybatis.support.common.mapper.EmpMapper.EmpWithProjectListTable" />
+  </resultMap>
   <sql id="columnNameWithTable">
     dept.dept_no AS dept_dept_no, 
     dept.dept_name AS dept_dept_name, 

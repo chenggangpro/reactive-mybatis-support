@@ -130,7 +130,7 @@ public class ManyQueryMapperTests extends MybatisR2dbcBaseTests {
         // (N represents the number of rows that need to be read to reach the maximum row count)
         // (An additional row is included to check whether the nested result map should cache the next entry )
         // then discard not-required data
-        // the mybatis log count should be 4
+        // the mybatis log count should be 2
         super.<DeptWithEmpList>newTestRunner()
                 .allDatabases()
                 .customizeR2dbcConfiguration(r2dbcMybatisConfiguration -> {
@@ -145,7 +145,7 @@ public class ManyQueryMapperTests extends MybatisR2dbcBaseTests {
                         .assertNext(dept -> {
                             assertEquals(1L, dept.getDeptNo());
                             assertNotNull(dept.getEmpList());
-                            assertEquals(3, dept.getEmpList()
+                            assertEquals(1, dept.getEmpList()
                                     .size());
                         })
                         .verifyComplete()

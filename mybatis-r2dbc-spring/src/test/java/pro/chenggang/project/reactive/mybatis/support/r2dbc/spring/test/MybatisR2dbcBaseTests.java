@@ -103,7 +103,7 @@ public class MybatisR2dbcBaseTests {
                 MariaDBContainer.class.getSimpleName()
         );
         for (Class<?> aClass : MybatisR2dbcBaseTests.databaseInitializationContainer.keySet()) {
-            if(!aClass.getSimpleName().equalsIgnoreCase(envDatabaseType)){
+            if(!"all".equalsIgnoreCase(envDatabaseType) && !aClass.getSimpleName().equalsIgnoreCase(envDatabaseType)){
                 continue;
             }
             log.info("⬇⬇⬇⬇⬇⬇ {} ----------------", aClass.getSimpleName());

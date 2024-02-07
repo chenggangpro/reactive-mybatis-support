@@ -1,4 +1,12 @@
 -- @DELIMITER /
+
+BEGIN
+EXECUTE IMMEDIATE 'DROP TABLE project';
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END;
+/
+
 BEGIN
     EXECUTE IMMEDIATE 'DROP TABLE emp';
 EXCEPTION
@@ -132,6 +140,36 @@ INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create
 INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create_time) VALUES ('FORD', 'ANALYST', '4', TO_DATE('1981-12-03','YYYY-MM-DD'), '3000', '1.00', '2', SYSTIMESTAMP);
 
 INSERT INTO emp (emp_name, job, manager, hire_date, salary, kpi, dept_no, create_time) VALUES ('MILLER', 'CLERK', '7', TO_DATE('1982-01-23','YYYY-MM-DD'), '1300', '0.99', '1', SYSTIMESTAMP);
+
+commit ;
+
+CREATE TABLE project (
+    project_id NUMBER (19) check (project_id > 0) NOT NULL,
+    emp_no NUMBER (19) NOT NULL,
+    start_date date NOT NULL,
+    end_date   date NOT NULL,
+    PRIMARY KEY (project_id),
+    CONSTRAINT fk_EMPNO FOREIGN KEY (emp_no) REFERENCES emp (emp_no)
+        ON DELETE CASCADE
+);
+
+commit ;
+
+INSERT INTO project VALUES (1, 7, TO_DATE('2005-06-16', 'YYYY-MM-DD'), TO_DATE('2005-06-18', 'YYYY-MM-DD'));
+INSERT INTO project VALUES (4, 7, TO_DATE('2005-06-19', 'YYYY-MM-DD'), TO_DATE('2005-06-24', 'YYYY-MM-DD'));
+INSERT INTO project VALUES (7, 7, TO_DATE('2005-06-22', 'YYYY-MM-DD'), TO_DATE('2005-06-25', 'YYYY-MM-DD'));
+INSERT INTO project VALUES (10, 7, TO_DATE('2005-06-25', 'YYYY-MM-DD'), TO_DATE('2005-06-28', 'YYYY-MM-DD'));
+INSERT INTO project VALUES (13, 7, TO_DATE('2005-06-28', 'YYYY-MM-DD'), TO_DATE('2005-07-02', 'YYYY-MM-DD'));
+INSERT INTO project VALUES (2, 9, TO_DATE('2005-06-17', 'YYYY-MM-DD'), TO_DATE('2005-06-21', 'YYYY-MM-DD'));
+INSERT INTO project VALUES (8, 9, TO_DATE('2005-06-23', 'YYYY-MM-DD'), TO_DATE('2005-06-25', 'YYYY-MM-DD'));
+INSERT INTO project VALUES (14, 9, TO_DATE('2005-06-29', 'YYYY-MM-DD'), TO_DATE('2005-06-30', 'YYYY-MM-DD'));
+INSERT INTO project VALUES (11, 9, TO_DATE('2005-06-26', 'YYYY-MM-DD'), TO_DATE('2005-06-27', 'YYYY-MM-DD'));
+INSERT INTO project VALUES (5, 9, TO_DATE('2005-06-20', 'YYYY-MM-DD'), TO_DATE('2005-06-24', 'YYYY-MM-DD'));
+INSERT INTO project VALUES (3, 14, TO_DATE('2005-06-18', 'YYYY-MM-DD'), TO_DATE('2005-06-22', 'YYYY-MM-DD'));
+INSERT INTO project VALUES (12, 14, TO_DATE('2005-06-27', 'YYYY-MM-DD'), TO_DATE('2005-06-28', 'YYYY-MM-DD'));
+INSERT INTO project VALUES (15, 14, TO_DATE('2005-06-30', 'YYYY-MM-DD'), TO_DATE('2005-07-03', 'YYYY-MM-DD'));
+INSERT INTO project VALUES (9, 14, TO_DATE('2005-06-24', 'YYYY-MM-DD'), TO_DATE('2005-06-27', 'YYYY-MM-DD'));
+INSERT INTO project VALUES (6, 14, TO_DATE('2005-06-21', 'YYYY-MM-DD'), TO_DATE('2005-06-23', 'YYYY-MM-DD'));
 
 commit ;
 

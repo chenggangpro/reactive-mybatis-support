@@ -107,6 +107,7 @@ public class MybatisR2dbcBaseTests {
     static {
         commonXmlMapperLocations.add("pro/chenggang/project/reactive/mybatis/support/common/DeptMapper.xml");
         commonXmlMapperLocations.add("pro/chenggang/project/reactive/mybatis/support/common/EmpMapper.xml");
+        commonXmlMapperLocations.add("pro/chenggang/project/reactive/mybatis/support/common/ProjectMapper.xml");
         commonXmlMapperLocations.add("pro/chenggang/project/reactive/mybatis/support/common/SubjectMapper.xml");
         commonXmlMapperLocations.add("pro/chenggang/project/reactive/mybatis/support/common/SubjectDataMapper.xml");
     }
@@ -284,7 +285,7 @@ public class MybatisR2dbcBaseTests {
                 MariaDBContainer.class.getSimpleName()
         );
         for (Class<?> aClass : MybatisR2dbcBaseTests.databaseInitializationContainer.keySet()) {
-            if (!aClass.getSimpleName().equalsIgnoreCase(envDatabaseType)) {
+            if (!"all".equalsIgnoreCase(envDatabaseType) && !aClass.getSimpleName().equalsIgnoreCase(envDatabaseType)) {
                 continue;
             }
             log.info("⬇⬇⬇⬇⬇⬇ {} ----------------", aClass.getSimpleName());
@@ -365,7 +366,12 @@ public class MybatisR2dbcBaseTests {
             );
             databaseInitializationContainer.keySet()
                     .stream()
-                    .filter(databaseType -> databaseType.getSimpleName().equalsIgnoreCase(envDatabaseType))
+                    .filter(databaseType -> {
+                        if ("all".equalsIgnoreCase(envDatabaseType)) {
+                            return true;
+                        }
+                        return databaseType.getSimpleName().equalsIgnoreCase(envDatabaseType);
+                    })
                     .filter(databaseFilter)
                     .forEach(databaseClass -> {
                         log.info("⬇⬇⬇⬇⬇⬇ {} ----------------", databaseClass.getSimpleName());

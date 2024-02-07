@@ -237,6 +237,10 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         Object partialObject = nestedResultObjects.get(rowKey);
         Object rowValue = getRowValueForNestedResultMap(readableResultWrapper, discriminatedResultMap, rowKey, null, partialObject);
         if (partialObject == null) {
+            // if select result is ordered ,then no matter the property's type is collection, the result does always represent single row object
+            if(mappedStatement.isResultOrdered()){
+                nestedResultObjects.clear();
+            }
             storeObject(resultHandler, resultContext, rowValue, null, readableResultWrapper);
         }
         List<Object> resultList = resultHandler.getResultList();
@@ -252,10 +256,13 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
 
         // result holder has value then return hold results and clear hold results
         if(!this.resultHolder.isEmpty()){
-            Object resultRowValue = this.resultHolder.get(0);
-            this.resultHolder.clear();
-            this.resultHolder.addAll(resultList);
-            return resultRowValue;
+            //nested mapping finished
+            if(partialObject == null){
+                Object resultRowValue = this.resultHolder.get(0);
+                this.resultHolder.clear();
+                this.resultHolder.addAll(resultList);
+                return resultRowValue;
+            }
         }
         // result holder is empty then hold result
         this.resultHolder.addAll(resultList);

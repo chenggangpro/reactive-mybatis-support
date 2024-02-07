@@ -233,7 +233,7 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
                     })
                     .switchIfEmpty(Mono.defer(
                             () -> {
-                                log.debug("[Close connection]just rollback,not close connection");
+                                log.debug("[Close connection]just rollback, close connection later");
                                 reactiveExecutorContext.setForceRollback(false);
                                 return Mono.from(this.connection.rollbackTransaction())
                                         .onErrorResume(Exception.class, this::onErrorOperation);
@@ -262,7 +262,7 @@ public class DefaultTransactionSupportConnectionFactory implements ConnectionFac
                     })
                     .switchIfEmpty(Mono.defer(
                             () -> {
-                                log.debug("[Close connection]just commit,not close connection");
+                                log.debug("[Close connection]just commit, close connection later");
                                 reactiveExecutorContext.setForceCommit(false);
                                 return Mono.from(this.connection.commitTransaction())
                                         .onErrorResume(Exception.class, this::onErrorOperation);
