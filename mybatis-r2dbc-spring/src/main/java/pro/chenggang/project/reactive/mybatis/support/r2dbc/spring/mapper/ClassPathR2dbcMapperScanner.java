@@ -15,6 +15,7 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.mapper;
 
+import org.apache.ibatis.io.Resources;
 import org.mybatis.logging.Logger;
 import org.mybatis.logging.LoggerFactory;
 import org.mybatis.spring.mapper.ClassPathMapperScanner;
@@ -204,11 +205,18 @@ public class ClassPathR2dbcMapperScanner extends ClassPathBeanDefinitionScanner 
             // the mapper interface is the original class of the bean
             // but, the actual class of the bean is MapperFactoryBean
             definition.getConstructorArgumentValues().addGenericArgumentValue(beanClassName); // issue #59
-            definition.setBeanClass(this.mapperFactoryBeanClass);
+            try {
+                Class<?> beanClass = Resources.classForName(beanClassName);
+                // Attribute for MockitoPostProcessor
+                // https://github.com/mybatis/spring-boot-starter/issues/475
+                definition.setAttribute(FACTORY_BEAN_OBJECT_TYPE, beanClass);
+                // for spring-native
+                definition.getPropertyValues().add("mapperInterface", beanClass);
+            } catch (ClassNotFoundException ignore) {
+                // ignore
+            }
 
-            // Attribute for MockitoPostProcessor
-            // https://github.com/mybatis/spring-boot-starter/issues/475
-            definition.setAttribute(FACTORY_BEAN_OBJECT_TYPE, beanClassName);
+            definition.setBeanClass(this.mapperFactoryBeanClass);
 
             boolean explicitFactoryUsed = false;
             if (StringUtils.hasText(this.sqlSessionFactoryBeanName)) {
