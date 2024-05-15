@@ -45,6 +45,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
@@ -110,7 +111,7 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
  */
 @Slf4j
 @Configuration
-@AutoConfigureBefore(DataSourceAutoConfiguration.class)
+@AutoConfigureBefore({DataSourceAutoConfiguration.class, R2dbcAutoConfiguration.class})
 @AutoConfigureAfter({MybatisLanguageDriverAutoConfiguration.class})
 @ConditionalOnClass({ConnectionFactory.class, ReactiveSqlSessionFactory.class, Flux.class})
 public class R2dbcMybatisAutoConfiguration {
