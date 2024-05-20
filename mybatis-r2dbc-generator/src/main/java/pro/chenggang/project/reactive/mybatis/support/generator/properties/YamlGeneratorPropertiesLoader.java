@@ -17,6 +17,8 @@ package pro.chenggang.project.reactive.mybatis.support.generator.properties;
 
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.introspector.BeanAccess;
@@ -47,9 +49,9 @@ public class YamlGeneratorPropertiesLoader implements GeneratorPropertiesLoader 
         } else if (StringUtils.isNotBlank(configurationFileName)) {
             this.customConfigurationFileName = configurationFileName;
         }
-        Representer represent = new Representer();
+        Representer represent = new Representer(new DumperOptions());
         represent.getPropertyUtils().setSkipMissingProperties(true);
-        yaml = new Yaml(new Constructor(GeneratorProperties.class), represent);
+        yaml = new Yaml(new Constructor(GeneratorProperties.class, new LoaderOptions()), represent);
         yaml.setBeanAccess(BeanAccess.FIELD);
     }
 
