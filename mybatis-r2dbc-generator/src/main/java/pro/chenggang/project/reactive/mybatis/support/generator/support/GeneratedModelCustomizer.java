@@ -84,7 +84,7 @@ public class GeneratedModelCustomizer {
             String lombokImport;
             String lombokAnnotation;
             if(lombokAnnotationName.contains("(")){
-                String pureAnnotation = StringUtils.substringBetween(lombokAnnotationName, ".", "(");
+                String pureAnnotation = StringUtils.substringBefore(StringUtils.substringAfterLast(StringUtils.substringBefore(lombokAnnotationName,"("),"."),  "(");
                 lombokImport = StringUtils.substringBefore(lombokAnnotationName,"(");
                 lombokAnnotation = StringUtils.substringAfter(lombokAnnotationName,
                         StringUtils.substringBeforeLast(lombokImport, pureAnnotation)
