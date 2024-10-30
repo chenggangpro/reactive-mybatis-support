@@ -205,7 +205,6 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.22.2</version>
                 <configuration>
-                    <argLine>-XX:+AllowRedefinitionToAddDeleteMethods</argLine>
                     <includes>
                         <include>pro/chenggang/project/reactive/mybatis/support/r2dbc/**/*Tests.java</include>
                     </includes>
