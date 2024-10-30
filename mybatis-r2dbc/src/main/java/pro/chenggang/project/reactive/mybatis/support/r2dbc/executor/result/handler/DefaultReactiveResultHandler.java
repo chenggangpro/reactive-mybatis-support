@@ -66,6 +66,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.stream.Stream;
 
 /**
  * The type Default reactive result handler.
@@ -185,8 +186,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
     @SuppressWarnings("unchecked")
     @Override
     public <T> Flux<T> getRemainedResults() {
-        return (Flux<T>) Flux.fromIterable(this.resultHolder)
-                .filter(Objects::nonNull);
+        return (Flux<T>) Flux.fromStream(Stream.of(this.resultHolder.toArray()).filter(Objects::nonNull));
     }
 
     @Override
