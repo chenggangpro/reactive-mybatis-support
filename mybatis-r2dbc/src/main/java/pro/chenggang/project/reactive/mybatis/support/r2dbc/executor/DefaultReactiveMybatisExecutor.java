@@ -254,8 +254,11 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                     })
                                     .doOnComplete(() -> {
                                         //clean up reactiveResultHandler
-                                        reactiveResultHandler.cleanup();
                                         r2dbcStatementLog.logTotal(reactiveResultHandler.getResultRowTotalCount());
+                                    })
+                                    .doOnTerminate(() -> {
+                                        //clean up reactiveResultHandler
+                                        reactiveResultHandler.cleanup();
                                     });
                         }));
 
