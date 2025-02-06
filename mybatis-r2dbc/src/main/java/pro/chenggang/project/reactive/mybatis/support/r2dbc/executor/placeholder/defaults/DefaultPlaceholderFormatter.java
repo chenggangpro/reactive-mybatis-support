@@ -17,12 +17,16 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholde
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.RemovalCause;
+import com.github.benmanes.caffeine.cache.RemovalListener;
+import com.github.benmanes.caffeine.cache.Scheduler;
 import io.r2dbc.spi.ConnectionMetadata;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.ParameterMapping;
 import org.apache.ibatis.util.MapUtil;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderDialect;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderDialectRegistry;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderFormatter;
@@ -60,6 +64,9 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
                     .maximumSize(sqlCacheMaxSize)
                     .expireAfterAccess(sqlCacheExpireDuration)
                     .initialCapacity(10)
+                    .evictionListener(new CacheRemovalListener("eviction", placeholderDialectType.getSimpleName()))
+                    .removalListener(new CacheRemovalListener("removal", placeholderDialectType.getSimpleName()))
+                    .scheduler(Scheduler.systemScheduler())
                     .build();
             this.formattedSqlCache.put(placeholderDialectType, cache);
         }
@@ -145,4 +152,20 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
         return builder.toString();
     }
 
+    private static class CacheRemovalListener implements RemovalListener<String, String> {
+
+        private final String listenerType;
+        private final String dialectType;
+
+        private CacheRemovalListener(String listenerType, String dialectType) {
+            this.listenerType = listenerType;
+            this.dialectType = dialectType;
+        }
+
+        @Override
+        public void onRemoval(@Nullable String key, @Nullable String value, RemovalCause cause) {
+            log.debug("Placeholder(" + dialectType + ") cache " + listenerType + " triggered according to " + cause);
+            log.trace("Key : " + key + "\nValue : " + value);
+        }
+    }
 }

@@ -17,8 +17,6 @@ package pro.chenggang.project.reactive.mybatis.support.r2dbc.mapping;
 
 import io.r2dbc.spi.ConnectionFactory;
 import org.apache.ibatis.builder.BuilderException;
-import org.apache.ibatis.logging.Log;
-import org.apache.ibatis.logging.LogFactory;
 
 import java.sql.SQLException;
 import java.util.Map;
@@ -37,41 +35,37 @@ import java.util.Properties;
  */
 public class R2dbcVendorDatabaseIdProvider implements R2dbcDatabaseIdProvider {
 
-  private Properties properties;
+    private Properties properties;
 
-  @Override
-  public String getDatabaseId(ConnectionFactory connectionFactory) {
-    if (connectionFactory == null) {
-      throw new NullPointerException("dataSource cannot be null");
-    }
-    try {
-      return getDatabaseName(connectionFactory);
-    } catch (SQLException e) {
-      throw new BuilderException("Error occurred when getting DB product name.", e);
-    }
-  }
-
-  @Override
-  public void setProperties(Properties p) {
-    this.properties = p;
-  }
-
-  protected String getDatabaseName(ConnectionFactory connectionFactory) throws SQLException {
-    String productName = connectionFactory.getMetadata().getName();
-    if (this.properties != null) {
-      for (Map.Entry<Object, Object> property : properties.entrySet()) {
-        if (productName.contains((String) property.getKey())) {
-          return (String) property.getValue();
+    @Override
+    public String getDatabaseId(ConnectionFactory connectionFactory) {
+        if (connectionFactory == null) {
+            throw new NullPointerException("dataSource cannot be null");
         }
-      }
-      // no match, return null
-      return null;
+        try {
+            return getDatabaseName(connectionFactory);
+        } catch (SQLException e) {
+            throw new BuilderException("Error occurred when getting DB product name.", e);
+        }
     }
-    return productName;
-  }
 
-  private static class LogHolder {
-    private static final Log log = LogFactory.getLog(R2dbcVendorDatabaseIdProvider.class);
-  }
+    @Override
+    public void setProperties(Properties p) {
+        this.properties = p;
+    }
+
+    protected String getDatabaseName(ConnectionFactory connectionFactory) throws SQLException {
+        String productName = connectionFactory.getMetadata().getName();
+        if (properties == null || properties.isEmpty()) {
+            return productName;
+        }
+        for (Map.Entry<Object, Object> property : properties.entrySet()) {
+            if (productName.contains((String) property.getKey())) {
+                return (String) property.getValue();
+            }
+        }
+        // no match, return null
+        return null;
+    }
 
 }

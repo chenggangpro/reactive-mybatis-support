@@ -558,8 +558,18 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
 
     private boolean applyColumnOrderBasedConstructorAutomapping(ReadableResultWrapper<? extends Readable> readableResultWrapper, List<Class<?>> constructorArgTypes,
                                                                 List<Object> constructorArgs, Constructor<?> constructor, boolean foundValues) throws SQLException {
-        for (int i = 0; i < constructor.getParameterTypes().length; i++) {
-            Class<?> parameterType = constructor.getParameterTypes()[i];
+        Class<?>[] parameterTypes = constructor.getParameterTypes();
+        if (parameterTypes.length > readableResultWrapper.getClassNames().size()) {
+            throw new ExecutorException(MessageFormat.format(
+                    "Constructor auto-mapping of ''{0}'' failed. " +
+                            "The constructor takes ''{1}'' arguments, but there are only ''{2}'' columns in the result set.",
+                    constructor,
+                    parameterTypes.length,
+                    readableResultWrapper.getClassNames().size()
+            ));
+        }
+        for (int i = 0; i < parameterTypes.length; i++) {
+            Class<?> parameterType = parameterTypes[i];
             String columnName = readableResultWrapper.getColumnNames().get(i);
             final TypeHandler<?> typeHandler = readableResultWrapper.getTypeHandler(parameterType, columnName);
             ((TypeHandleContext) this.delegatedTypeHandler).contextWith(parameterType,typeHandler,
