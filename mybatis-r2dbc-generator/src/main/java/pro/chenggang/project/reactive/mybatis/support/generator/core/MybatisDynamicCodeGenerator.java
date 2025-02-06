@@ -32,7 +32,9 @@ import pro.chenggang.project.reactive.mybatis.support.generator.properties.YamlG
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * The Mybatis dynamic code generator builder.
@@ -43,6 +45,7 @@ import java.util.Optional;
 public class MybatisDynamicCodeGenerator {
 
     private final ContextGeneratorFactory contextGeneratorFactory = new ContextGeneratorFactory();
+    private Consumer<Configuration> configurationCustomizer;
 
     private MybatisDynamicCodeGenerator() {
 
@@ -106,12 +109,26 @@ public class MybatisDynamicCodeGenerator {
     }
 
     /**
+     * Customize configuration mybatis dynamic code generator.
+     *
+     * @param configurationCustomizer the configuration customizer
+     * @return the mybatis dynamic code generator
+     */
+    public MybatisDynamicCodeGenerator customizeConfiguration(Consumer<Configuration> configurationCustomizer) {
+        this.configurationCustomizer = configurationCustomizer;
+        return this;
+    }
+
+    /**
      * Execute generate action.
      */
     public void generate() {
         GeneratorProperties generatorProperties = GeneratorPropertiesHolder.getInstance().getGeneratorProperties();
         generatorProperties.validate();
         Configuration configuration = this.getConfiguration(generatorProperties);
+        if (Objects.nonNull(this.configurationCustomizer)) {
+            this.configurationCustomizer.accept(configuration);
+        }
         DefaultShellCallback callback = new DefaultShellCallback(generatorProperties.isOverwrite());
         List<String> warnings = new ArrayList<>();
         try {
