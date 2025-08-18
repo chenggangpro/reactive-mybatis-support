@@ -3,23 +3,25 @@
 
     <property scope="context" name="app_profile" value="default"/>
     <property scope="context" name="app_name" value="mybatis-r2dbc-spring"/>
-    <property name="maxFileSize" value="300MB"/>
-    <property name="maxHistory" value="30"/>
+    <property name="maxFileSize" value="100MB"/>
+    <property name="maxHistory" value="1"/>
 
     <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } [%t] [%-40.40logger{39}:%line] %m%n"/>
     <property name="CONSOLE_LOG_PATTERN" value="${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr([%t]){faint} %clr([%-40.40logger{39}:%line]){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}" />
 
-    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
-    <conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" />
-    <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter" />
+    <conversionRule conversionWord="clr" class="org.springframework.boot.logging.logback.ColorConverter" />
+    <conversionRule conversionWord="wex" class="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" />
+    <conversionRule conversionWord="wEx" class="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter" />
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>  
-            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
-        </encoder>  
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            </layout>
+        </encoder>
     </appender>
 
-<!--    <logger name="io.r2dbc" level="DEBUG" />-->
+    <!--    <logger name="io.r2dbc" level="DEBUG" />-->
     <logger name="com.mybatis" level="DEBUG" />
     <logger name="pro.chenggang" level="DEBUG" />
     <logger name="org.springframework.r2dbc" level="DEBUG" />
