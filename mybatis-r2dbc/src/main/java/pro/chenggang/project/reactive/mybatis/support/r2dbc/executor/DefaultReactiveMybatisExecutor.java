@@ -16,9 +16,6 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor;
 
 import io.r2dbc.spi.Connection;
-import io.r2dbc.spi.OutParameters;
-import io.r2dbc.spi.Result;
-import io.r2dbc.spi.Row;
 import io.r2dbc.spi.Statement;
 import org.apache.ibatis.executor.keygen.Jdbc3KeyGenerator;
 import org.apache.ibatis.executor.keygen.KeyGenerator;
@@ -29,22 +26,21 @@ import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
-import org.apache.ibatis.mapping.ParameterMode;
 import org.apache.ibatis.session.RowBounds;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.MybatisReactiveContextManager;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.exception.GeneratedKeysException;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.exception.R2dbcParameterException;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.DefaultR2dbcKeyGenerator;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.NoKeyR2dbcKeyGenerator;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.R2dbcKeyGenerator;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.SelectR2dbcKeyGenerator;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.parameter.DelegateR2dbcParameterHandler;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.PlaceholderFormatter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.placeholder.defaults.DefaultPlaceholderFormatter;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.DefaultReactiveResultHandler;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.ReactiveResultHandler;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.query.QueryResultHandler;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.update.UpdateResultHandler;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.R2dbcStatementLog;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.ReactiveExecutorContextAttribute;
@@ -54,10 +50,9 @@ import reactor.core.publisher.Mono;
 
 import java.sql.SQLException;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
-import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SELECT_KEY_AFTER;
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SELECT_KEY_BEFORE;
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SIMPLE_RETURN;
 
@@ -101,77 +96,28 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                 })
                 .map(ReactiveExecutorContext::getR2dbcStatementLog)
                 .flatMap(r2dbcStatementLog -> {
-                    R2dbcKeyGenerator r2dbcKeyGenerator = this.getR2dbcKeyGenerator(mappedStatement);
-                    return MybatisReactiveContextManager.currentContextAttribute()
-                            .flatMap(attribute -> r2dbcKeyGenerator.processSelectKey(SELECT_KEY_BEFORE, mappedStatement, parameter)
-                                    .flatMapMany(ignoreResult -> {
-                                        BoundSql boundSql = mappedStatement.getBoundSql(parameter);
-                                        String boundSqlStatement = boundSql.getSql();
-                                        boolean isSimpleReturnedGeneratedKeys = SIMPLE_RETURN.equals(r2dbcKeyGenerator.keyGeneratorType());
-                                        StatementHandler handler = configuration.newStatementHandler(null, mappedStatement, parameter, RowBounds.DEFAULT, null, null);
-                                        ParameterHandler parameterHandler = handler.getParameterHandler();
-                                        Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameterHandler, RowBounds.DEFAULT, isSimpleReturnedGeneratedKeys, attribute, r2dbcStatementLog);
-                                        if(isSimpleReturnedGeneratedKeys){
-                                            return Flux.from(statement
-                                                                  .fetchSize(mappedStatement.getKeyProperties().length)
-                                                                  .execute()
-                                                    )
-                                                    .checkpoint("[DefaultReactiveExecutor] SQL: \"" + boundSqlStatement + "\" ")
-                                                    .concatMap(result -> result.map((row, rowMetadata) -> {
-                                                        ReadableResultWrapper<Row> readableResultWrapper = ReadableResultWrapper.ofRow(row,configuration);
-                                                        return r2dbcKeyGenerator.processGeneratedKeyResult(readableResultWrapper, parameter);
-                                                    }));
-                                        }
-                                        final ReactiveResultHandler reactiveResultHandler = new DefaultReactiveResultHandler(configuration, mappedStatement, boundSql, parameterHandler);
-                                        boolean anyOutParameterExist = boundSql.getParameterMappings()
-                                                .stream()
-                                                .anyMatch(parameterMapping ->
-                                                        ParameterMode.OUT.equals(parameterMapping.getMode())
-                                                                || ParameterMode.INOUT.equals(parameterMapping.getMode())
-                                                );
-                                        return Flux.from(statement.execute())
-                                                .checkpoint("[DefaultReactiveExecutor]SQL: \"" + boundSqlStatement + "\" ")
-                                                .concatMap(result -> {
-                                                    if(anyOutParameterExist){
-                                                        return result.filter(segment -> segment instanceof Result.Message
-                                                                        || segment instanceof Result.RowSegment
-                                                                        || segment instanceof Result.OutSegment
-                                                                )
-                                                                .flatMap(segment -> {
-                                                                    if (segment instanceof Result.Message) {
-                                                                        return Mono.error(((Result.Message) segment).exception());
-                                                                    }
-                                                                    // row data
-                                                                    if (segment instanceof Result.RowSegment) {
-                                                                        log.warn("Unsupported Row data during output parameter mapping." +
-                                                                                        " To handle multiple rows of output parameters," +
-                                                                                        " consider using a query operation rather than an update operation." +
-                                                                                        " Receiving output parameters with an update operation is only effective for single-row results.");
-                                                                        return Mono.just(0L);
-                                                                    }
-                                                                    // output parameters
-                                                                    if (segment instanceof Result.OutSegment) {
-                                                                        ReadableResultWrapper<OutParameters> readableResultWrapper = ReadableResultWrapper.ofOutParameters(
-                                                                                ((Result.OutSegment) segment).outParameters(),
-                                                                                configuration
-                                                                        );
-                                                                        return reactiveResultHandler.handleOutputParameters(readableResultWrapper)
-                                                                                .thenReturn(1L);
-                                                                    }
-                                                                    log.trace("[DoUpdate]Ignore process result's segment : " + segment.getClass());
-                                                                    return Mono.empty();
-                                                                });
-                                                    }
-                                                    return Mono.from(result.getRowsUpdated());
-                                                });
-                                    })
-                                    .collect(Collectors.summingLong(Long::longValue))
-                                    .defaultIfEmpty(0L)
-                                    .doOnNext(r2dbcStatementLog::logUpdates)
-                                    .flatMap(totalUpdateRowCount -> r2dbcKeyGenerator.processSelectKey(SELECT_KEY_AFTER, mappedStatement, parameter)
-                                            .flatMap(ignore -> Mono.just(totalUpdateRowCount))
-                                    )
-                            );
+                    return Mono.fromFuture(CompletableFuture.supplyAsync(() -> this.getR2dbcKeyGenerator(mappedStatement)))
+                            .flatMap(r2dbcKeyGenerator -> {
+                                return r2dbcKeyGenerator.processSelectKey(SELECT_KEY_BEFORE, mappedStatement, parameter)
+                                        .then(MybatisReactiveContextManager.currentContextAttribute())
+                                        .flatMap(attribute -> {
+                                            BoundSql boundSql = mappedStatement.getBoundSql(parameter);
+                                            StatementHandler handler = configuration.newStatementHandler(null, mappedStatement, parameter, RowBounds.DEFAULT, null, null);
+                                            ParameterHandler parameterHandler = handler.getParameterHandler();
+                                            Statement statement = this.createStatementInternal(connection,
+                                                    boundSql,
+                                                    mappedStatement,
+                                                    parameterHandler,
+                                                    RowBounds.DEFAULT,
+                                                    r2dbcKeyGenerator.keyGeneratorType(),
+                                                    attribute,
+                                                    r2dbcStatementLog
+                                            );
+                                            return UpdateResultHandler.of(configuration, mappedStatement, parameter, boundSql, parameterHandler, r2dbcKeyGenerator)
+                                                    .handle(statement.execute());
+                                        });
+                            })
+                            .doOnNext(r2dbcStatementLog::logUpdates);
                 });
     }
 
@@ -187,117 +133,34 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                 .flatMapMany(r2dbcStatementLog -> MybatisReactiveContextManager.currentContextAttribute()
                         .flatMapMany(attribute -> {
                             BoundSql boundSql = mappedStatement.getBoundSql(parameter);
-                            String boundSqlStatement = boundSql.getSql();
                             StatementHandler handler = configuration.newStatementHandler(null, mappedStatement, parameter, rowBounds, null, null);
                             ParameterHandler parameterHandler = handler.getParameterHandler();
-                            Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameterHandler, rowBounds, false, attribute, r2dbcStatementLog);
-                            final ReactiveResultHandler reactiveResultHandler = new DefaultReactiveResultHandler(configuration, mappedStatement, boundSql, parameterHandler);
-                            boolean anyOutParameterExist = boundSql.getParameterMappings()
-                                    .stream()
-                                    .anyMatch(parameterMapping ->
-                                            ParameterMode.OUT.equals(parameterMapping.getMode())
-                                                    || ParameterMode.INOUT.equals(parameterMapping.getMode())
-                                    );
-                            return Flux.from(statement.execute())
-                                    .checkpoint("[DefaultReactiveExecutor] SQL: \"" + boundSqlStatement + "\"")
-                                    .skip(rowBounds.getOffset())
-                                    .take(rowBounds.getLimit(), true)
-                                    .concatMap(result -> {
-                                        if (anyOutParameterExist) {
-                                            return result.filter(segment -> segment instanceof Result.Message
-                                                            || segment instanceof Result.RowSegment
-                                                            || segment instanceof Result.OutSegment
-                                                    )
-                                                    .flatMap(segment -> {
-                                                        if (segment instanceof Result.Message) {
-                                                            return Mono.error(((Result.Message) segment).exception());
-                                                        }
-                                                        // row data
-                                                        if (segment instanceof Result.RowSegment) {
-                                                            ReadableResultWrapper<Row> readableResultWrapper = ReadableResultWrapper.ofRow(
-                                                                    ((Result.RowSegment) segment).row(),
-                                                                    configuration
-                                                            );
-                                                            return reactiveResultHandler.handleResult(readableResultWrapper);
-                                                        }
-                                                        // output parameters
-                                                        if (segment instanceof Result.OutSegment) {
-                                                            ReadableResultWrapper<OutParameters> readableResultWrapper = ReadableResultWrapper.ofOutParameters(
-                                                                    ((Result.OutSegment) segment).outParameters(),
-                                                                    configuration
-                                                            );
-                                                            return reactiveResultHandler.handleOutputParameters(readableResultWrapper);
-                                                        }
-                                                        log.trace("[DoQuery]Ignore process result's segment : " + segment.getClass());
-                                                        return Mono.<E>empty();
-                                                    });
-                                        }
-                                        return result.filter(segment -> segment instanceof Result.Message
-                                                        || segment instanceof Result.RowSegment
-                                                )
-                                                .flatMap(segment -> {
-                                                    if (segment instanceof Result.Message) {
-                                                        return Mono.error(((Result.Message) segment).exception());
-                                                    }
-                                                    ReadableResultWrapper<Row> readableResultWrapper = ReadableResultWrapper.ofRow(
-                                                            ((Result.RowSegment) segment).row(),
-                                                            configuration
-                                                    );
-                                                    return reactiveResultHandler.handleResult(readableResultWrapper);
-                                                });
-                                    })
-                                    .concatWith(Flux.defer(reactiveResultHandler::getRemainedResults))
-                                    .doOnCancel(() -> {
-                                        //clean up reactiveResultHandler
-                                        reactiveResultHandler.cleanup();
-                                        r2dbcStatementLog.logTotal(reactiveResultHandler.getResultRowTotalCount());
-                                    })
-                                    .doOnComplete(() -> {
-                                        //clean up reactiveResultHandler
-                                        r2dbcStatementLog.logTotal(reactiveResultHandler.getResultRowTotalCount());
-                                    })
-                                    .doOnTerminate(() -> {
-                                        //clean up reactiveResultHandler
-                                        reactiveResultHandler.cleanup();
-                                    });
-                        }));
-
+                            Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameterHandler, rowBounds, null, attribute, r2dbcStatementLog);
+                            return QueryResultHandler.<E>of(configuration, mappedStatement, rowBounds, boundSql, parameterHandler, r2dbcStatementLog)
+                                    .handle(statement.execute());
+                        })
+                );
     }
 
-    /**
-     * create statement internal
-     *
-     * @param connection                       the target connection
-     * @param originalBoundSql                 the original bound sql
-     * @param mappedStatement                  the mapped statement
-     * @param originalParameterHandler         the original parameter handler
-     * @param rowBounds                        the row bounds
-     * @param returnedGeneratedKeys            whether returned generated keys
-     * @param reactiveExecutorContextAttribute the reactive executor context attribute
-     * @param r2dbcStatementLog                the r2dbc statement log
-     * @return the r2dbc statement
-     */
     private Statement createStatementInternal(Connection connection,
                                               BoundSql originalBoundSql,
                                               MappedStatement mappedStatement,
                                               ParameterHandler originalParameterHandler,
                                               RowBounds rowBounds,
-                                              boolean returnedGeneratedKeys,
+                                              KeyGeneratorType keyGeneratorType,
                                               ReactiveExecutorContextAttribute reactiveExecutorContextAttribute,
                                               R2dbcStatementLog r2dbcStatementLog) {
         r2dbcStatementLog.logSql(originalBoundSql.getSql());
         String formattedSql = this.placeholderFormatter.replaceSqlPlaceholder(connection.getMetadata(), originalBoundSql, reactiveExecutorContextAttribute);
         Statement statement = connection.createStatement(formattedSql);
-        if (returnedGeneratedKeys) {
-            statement.returnGeneratedValues(mappedStatement.getKeyColumns());
-        }
         ParameterHandler delegateParameterHandler = ProxyInstanceFactory.newInstanceOfInterfaces(
                 ParameterHandler.class,
                 () -> new DelegateR2dbcParameterHandler(
                         this.configuration,
                         originalParameterHandler,
                         statement,
-                        r2dbcStatementLog)
+                        r2dbcStatementLog
+                )
         );
         try {
             delegateParameterHandler.setParameters(null);
@@ -310,29 +173,27 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
          * If fetch size is configured by MappedStatement or Configuration
          * then take the min value between configured fetch size and limit value in rowBounds
          */
-        Stream.of(mappedStatementFetchSize,defaultFetchSize)
+        Stream.of(mappedStatementFetchSize, defaultFetchSize)
                 .filter(Objects::nonNull)
                 .min(Integer::compareTo)
                 .ifPresent(configuredFetchSize -> {
                     int fetchSize = Integer.min(configuredFetchSize, rowBounds.getLimit());
                     statement.fetchSize(fetchSize);
                 });
+        if (SIMPLE_RETURN.equals(keyGeneratorType)) {
+            statement.returnGeneratedValues(mappedStatement.getKeyColumns())
+                    .fetchSize(mappedStatement.getKeyProperties().length);
+        }
         return statement;
     }
 
-    /**
-     * get r2dbc key generator
-     *
-     * @param mappedStatement MappedStatement
-     * @return R2dbcKeyGenerator
-     */
     private R2dbcKeyGenerator getR2dbcKeyGenerator(MappedStatement mappedStatement) {
         String[] keyColumns = mappedStatement.getKeyColumns();
         boolean hasKeyColumns = keyColumns != null && keyColumns.length != 0;
         KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
         boolean useJdbc3KeyGenerator = keyGenerator instanceof Jdbc3KeyGenerator;
         // link to issue #55 , When using useGeneratedKeys="true" in insert sql, there should be a check for keyColumn="xxxx"
-        if(useJdbc3KeyGenerator && !hasKeyColumns){
+        if (useJdbc3KeyGenerator && !hasKeyColumns) {
             throw new GeneratedKeysException("When useGeneratedKeys is configured to simply return the generated keys , " +
                     "the keyColumns must also be configured , please check @Options or xml 's keyColumns configuration.");
         }

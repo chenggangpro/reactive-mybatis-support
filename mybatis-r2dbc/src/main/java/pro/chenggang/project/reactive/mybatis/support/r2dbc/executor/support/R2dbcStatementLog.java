@@ -80,7 +80,7 @@ public class R2dbcStatementLog {
      *
      * @param rows the rows
      */
-    public void logTotal(Integer rows) {
+    public void logTotal(Long rows) {
         debug("     Total: " + rows, false);
     }
 

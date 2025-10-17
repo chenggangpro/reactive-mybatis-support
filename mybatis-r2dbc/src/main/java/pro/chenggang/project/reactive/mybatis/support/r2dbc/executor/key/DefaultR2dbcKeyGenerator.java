@@ -28,7 +28,7 @@ import org.apache.ibatis.util.MapUtil;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.TypeHandleContext;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.DelegateR2dbcResultRowDataHandler;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.parser.DelegateR2dbcResultRowDataHandler;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
 import reactor.core.publisher.Mono;
 

@@ -13,7 +13,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.parser;
 
 import io.r2dbc.spi.Readable;
 import org.apache.ibatis.logging.Log;
