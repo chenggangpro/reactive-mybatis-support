@@ -47,6 +47,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.Rea
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.sql.SQLException;
 import java.util.Objects;
@@ -117,7 +118,8 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                                     .handle(statement.execute());
                                         });
                             })
-                            .doOnNext(r2dbcStatementLog::logUpdates);
+                            .doOnNext(r2dbcStatementLog::logUpdates)
+                            .publishOn(Schedulers.boundedElastic());
                 });
     }
 

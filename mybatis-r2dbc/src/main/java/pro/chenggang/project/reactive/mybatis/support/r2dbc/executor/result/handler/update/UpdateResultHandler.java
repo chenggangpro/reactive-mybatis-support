@@ -18,6 +18,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.Read
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.parser.ResultHandlerToolkit;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SELECT_KEY_AFTER;
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SIMPLE_RETURN;
@@ -93,6 +94,7 @@ public class UpdateResultHandler {
                     }
                     return result.getRowsUpdated();
                 })
+                .publishOn(Schedulers.boundedElastic())
                 .reduce(Long::sum)
                 .defaultIfEmpty(0L)
                 .flatMap(totalUpdateRowCount -> r2dbcKeyGenerator.processSelectKey(SELECT_KEY_AFTER, mappedStatement, parameter)

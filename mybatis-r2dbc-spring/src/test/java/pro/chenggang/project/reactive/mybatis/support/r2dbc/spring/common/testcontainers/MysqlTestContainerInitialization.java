@@ -53,7 +53,7 @@ public class MysqlTestContainerInitialization implements DatabaseInitialization 
             log.info("[DryRun] Start up test container success : {}", r2dbcProtocol);
             return r2dbcProtocol;
         }
-        JdbcDatabaseContainer<?> jdbcDatabaseContainer = new MySQLContainer<>(DockerImageName.parse("mysql:8.0.16"))
+        JdbcDatabaseContainer<?> jdbcDatabaseContainer = new MySQLContainer<>(DockerImageName.parse("mysql:8.0.40"))
                 .withDatabaseName(databaseConfig.getDatabaseName())
                 .withUsername(databaseConfig.getUsername())
                 .withPassword(databaseConfig.getPassword())

@@ -19,11 +19,14 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.pars
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.R2dbcStatementLog;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.Deque;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Stream;
 
 /**
  * @author Gang Cheng
@@ -109,6 +112,7 @@ public class QueryResultHandler<R> {
                     }
                     sink.complete();
                 })))
+                .publishOn(Schedulers.boundedElastic())
                 .doOnComplete(() -> r2dbcStatementLog.logTotal(resultRowDataParser.getTotalCount()))
                 .doFinally(signalType -> resultRowDataParser.cleanup());
     }
