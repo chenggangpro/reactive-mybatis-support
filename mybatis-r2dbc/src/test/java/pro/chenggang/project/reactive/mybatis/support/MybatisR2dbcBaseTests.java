@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2024 the original author or authors.
+ *    Copyright 2009-2025 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -46,6 +46,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionOp
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.builder.R2dbcXMLMapperBuilder;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReactiveSqlSessionFactory;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.DefaultReactiveSqlSessionOperator;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.ReactiveSqlSessionProfile.ReactiveSqlSessionProfileBuilder;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.mapping.R2dbcDatabaseIdProvider;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.mapping.R2dbcEnvironment;
@@ -55,6 +56,7 @@ import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
+import reactor.test.StepVerifier.FirstStep;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -233,16 +235,17 @@ public class MybatisR2dbcBaseTests {
         for (Class<?> aClass : MybatisR2dbcBaseTests.databaseInitializationContainer.keySet()) {
             log.info("⬇⬇⬇⬇⬇⬇ {} ----------------", aClass.getSimpleName());
             ReactiveSqlSessionFactory reactiveSqlSessionFactory = setUp(aClass, false, r2dbcProtocol -> {
-                R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
-                R2dbcDatabaseIdProvider r2dbcDatabaseIdProvider = new R2dbcVendorDatabaseIdProvider();
-                r2dbcDatabaseIdProvider.setProperties(databaseIdAliasProperties);
-                r2dbcMybatisConfiguration.setDatabaseId(r2dbcDatabaseIdProvider.getDatabaseId(connectionFactory));
-                for (String commonXmlMapperLocation : commonXmlMapperLocations) {
-                    loadXmlMapper(commonXmlMapperLocation, r2dbcMybatisConfiguration);
-                }
-                r2dbcMybatisConfigurationInitialization.accept(r2dbcMybatisConfiguration);
-                return r2dbcMybatisConfiguration;
-            });
+                        R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
+                        R2dbcDatabaseIdProvider r2dbcDatabaseIdProvider = new R2dbcVendorDatabaseIdProvider();
+                        r2dbcDatabaseIdProvider.setProperties(databaseIdAliasProperties);
+                        r2dbcMybatisConfiguration.setDatabaseId(r2dbcDatabaseIdProvider.getDatabaseId(connectionFactory));
+                        for (String commonXmlMapperLocation : commonXmlMapperLocations) {
+                            loadXmlMapper(commonXmlMapperLocation, r2dbcMybatisConfiguration);
+                        }
+                        r2dbcMybatisConfigurationInitialization.accept(r2dbcMybatisConfiguration);
+                        return r2dbcMybatisConfiguration;
+                    }
+            );
             ReactiveSqlSession reactiveSqlSession = reactiveSqlSessionFactory.openSession();
             reactiveSqlSessionConsumer.accept(aClass, reactiveSqlSession);
             destroy(aClass, false);
@@ -255,13 +258,14 @@ public class MybatisR2dbcBaseTests {
         for (Class<?> aClass : MybatisR2dbcBaseTests.databaseInitializationContainer.keySet()) {
             log.info("⬇⬇⬇⬇⬇⬇ {} ----------------", aClass.getSimpleName());
             ReactiveSqlSessionFactory reactiveSqlSessionFactory = setUp(aClass, true, r2dbcProtocol -> {
-                R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
-                R2dbcDatabaseIdProvider r2dbcDatabaseIdProvider = new R2dbcVendorDatabaseIdProvider();
-                r2dbcDatabaseIdProvider.setProperties(databaseIdAliasProperties);
-                r2dbcMybatisConfiguration.setDatabaseId(r2dbcDatabaseIdProvider.getDatabaseId(connectionFactory));
-                r2dbcMybatisConfigurationInitialization.accept(r2dbcMybatisConfiguration);
-                return r2dbcMybatisConfiguration;
-            });
+                        R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
+                        R2dbcDatabaseIdProvider r2dbcDatabaseIdProvider = new R2dbcVendorDatabaseIdProvider();
+                        r2dbcDatabaseIdProvider.setProperties(databaseIdAliasProperties);
+                        r2dbcMybatisConfiguration.setDatabaseId(r2dbcDatabaseIdProvider.getDatabaseId(connectionFactory));
+                        r2dbcMybatisConfigurationInitialization.accept(r2dbcMybatisConfiguration);
+                        return r2dbcMybatisConfiguration;
+                    }
+            );
             ReactiveSqlSession reactiveSqlSession = reactiveSqlSessionFactory.openSession();
             reactiveSqlSessionConsumer.accept(aClass, reactiveSqlSession);
             destroy(aClass, true);
@@ -302,9 +306,10 @@ public class MybatisR2dbcBaseTests {
         private Consumer<R2dbcMybatisConfiguration> r2dbcMybatisConfigurationCustomizer;
         private BiConsumer<Class<?>, ReactiveSqlSessionFactory> reactiveSqlSessionFactoryTestRunner;
         private BiFunction<Class<?>, ReactiveSqlSession, ? extends Publisher<T>> reactiveSqlSessionTestRunner;
-        private Function<StepVerifier.FirstStep<T>, Duration> stepVerifierRunner;
+        private Function<FirstStep<T>, Duration> stepVerifierRunner;
         private BiFunction<Class<?>, ReactiveSqlSession, ? extends Mono<T>> reactiveSqlSessionTestRollbackMonoRunner;
         private BiFunction<Class<?>, ReactiveSqlSession, ? extends Flux<T>> reactiveSqlSessionTestRollbackFluxRunner;
+        private BiConsumer<Class<?>, ReactiveSqlSessionOperator> rReactiveSqlSessionTestOperatorRunner;
 
         public MybatisR2dbcTestRunner() {
         }
@@ -349,12 +354,17 @@ public class MybatisR2dbcBaseTests {
             return this;
         }
 
+        public MybatisR2dbcTestRunner<T> runWith(BiConsumer<Class<?>, ReactiveSqlSessionOperator> rReactiveSqlSessionTestOperatorRunner) {
+            this.rReactiveSqlSessionTestOperatorRunner = rReactiveSqlSessionTestOperatorRunner;
+            return this;
+        }
+
         public MybatisR2dbcTestRunner<T> runWithReactiveSqlSessionFactory(BiConsumer<Class<?>, ReactiveSqlSessionFactory> reactiveSqlSessionFactoryTestRunner) {
             this.reactiveSqlSessionFactoryTestRunner = reactiveSqlSessionFactoryTestRunner;
             return this;
         }
 
-        public MybatisR2dbcTestRunner<T> verifyWith(Function<StepVerifier.FirstStep<T>, Duration> stepVerifierRunner) {
+        public MybatisR2dbcTestRunner<T> verifyWith(Function<FirstStep<T>, Duration> stepVerifierRunner) {
             this.stepVerifierRunner = stepVerifierRunner;
             return this;
         }
@@ -365,79 +375,84 @@ public class MybatisR2dbcBaseTests {
             );
             databaseInitializationContainer.keySet()
                     .stream()
-                    .filter(databaseType -> databaseType.getSimpleName().equalsIgnoreCase(envDatabaseType))
+//                    .filter(databaseType -> databaseType.getSimpleName().equalsIgnoreCase(envDatabaseType))
+                    .filter(databaseType -> databaseType.getSimpleName().equalsIgnoreCase(MariaDBContainer.class.getSimpleName())
+                            || databaseType.getSimpleName().equalsIgnoreCase(PostgreSQLContainer.class.getSimpleName())
+                            || databaseType.getSimpleName().equalsIgnoreCase(MySQLContainer.class.getSimpleName())
+                    )
                     .filter(databaseFilter)
                     .forEach(databaseClass -> {
                         log.info("⬇⬇⬇⬇⬇⬇ {} ----------------", databaseClass.getSimpleName());
-                        ReactiveSqlSessionFactory reactiveSqlSessionFactory = setUp(databaseClass,
-                                dryRun,
-                                r2dbcProtocol -> {
-                                    R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
-                                    R2dbcDatabaseIdProvider r2dbcDatabaseIdProvider = new R2dbcVendorDatabaseIdProvider();
-                                    r2dbcDatabaseIdProvider.setProperties(databaseIdAliasProperties);
-                                    r2dbcMybatisConfiguration.setDatabaseId(r2dbcDatabaseIdProvider.getDatabaseId(connectionFactory));
-                                    r2dbcMybatisConfigurationCustomizer.accept(
-                                            r2dbcMybatisConfiguration);
-                                    for (String commonXmlMapperLocation : commonXmlMapperLocations) {
-                                        loadXmlMapper(
-                                                commonXmlMapperLocation,
-                                                r2dbcMybatisConfiguration
-                                        );
+                        try {
+                            ReactiveSqlSessionFactory reactiveSqlSessionFactory = setUp(databaseClass,
+                                    dryRun,
+                                    r2dbcProtocol -> {
+                                        R2dbcMybatisConfiguration r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
+                                        R2dbcDatabaseIdProvider r2dbcDatabaseIdProvider = new R2dbcVendorDatabaseIdProvider();
+                                        r2dbcDatabaseIdProvider.setProperties(databaseIdAliasProperties);
+                                        r2dbcMybatisConfiguration.setDatabaseId(r2dbcDatabaseIdProvider.getDatabaseId(connectionFactory));
+                                        r2dbcMybatisConfigurationCustomizer.accept(
+                                                r2dbcMybatisConfiguration);
+                                        for (String commonXmlMapperLocation : commonXmlMapperLocations) {
+                                            loadXmlMapper(
+                                                    commonXmlMapperLocation,
+                                                    r2dbcMybatisConfiguration
+                                            );
+                                        }
+                                        for (String xmlMapperLocation : xmlMapperLocations) {
+                                            loadXmlMapper(
+                                                    xmlMapperLocation,
+                                                    r2dbcMybatisConfiguration
+                                            );
+                                        }
+                                        return r2dbcMybatisConfiguration;
                                     }
-                                    for (String xmlMapperLocation : xmlMapperLocations) {
-                                        loadXmlMapper(
-                                                xmlMapperLocation,
-                                                r2dbcMybatisConfiguration
-                                        );
-                                    }
-                                    return r2dbcMybatisConfiguration;
-                                }
-                        );
-                        if (Objects.nonNull(this.reactiveSqlSessionFactoryTestRunner)) {
-                            reactiveSqlSessionFactoryTestRunner.accept(
-                                    databaseClass,
-                                    reactiveSqlSessionFactory
                             );
-                        } else if (Objects.nonNull(this.reactiveSqlSessionTestRunner)) {
-                            ReactiveSqlSession reactiveSqlSession = reactiveSqlSessionFactory.openSession();
-                            stepVerifierRunner.apply(ReactiveSqlSessionOperator.executeThenClose(reactiveSqlSession,
-                                                    (session, profile) -> reactiveSqlSessionTestRunner.apply(databaseClass, session)
-                                            )
-                                            .as(StepVerifier::create)
-                            );
-                        } else if (Objects.nonNull(this.reactiveSqlSessionTestRollbackMonoRunner)) {
-                            ReactiveSqlSessionOperator reactiveSqlSessionOperator = new DefaultReactiveSqlSessionOperator(
-                                    reactiveSqlSessionFactory
-                            );
-                            stepVerifierRunner.apply(
-                                    reactiveSqlSessionOperator.executeMonoThenClose(
-                                                    (reactiveSqlSession, reactiveSqlSessionProfile) -> {
-                                                        reactiveSqlSessionProfile.forceToRollback();
-                                                        return reactiveSqlSessionTestRollbackMonoRunner.apply(databaseClass,
-                                                                reactiveSqlSession
-                                                        );
-                                                    }
-                                            )
-                                            .as(StepVerifier::create)
-                            );
-                        } else if (Objects.nonNull(this.reactiveSqlSessionTestRollbackFluxRunner)) {
-                            ReactiveSqlSessionOperator reactiveSqlSessionOperator = new DefaultReactiveSqlSessionOperator(
-                                    reactiveSqlSessionFactory
-                            );
-                            stepVerifierRunner.apply(
-                                    reactiveSqlSessionOperator.executeMonoThenClose(
-                                                    (reactiveSqlSession, reactiveSqlSessionProfile) -> {
-                                                        return reactiveSqlSessionTestRollbackMonoRunner.apply(databaseClass,
-                                                                reactiveSqlSession
-                                                        );
-                                                    }
-                                            )
-                                            .as(StepVerifier::create)
-                            );
-                        } else {
-                            log.info("None test runner configured");
+                            if (Objects.nonNull(this.reactiveSqlSessionFactoryTestRunner)) {
+                                reactiveSqlSessionFactoryTestRunner.accept(databaseClass, reactiveSqlSessionFactory);
+                                return;
+                            }
+                            ReactiveSqlSessionOperator reactiveSqlSessionOperator = new DefaultReactiveSqlSessionOperator(reactiveSqlSessionFactory);
+                            if (Objects.nonNull(this.reactiveSqlSessionTestRunner)) {
+                                stepVerifierRunner.apply(reactiveSqlSessionOperator.executeThenClose(ReactiveSqlSessionProfileBuilder::forceToRollback,
+                                                        session -> reactiveSqlSessionTestRunner.apply(databaseClass, session)
+                                                )
+                                                .as(StepVerifier::create)
+                                );
+                                return;
+                            }
+                            if (Objects.nonNull(this.reactiveSqlSessionTestRollbackMonoRunner)) {
+                                stepVerifierRunner.apply(
+                                        reactiveSqlSessionOperator.executeMonoThenClose(ReactiveSqlSessionProfileBuilder::forceToRollback,
+                                                        reactiveSqlSession -> {
+                                                            return reactiveSqlSessionTestRollbackMonoRunner.apply(databaseClass,
+                                                                    reactiveSqlSession
+                                                            );
+                                                        }
+                                                )
+                                                .as(StepVerifier::create)
+                                );
+                                return;
+                            }
+                            if (Objects.nonNull(this.reactiveSqlSessionTestRollbackFluxRunner)) {
+                                stepVerifierRunner.apply(
+                                        reactiveSqlSessionOperator.executeMonoThenClose(ReactiveSqlSessionProfileBuilder::forceToRollback,
+                                                        reactiveSqlSession -> {
+                                                            return reactiveSqlSessionTestRollbackMonoRunner.apply(databaseClass,
+                                                                    reactiveSqlSession
+                                                            );
+                                                        }
+                                                )
+                                                .as(StepVerifier::create)
+                                );
+                                return;
+                            }
+                            if (Objects.nonNull(this.rReactiveSqlSessionTestOperatorRunner)) {
+                                rReactiveSqlSessionTestOperatorRunner.accept(databaseClass, reactiveSqlSessionOperator);
+                            }
+                        } finally {
+                            destroy(databaseClass, false);
                         }
-                        destroy(databaseClass, false);
                         log.info("⬆⬆⬆⬆⬆⬆ {} ----------------", databaseClass.getSimpleName());
                     });
         }

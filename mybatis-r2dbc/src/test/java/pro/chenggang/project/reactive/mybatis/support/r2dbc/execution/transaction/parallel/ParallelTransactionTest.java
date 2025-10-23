@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2024 the original author or authors.
+ *    Copyright 2009-2025 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -69,94 +69,98 @@ class ParallelTransactionTest extends MybatisR2dbcBaseTests {
                 })
                 .runWithReactiveSqlSessionFactory((type, reactiveSqlSessionFactory) -> {
                     ExecutorService executorService = Executors.newScheduledThreadPool(16);
-                    ReactiveSqlSessionOperator reactiveSqlSessionOperator = new DefaultReactiveSqlSessionOperator(
-                            reactiveSqlSessionFactory);
+                    ReactiveSqlSessionOperator reactiveSqlSessionOperator = new DefaultReactiveSqlSessionOperator(reactiveSqlSessionFactory);
                     Tuple3<AtomicInteger, AtomicInteger, AtomicInteger> results = Tuples.of(new AtomicInteger(0),
                             new AtomicInteger(0),
                             new AtomicInteger(0)
                     );
                     Flux.range(0, parallelCount)
                             .flatMap(loop -> {
-                                if (loop % 2 == 0) {
-                                    return Mono.fromCompletionStage(CompletableFuture
-                                            .runAsync(() -> {
-                                                reactiveSqlSessionOperator.executeMonoThenClose(
-                                                                ReactiveSqlSessionProfile.of(IsolationLevel.READ_COMMITTED),
-                                                                (reactiveSqlSession,reactiveSqlSessionProfile) -> {
-                                                                    reactiveSqlSessionProfile.forceToRollback();
-                                                                    UpdateMapper updateMapper = reactiveSqlSession.getMapper(
-                                                                            UpdateMapper.class);
-                                                                    SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(
-                                                                            SimpleQueryMapper.class
-                                                                    );
-                                                                    Dept dept = new Dept();
-                                                                    dept.setDeptNo(1L);
-                                                                    dept.setDeptName("INSET_DEPT_NAME1");
-                                                                    dept.setLocation("INSET_DEPT_LOCATION");
-                                                                    dept.setCreateTime(LocalDateTime.now());
-                                                                    return updateMapper.updateDeptByDeptNo(dept)
-                                                                            .then(simpleQueryMapper.selectByDeptNo(1L));
-                                                                }
-                                                        )
-                                                        .as(StepVerifier::create)
-                                                        .consumeNextWith(dept -> {
-                                                            Assertions.assertEquals(dept.getDeptName(),
-                                                                    "INSET_DEPT_NAME1"
-                                                            );
-                                                        })
-                                                        .verifyComplete();
-                                            }, executorService));
-                                } else {
-                                    return Mono.fromCompletionStage(CompletableFuture.runAsync(
-                                            () -> {
-                                                reactiveSqlSessionOperator.executeMonoThenClose(
-                                                                ReactiveSqlSessionProfile.of(IsolationLevel.READ_UNCOMMITTED),
-                                                                (reactiveSqlSession,reactiveSqlSessionProfile) -> {
-                                                                    reactiveSqlSessionProfile.forceToRollback();
-                                                                    UpdateMapper updateMapper = reactiveSqlSession.getMapper(
-                                                                            UpdateMapper.class);
-                                                                    SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(
-                                                                            SimpleQueryMapper.class);
-                                                                    Dept dept = new Dept();
-                                                                    dept.setDeptNo(1L);
-                                                                    dept.setDeptName("INSET_DEPT_NAME2");
-                                                                    dept.setLocation("INSET_DEPT_LOCATION");
-                                                                    dept.setCreateTime(LocalDateTime.now());
-                                                                    return simpleQueryMapper.selectByDeptNo(1L)
-                                                                            .doOnNext(oldDept -> {
-                                                                                boolean readUnCommitted = "INSET_DEPT_NAME1".equals(
-                                                                                        oldDept.getDeptName());
-                                                                                boolean readCurrent = "INSET_DEPT_NAME2".equals(
-                                                                                        oldDept.getDeptName());
-                                                                                boolean readOriginal = !readUnCommitted && !readCurrent;
-                                                                                if (readUnCommitted) {
-                                                                                    results.getT1().getAndIncrement();
+                                        if (loop % 2 == 0) {
+                                            return Mono.fromCompletionStage(CompletableFuture
+                                                    .runAsync(() -> {
+                                                                reactiveSqlSessionOperator.executeMonoThenClose(
+                                                                                ReactiveSqlSessionProfile.builder().withIsolationLevel(IsolationLevel.READ_COMMITTED)
+                                                                                        .forceToRollback()
+                                                                                        .build(),
+                                                                                reactiveSqlSession -> {
+                                                                                    UpdateMapper updateMapper = reactiveSqlSession.getMapper(
+                                                                                            UpdateMapper.class);
+                                                                                    SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(
+                                                                                            SimpleQueryMapper.class
+                                                                                    );
+                                                                                    Dept dept = new Dept();
+                                                                                    dept.setDeptNo(1L);
+                                                                                    dept.setDeptName("INSET_DEPT_NAME1");
+                                                                                    dept.setLocation("INSET_DEPT_LOCATION");
+                                                                                    dept.setCreateTime(LocalDateTime.now());
+                                                                                    return updateMapper.updateDeptByDeptNo(dept)
+                                                                                            .then(simpleQueryMapper.selectByDeptNo(1L));
                                                                                 }
-                                                                                if (readCurrent) {
-                                                                                    results.getT2().getAndIncrement();
-                                                                                }
-                                                                                if (readOriginal) {
-                                                                                    results.getT3().getAndIncrement();
-                                                                                }
-                                                                            })
-                                                                            .flatMap(oldDept -> {
-                                                                                return updateMapper.updateDeptByDeptNo(dept)
-                                                                                        .then(simpleQueryMapper.selectByDeptNo(
-                                                                                                1L))
-                                                                                        .doOnNext(newDept -> Assertions.assertEquals(
-                                                                                                newDept.getDeptName(),
-                                                                                                "INSET_DEPT_NAME2"
-                                                                                        ));
-                                                                            });
-                                                                }
-                                                        )
-                                                        .as(StepVerifier::create)
-                                                        .expectNextCount(1)
-                                                        .verifyComplete();
-                                            }, executorService
-                                    ));
-                                }
-                            }, 16)
+                                                                        )
+                                                                        .as(StepVerifier::create)
+                                                                        .consumeNextWith(dept -> {
+                                                                            Assertions.assertEquals(dept.getDeptName(),
+                                                                                    "INSET_DEPT_NAME1"
+                                                                            );
+                                                                        })
+                                                                        .verifyComplete();
+                                                            }, executorService
+                                                    ));
+                                        } else {
+                                            return Mono.fromCompletionStage(CompletableFuture.runAsync(
+                                                    () -> {
+                                                        reactiveSqlSessionOperator.executeMonoThenClose(
+                                                                        ReactiveSqlSessionProfile.builder()
+                                                                                .withIsolationLevel(IsolationLevel.READ_UNCOMMITTED)
+                                                                                .forceToRollback()
+                                                                                .build(),
+                                                                        reactiveSqlSession -> {
+                                                                            UpdateMapper updateMapper = reactiveSqlSession.getMapper(
+                                                                                    UpdateMapper.class);
+                                                                            SimpleQueryMapper simpleQueryMapper = reactiveSqlSession.getMapper(
+                                                                                    SimpleQueryMapper.class);
+                                                                            Dept dept = new Dept();
+                                                                            dept.setDeptNo(1L);
+                                                                            dept.setDeptName("INSET_DEPT_NAME2");
+                                                                            dept.setLocation("INSET_DEPT_LOCATION");
+                                                                            dept.setCreateTime(LocalDateTime.now());
+                                                                            return simpleQueryMapper.selectByDeptNo(1L)
+                                                                                    .doOnNext(oldDept -> {
+                                                                                        boolean readUnCommitted = "INSET_DEPT_NAME1".equals(
+                                                                                                oldDept.getDeptName());
+                                                                                        boolean readCurrent = "INSET_DEPT_NAME2".equals(
+                                                                                                oldDept.getDeptName());
+                                                                                        boolean readOriginal = !readUnCommitted && !readCurrent;
+                                                                                        if (readUnCommitted) {
+                                                                                            results.getT1().getAndIncrement();
+                                                                                        }
+                                                                                        if (readCurrent) {
+                                                                                            results.getT2().getAndIncrement();
+                                                                                        }
+                                                                                        if (readOriginal) {
+                                                                                            results.getT3().getAndIncrement();
+                                                                                        }
+                                                                                    })
+                                                                                    .flatMap(oldDept -> {
+                                                                                        return updateMapper.updateDeptByDeptNo(dept)
+                                                                                                .then(simpleQueryMapper.selectByDeptNo(
+                                                                                                        1L))
+                                                                                                .doOnNext(newDept -> Assertions.assertEquals(
+                                                                                                        newDept.getDeptName(),
+                                                                                                        "INSET_DEPT_NAME2"
+                                                                                                ));
+                                                                                    });
+                                                                        }
+                                                                )
+                                                                .as(StepVerifier::create)
+                                                                .expectNextCount(1)
+                                                                .verifyComplete();
+                                                    }, executorService
+                                            ));
+                                        }
+                                    }, 16
+                            )
                             .subscribe(__ -> {});
                     try {
                         executorService.awaitTermination(30, TimeUnit.SECONDS);

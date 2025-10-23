@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2024 the original author or authors.
+ *    Copyright 2009-2025 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -47,13 +47,12 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.Rea
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.sql.SQLException;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.NONE;
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SELECT_KEY_BEFORE;
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SIMPLE_RETURN;
 
@@ -95,9 +94,15 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                         log.trace("Do update with connection from context : " + reactiveExecutorContext);
                     }
                 })
-                .map(ReactiveExecutorContext::getR2dbcStatementLog)
-                .flatMap(r2dbcStatementLog -> {
-                    return Mono.fromFuture(CompletableFuture.supplyAsync(() -> this.getR2dbcKeyGenerator(mappedStatement)))
+                .flatMap(reactiveExecutorContext -> {
+                    R2dbcStatementLog r2dbcStatementLog = reactiveExecutorContext.getCurrentR2dbcStatementLog();
+                    return Mono.fromCallable(() -> {
+                                R2dbcKeyGenerator r2dbcKeyGenerator = this.getR2dbcKeyGenerator(mappedStatement);
+                                if (!NONE.equals(r2dbcKeyGenerator.keyGeneratorType()) && !SIMPLE_RETURN.equals(r2dbcKeyGenerator.keyGeneratorType())) {
+                                    reactiveExecutorContext.setDirty();
+                                }
+                                return r2dbcKeyGenerator;
+                            })
                             .flatMap(r2dbcKeyGenerator -> {
                                 return r2dbcKeyGenerator.processSelectKey(SELECT_KEY_BEFORE, mappedStatement, parameter)
                                         .then(MybatisReactiveContextManager.currentContextAttribute())
@@ -105,21 +110,28 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                             BoundSql boundSql = mappedStatement.getBoundSql(parameter);
                                             StatementHandler handler = configuration.newStatementHandler(null, mappedStatement, parameter, RowBounds.DEFAULT, null, null);
                                             ParameterHandler parameterHandler = handler.getParameterHandler();
-                                            Statement statement = this.createStatementInternal(connection,
-                                                    boundSql,
-                                                    mappedStatement,
-                                                    parameterHandler,
-                                                    RowBounds.DEFAULT,
-                                                    r2dbcKeyGenerator.keyGeneratorType(),
-                                                    attribute,
-                                                    r2dbcStatementLog
-                                            );
-                                            return UpdateResultHandler.of(configuration, mappedStatement, parameter, boundSql, parameterHandler, r2dbcKeyGenerator)
-                                                    .handle(statement.execute());
+                                            return Mono.fromRunnable(() -> r2dbcStatementLog.logSql(boundSql.getSql()))
+                                                    .then(Mono.fromCallable(() -> this.createStatementInternal(connection,
+                                                            boundSql,
+                                                            mappedStatement,
+                                                            parameterHandler,
+                                                            RowBounds.DEFAULT,
+                                                            r2dbcKeyGenerator.keyGeneratorType(),
+                                                            attribute,
+                                                            r2dbcStatementLog
+                                                    )))
+                                                    .flatMap(statement -> UpdateResultHandler.of(configuration,
+                                                                            mappedStatement,
+                                                                            parameter,
+                                                                            boundSql,
+                                                                            parameterHandler,
+                                                                            r2dbcStatementLog,
+                                                                            r2dbcKeyGenerator
+                                                                    )
+                                                                    .handle(statement.execute())
+                                                    );
                                         });
-                            })
-                            .doOnNext(r2dbcStatementLog::logUpdates)
-                            .publishOn(Schedulers.boundedElastic());
+                            });
                 });
     }
 
@@ -131,15 +143,18 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                         log.trace("Do query with connection from context : " + reactiveExecutorContext);
                     }
                 })
-                .map(ReactiveExecutorContext::getR2dbcStatementLog)
+                .map(ReactiveExecutorContext::getCurrentR2dbcStatementLog)
                 .flatMapMany(r2dbcStatementLog -> MybatisReactiveContextManager.currentContextAttribute()
                         .flatMapMany(attribute -> {
                             BoundSql boundSql = mappedStatement.getBoundSql(parameter);
                             StatementHandler handler = configuration.newStatementHandler(null, mappedStatement, parameter, rowBounds, null, null);
                             ParameterHandler parameterHandler = handler.getParameterHandler();
-                            Statement statement = this.createStatementInternal(connection, boundSql, mappedStatement, parameterHandler, rowBounds, null, attribute, r2dbcStatementLog);
-                            return QueryResultHandler.<E>of(configuration, mappedStatement, rowBounds, boundSql, parameterHandler, r2dbcStatementLog)
-                                    .handle(statement.execute());
+                            return Mono.fromRunnable(() -> r2dbcStatementLog.logSql(boundSql.getSql()))
+                                    .then(Mono.fromCallable(() -> this.createStatementInternal(connection, boundSql, mappedStatement, parameterHandler, rowBounds, null, attribute, r2dbcStatementLog)))
+                                    .flatMapMany(statement -> {
+                                        return QueryResultHandler.<E>of(configuration, mappedStatement, rowBounds, boundSql, parameterHandler, r2dbcStatementLog)
+                                                .handle(statement.execute());
+                                    });
                         })
                 );
     }
@@ -152,7 +167,6 @@ public class DefaultReactiveMybatisExecutor extends AbstractReactiveMybatisExecu
                                               KeyGeneratorType keyGeneratorType,
                                               ReactiveExecutorContextAttribute reactiveExecutorContextAttribute,
                                               R2dbcStatementLog r2dbcStatementLog) {
-        r2dbcStatementLog.logSql(originalBoundSql.getSql());
         String formattedSql = this.placeholderFormatter.replaceSqlPlaceholder(connection.getMetadata(), originalBoundSql, reactiveExecutorContextAttribute);
         Statement statement = connection.createStatement(formattedSql);
         ParameterHandler delegateParameterHandler = ProxyInstanceFactory.newInstanceOfInterfaces(

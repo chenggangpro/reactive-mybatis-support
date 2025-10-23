@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2024 the original author or authors.
+ *    Copyright 2009-2025 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.ReactiveSqlSessionOp
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * The type Default reactive sql session operator.
@@ -46,32 +46,18 @@ public class DefaultReactiveSqlSessionOperator implements ReactiveSqlSessionOper
     }
 
     @Override
-    public <T> Flux<T> executeThenClose(final ReactiveSqlSessionProfile reactiveSqlSessionProfile,
-                                        BiFunction<ReactiveSqlSession, ReactiveSqlSessionProfile, Publisher<T>> execution) {
-        final ReactiveSqlSession reactiveSqlSession = this.reactiveSqlSessionFactory.openSession(
-                reactiveSqlSessionProfile);
-        return MybatisReactiveContextManager.currentContext()
-                .flatMapMany(reactiveExecutorContext -> Flux
-                        .usingWhen(
-                                Mono.just(reactiveSqlSession),
-                                currentReactiveSqlSession -> execution.apply(currentReactiveSqlSession,
-                                        currentReactiveSqlSession.getProfile()
-                                ),
-                                currentReactiveSqlSession -> Mono.defer(
-                                                () -> {
-                                                    if (currentReactiveSqlSession.getProfile().isForceToRollback()) {
-                                                        return currentReactiveSqlSession.rollback(true);
-                                                    } else {
-                                                        return currentReactiveSqlSession.commit(true);
-                                                    }
-                                                })
-                                        .then(Mono.defer(currentReactiveSqlSession::close)),
-                                (currentReactiveSqlSession, err) -> currentReactiveSqlSession.rollback(true)
-                                        .then(Mono.defer(currentReactiveSqlSession::close)),
-                                currentReactiveSqlSession -> currentReactiveSqlSession.rollback(true)
-                                        .then(Mono.defer(currentReactiveSqlSession::close))
-                                        .onErrorMap(this::unwrapIfResourceCleanupFailure)
-                        )
+    public <T> Flux<T> executeThenClose(ReactiveSqlSessionProfile reactiveSqlSessionProfile, Function<ReactiveSqlSession, Publisher<T>> execution) {
+        final ReactiveSqlSession reactiveSqlSession = this.reactiveSqlSessionFactory.openSession(reactiveSqlSessionProfile);
+        return Flux.usingWhen(Mono.just(reactiveSqlSession),
+                        execution,
+                        currentReactiveSqlSession -> Mono.defer(currentReactiveSqlSession::close),
+                        (currentReactiveSqlSession, err) -> {
+                            return currentReactiveSqlSession.rollback(true)
+                                    .then(Mono.defer(currentReactiveSqlSession::close));
+                        },
+                        currentReactiveSqlSession -> currentReactiveSqlSession.rollback(true)
+                                .then(Mono.defer(currentReactiveSqlSession::close))
+                                .onErrorMap(this::unwrapIfResourceCleanupFailure)
                 )
                 .contextWrite(reactiveSqlSession::initReactiveExecutorContext)
                 .contextWrite(MybatisReactiveContextManager::initReactiveExecutorContextAttribute);

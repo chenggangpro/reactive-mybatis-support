@@ -1,3 +1,18 @@
+/*
+ *    Copyright 2009-2025 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.update;
 
 import io.r2dbc.spi.Result;
@@ -16,9 +31,9 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybati
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.R2dbcKeyGenerator;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.parser.ResultHandlerToolkit;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.R2dbcStatementLog;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SELECT_KEY_AFTER;
 import static pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.key.KeyGeneratorType.SIMPLE_RETURN;
@@ -37,6 +52,7 @@ public class UpdateResultHandler {
     private final Object parameter;
     private final BoundSql boundSql;
     private final ParameterHandler parameterHandler;
+    private final R2dbcStatementLog r2dbcStatementLog;
     private final R2dbcKeyGenerator r2dbcKeyGenerator;
     private final boolean anyOutParameterExist;
     private final boolean anyGeneratedKeyExist;
@@ -46,12 +62,14 @@ public class UpdateResultHandler {
                                 Object parameter,
                                 BoundSql boundSql,
                                 ParameterHandler parameterHandler,
+                                R2dbcStatementLog r2dbcStatementLog,
                                 R2dbcKeyGenerator r2dbcKeyGenerator) {
         this.r2dbcMybatisConfiguration = r2dbcMybatisConfiguration;
         this.mappedStatement = mappedStatement;
         this.parameter = parameter;
         this.boundSql = boundSql;
         this.parameterHandler = parameterHandler;
+        this.r2dbcStatementLog = r2dbcStatementLog;
         this.r2dbcKeyGenerator = r2dbcKeyGenerator;
         this.anyOutParameterExist = this.determineIfAnyOutParameterExist(boundSql);
         this.anyGeneratedKeyExist = this.determineIfAnyGeneratedKeyExist();
@@ -62,8 +80,9 @@ public class UpdateResultHandler {
                                          Object parameter,
                                          BoundSql boundSql,
                                          ParameterHandler parameterHandler,
+                                         R2dbcStatementLog r2dbcStatementLog,
                                          R2dbcKeyGenerator r2dbcKeyGenerator) {
-        return new UpdateResultHandler(r2dbcMybatisConfiguration, mappedStatement, parameter, boundSql, parameterHandler, r2dbcKeyGenerator);
+        return new UpdateResultHandler(r2dbcMybatisConfiguration, mappedStatement, parameter, boundSql, parameterHandler, r2dbcStatementLog, r2dbcKeyGenerator);
     }
 
     // ==== Methods for initialization start ====
@@ -94,9 +113,9 @@ public class UpdateResultHandler {
                     }
                     return result.getRowsUpdated();
                 })
-                .publishOn(Schedulers.boundedElastic())
                 .reduce(Long::sum)
                 .defaultIfEmpty(0L)
+                .doOnNext(r2dbcStatementLog::logUpdates)
                 .flatMap(totalUpdateRowCount -> r2dbcKeyGenerator.processSelectKey(SELECT_KEY_AFTER, mappedStatement, parameter)
                         .thenReturn(totalUpdateRowCount)
                 );

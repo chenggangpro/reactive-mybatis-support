@@ -1,3 +1,18 @@
+/*
+ *    Copyright 2009-2025 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler.query;
 
 import io.r2dbc.spi.Result;
@@ -14,19 +29,16 @@ import org.apache.ibatis.session.RowBounds;
 import org.reactivestreams.Publisher;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybatisConfiguration;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.parser.ResultRowDataParser;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.parser.ResultHandlerToolkit;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.parser.ResultRowDataParser;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support.R2dbcStatementLog;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
-import reactor.core.scheduler.Schedulers;
 
 import java.util.Deque;
+import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Stream;
 
 /**
  * @author Gang Cheng
@@ -101,18 +113,8 @@ public class QueryResultHandler<R> {
                     }
                     return this.handleResultWithoutOutputParameters(result);
                 })
-                .concatWith(Flux.defer(() -> Flux.create(sink -> {
-                    Deque<Object> resultHolder = resultRowDataParser.getResultHolder();
-                    if (!resultHolder.isEmpty()) {
-                        for (Object result : resultHolder) {
-                            if (Objects.nonNull(result)) {
-                                sink.next((R) result);
-                            }
-                        }
-                    }
-                    sink.complete();
-                })))
-                .publishOn(Schedulers.boundedElastic())
+                .concatWith(this.getRemainingParsedValues())
+                .doOnCancel(() -> r2dbcStatementLog.logTotal(resultRowDataParser.getTotalCount()))
                 .doOnComplete(() -> r2dbcStatementLog.logTotal(resultRowDataParser.getTotalCount()))
                 .doFinally(signalType -> resultRowDataParser.cleanup());
     }
@@ -150,7 +152,14 @@ public class QueryResultHandler<R> {
                             // int this case the result count would be larger than Integer.MAX_VALUE until the sink is cancelled or disposed or error occurred
                             log.trace("Default row bounds, no need to check row bounds limit");
                         }
-                        return this.parseRowSegment((RowSegment) segment);
+                        // RowSegment must be consumed within the flatMap function body, so the process of handle result can not be inside the Mono.create() or Mono.fromCallable()
+                        R result = null;
+                        try {
+                            result = resultRowDataParser.handleResult(ReadableResultWrapper.ofRow(((RowSegment) segment).row(), r2dbcMybatisConfiguration));
+                        } catch (Exception e) {
+                            return Mono.error(e);
+                        }
+                        return Mono.justOrEmpty(result);
                     }
                     log.trace("Ignore process result's segment : " + segment.getClass());
                     return Mono.empty();
@@ -165,21 +174,52 @@ public class QueryResultHandler<R> {
                     if (segment instanceof Message) {
                         return Mono.error(((Message) segment).exception());
                     }
-                    return this.parseRowSegment((RowSegment) segment);
+                    long receivedCount = totalReceivedCount.incrementAndGet();
+                    if (!isDefaultRowBounds) {
+                        if (receivedCount < rowBounds.getOffset()) {
+                            log.debug("Row bounds startpoint strict to " + rowBounds.getOffset() + ", bypass processing current row data.");
+                            return Mono.empty();
+                        }
+                        if (receivedCount > rowBounds.getOffset() + rowBounds.getLimit()) {
+                            log.debug("Row bounds limit reached, stop parsing");
+                            return Mono.empty();
+                        }
+                    } else if (log.isTraceEnabled()) {
+                        // this would bypass the row bounds limitation check if row bounds are not set
+                        // int this case the result count would be larger than Integer.MAX_VALUE until the sink is cancelled or disposed or error occurred
+                        log.trace("Default row bounds, no need to check row bounds limit");
+                    }
+                    // RowSegment must be consumed within the flatMap function body, so the process of handle result can not be inside the Mono.create() or Mono.fromCallable()
+                    R result = null;
+                    try {
+                        result = resultRowDataParser.handleResult(ReadableResultWrapper.ofRow(((RowSegment) segment).row(), r2dbcMybatisConfiguration));
+                    } catch (Exception e) {
+                        return Mono.error(e);
+                    }
+                    return Mono.justOrEmpty(result);
                 });
     }
 
-    private Mono<R> parseRowSegment(RowSegment segment) {
-        return Mono.fromFuture(CompletableFuture.supplyAsync(
-                        () -> {
-                            R resultValue = resultRowDataParser.handleResult(ReadableResultWrapper.ofRow(segment.row(), r2dbcMybatisConfiguration));
-                            if (Objects.isNull(resultValue) && resultRowDataParser.getResultHolder().size() > 1) {
-                                return (R) resultRowDataParser.getResultHolder().pop();
-                            }
-                            return resultValue;
+    private Flux<R> getRemainingParsedValues() {
+        return Flux.defer(() -> Flux.create(sink -> {
+            sink.onRequest(__ -> {
+                try {
+                    Deque<Object> resultHolder = resultRowDataParser.getResultHolder();
+                    while (!resultHolder.isEmpty()) {
+                        R resultValue = (R) resultHolder.pop();
+                        if (Objects.nonNull(resultValue)) {
+                            sink.next(resultValue);
                         }
-                )
-        );
+                    }
+                } catch (Throwable e) {
+                    if (!(e instanceof NoSuchElementException)) {
+                        sink.error(e);
+                        return;
+                    }
+                }
+                sink.complete();
+            });
+        }));
     }
 
     // ==== Methods for parsing result end ====
