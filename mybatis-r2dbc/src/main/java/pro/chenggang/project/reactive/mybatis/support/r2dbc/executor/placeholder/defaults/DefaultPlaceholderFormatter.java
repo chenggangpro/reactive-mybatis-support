@@ -54,10 +54,15 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
 
     private final PlaceholderDialectRegistry placeholderDialectRegistry;
     //Class<? extends PlaceholderDialect --> Cache< original SQL , formatted SQL >
-    private final ConcurrentHashMap<Class<? extends PlaceholderDialect>, Cache<String, String>> formattedSqlCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Class<? extends PlaceholderDialect>, Cache<String, String>> formattedSqlCache;
 
-    public DefaultPlaceholderFormatter(PlaceholderDialectRegistry placeholderDialectRegistry, Integer sqlCacheMaxSize, Duration sqlCacheExpireDuration) {
+    public DefaultPlaceholderFormatter(PlaceholderDialectRegistry placeholderDialectRegistry, Boolean enableDialectSqlCache, Integer sqlCacheMaxSize, Duration sqlCacheExpireDuration) {
         this.placeholderDialectRegistry = placeholderDialectRegistry;
+        if (!Boolean.TRUE.equals(enableDialectSqlCache)) {
+            this.formattedSqlCache = null;
+            return;
+        }
+        this.formattedSqlCache = new ConcurrentHashMap<>();
         Set<Class<? extends PlaceholderDialect>> allPlaceholderDialectTypes = placeholderDialectRegistry.getAllPlaceholderDialectTypes();
         for (Class<? extends PlaceholderDialect> placeholderDialectType : allPlaceholderDialectTypes) {
             Cache<String, String> cache = Caffeine.newBuilder()
@@ -78,13 +83,17 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
                 .getPlaceholderDialect(connectionMetadata, reactiveExecutorContextAttribute)
                 .filter(placeholderDialect -> !Objects.equals(placeholderDialect.getMarker(), DEFAULT_PLACEHOLDER));
         String originalSql = boundSql.getSql();
-        if (!optionalPlaceholderDialect.isPresent()) {
+        if (optionalPlaceholderDialect.isEmpty()) {
             if (log.isTraceEnabled()) {
                 log.trace("Placeholder dialect not found or is default placeholder ,use original sql");
             }
             return originalSql;
         }
         PlaceholderDialect placeholderDialect = optionalPlaceholderDialect.get();
+        if (Objects.isNull(formattedSqlCache)) {
+            log.debug("Placeholder dialect sql cache is null, format placeholder directly");
+            return this.formatPlaceholderInternal(placeholderDialect, boundSql);
+        }
         Cache<String, String> cache = this.formattedSqlCache.get(placeholderDialect.getClass());
         if (Objects.isNull(cache)) {
             throw new IllegalStateException("Placeholder dialect found,but Placeholder dialect sql cache is null,Placeholder dialect type : " + placeholderDialect.getClass());
@@ -165,7 +174,9 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
         @Override
         public void onRemoval(@Nullable String key, @Nullable String value, RemovalCause cause) {
             log.debug("Placeholder(" + dialectType + ") cache " + listenerType + " triggered according to " + cause);
-            log.trace("Key : " + key + "\nValue : " + value);
+            if(log.isTraceEnabled()){
+                log.trace("Key : " + key + "\nValue : " + value);
+            }
         }
     }
 }
