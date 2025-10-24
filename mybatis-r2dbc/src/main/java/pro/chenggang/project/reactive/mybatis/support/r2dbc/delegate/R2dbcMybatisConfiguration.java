@@ -87,14 +87,20 @@ public class R2dbcMybatisConfiguration extends Configuration {
      */
     protected final AtomicBoolean initializedFlag = new AtomicBoolean(false);
     /**
+     * Whether to enable the dialect sql cache.
+     */
+    protected boolean dialectSqlCacheEnabled = true;
+    /**
      * The Formatted dialect sql cache max size.
      */
-    protected Integer formattedDialectSqlCacheMaxSize = 10_000;
+    protected Integer formattedDialectSqlCacheMaxSize = 100;
     /**
      * The Formatted dialect sql cache expire duration.
      */
     protected Duration formattedDialectSqlCacheExpireDuration = Duration.ofHours(6);
-
+    /*
+     * The r2dbc environment.
+     */
     private R2dbcEnvironment r2dbcEnvironment;
 
     /**
@@ -278,6 +284,24 @@ public class R2dbcMybatisConfiguration extends Configuration {
      */
     public void addPlaceholderDialect(PlaceholderDialect placeholderDialect) {
         this.placeholderDialectRegistry.register(placeholderDialect);
+    }
+
+    /**
+     * Gets placeholder dialect registry.
+     *
+     * @return the placeholder dialect registry
+     */
+    public void setDialectSqlCacheEnabled(boolean dialectSqlCacheEnabled) {
+        this.dialectSqlCacheEnabled = dialectSqlCacheEnabled;
+    }
+
+    /**
+     * Get dialect sql cache enabled
+     *
+     * @return true if enabled, otherwise false
+     */
+    public boolean isDialectSqlCacheEnabled() {
+        return dialectSqlCacheEnabled;
     }
 
     /**
