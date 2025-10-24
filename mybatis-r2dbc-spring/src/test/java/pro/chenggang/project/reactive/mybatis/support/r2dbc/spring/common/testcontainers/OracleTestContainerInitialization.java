@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2024 the original author or authors.
+ *    Copyright 2009-2025 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -61,8 +61,8 @@ public class OracleTestContainerInitialization implements DatabaseInitialization
             log.info("[DryRun] Start up test container success : {}", r2dbcProtocol);
             return r2dbcProtocol;
         }
-        JdbcDatabaseContainer<?> jdbcDatabaseContainer = new OracleContainer(DockerImageName.parse(
-                "gvenzl/oracle-xe:21-slim-faststart"))
+        JdbcDatabaseContainer<?> jdbcDatabaseContainer = new OracleContainer(DockerImageName.parse("gvenzl/oracle-free:slim-faststart")
+                .asCompatibleSubstituteFor("gvenzl/oracle-xe"))
                 .withDatabaseName(specificDatabaseConfig.getDatabaseName())
                 .withUsername(specificDatabaseConfig.getUsername())
                 .withPassword(specificDatabaseConfig.getPassword())

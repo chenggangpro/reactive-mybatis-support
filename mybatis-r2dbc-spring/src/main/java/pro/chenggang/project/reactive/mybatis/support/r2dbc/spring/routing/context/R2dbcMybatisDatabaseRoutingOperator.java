@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2024 the original author or authors.
+ *    Copyright 2009-2025 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -68,12 +68,7 @@ public class R2dbcMybatisDatabaseRoutingOperator {
                             log.debug("Reset Current DataSourceType Key : {}", oldKeyInfo);
                             return Mono.empty();
                         }
-                ).onErrorResume(ex -> {
-                    R2dbcMybatisDatabaseRoutingKeyInfo oldKeyInfo = databaseRoutingContextHolder.getDatabaseRoutingKeys()
-                            .pollFirst();
-                    log.debug("Reset Current DataSourceType Key : {}", oldKeyInfo);
-                    return Mono.error(ex);
-                }))
+                ))
                 .contextWrite(R2dbcMybatisDatabaseRoutingContextManager.initializeDatabaseRoutingContext(targetRoutingKey))
                 .contextWrite(R2dbcMybatisDatabaseRoutingContextManager.initializeDatabaseRoutingHolderContext());
     }

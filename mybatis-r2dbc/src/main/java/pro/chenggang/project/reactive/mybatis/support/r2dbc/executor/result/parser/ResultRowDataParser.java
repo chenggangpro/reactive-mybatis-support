@@ -13,24 +13,21 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.handler;
+package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.parser;
 
 import io.r2dbc.spi.Readable;
-import io.r2dbc.spi.Result;
 import io.r2dbc.spi.Row;
 import org.apache.ibatis.annotations.AutomapConstructor;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.cache.CacheKey;
 import org.apache.ibatis.executor.ExecutorException;
-import org.apache.ibatis.executor.parameter.ParameterHandler;
 import org.apache.ibatis.executor.result.DefaultResultContext;
 import org.apache.ibatis.executor.result.DefaultResultHandler;
 import org.apache.ibatis.executor.result.ResultMapException;
-import org.apache.ibatis.mapping.BoundSql;
+import org.apache.ibatis.logging.Log;
+import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.mapping.Discriminator;
 import org.apache.ibatis.mapping.MappedStatement;
-import org.apache.ibatis.mapping.ParameterMapping;
-import org.apache.ibatis.mapping.ParameterMode;
 import org.apache.ibatis.mapping.ResultMap;
 import org.apache.ibatis.mapping.ResultMapping;
 import org.apache.ibatis.reflection.MetaClass;
@@ -46,150 +43,108 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybati
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.exception.R2dbcResultException;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.ReadableResultWrapper;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.result.TypeHandleContext;
-import pro.chenggang.project.reactive.mybatis.support.r2dbc.support.ProxyInstanceFactory;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.LongAdder;
-import java.util.stream.Stream;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * The type Default reactive result handler.
- * <p>
- * {@link org.apache.ibatis.executor.resultset.DefaultResultSetHandler}
- *
  * @author Gang Cheng
- * @version 1.0.0
+ * @version 0.1.0
+ * @since 3.1.0
  */
-public class DefaultReactiveResultHandler implements ReactiveResultHandler {
+public class ResultRowDataParser<T> {
 
-    private final LongAdder totalCount = new LongAdder();
+    private static final Log log = LogFactory.getLog(ResultRowDataParser.class);
+
+    private final AtomicLong totalCount = new AtomicLong();
 
     private final R2dbcMybatisConfiguration r2dbcMybatisConfiguration;
     private final MappedStatement mappedStatement;
     private final ObjectFactory objectFactory;
     private final ReflectorFactory reflectorFactory;
     private final TypeHandlerRegistry typeHandlerRegistry;
-    private final Map<CacheKey, List<DefaultReactiveResultHandler.PendingRelation>> pendingRelations = new HashMap<>();
+    private final Map<CacheKey, List<PendingRelation>> pendingRelations = new HashMap<>();
     // Cached Automappings
-    private final Map<String, List<DefaultReactiveResultHandler.UnMappedColumnAutoMapping>> autoMappingsCache = new HashMap<>();
+    private final Map<String, List<UnMappedColumnAutoMapping>> autoMappingsCache = new HashMap<>();
     private final Map<String, List<String>> constructorAutoMappingColumns = new HashMap<>();
     // nested resultmaps
     private final Map<CacheKey, Object> nestedResultObjects = new HashMap<>();
     private final Map<String, Object> ancestorObjects = new HashMap<>();
     private final TypeHandler<?> delegatedTypeHandler;
-    private final List<Object> resultHolder = new ArrayList<>();
+    private final Deque<Object> resultHolder = new ConcurrentLinkedDeque<>();
     // temporary marking flag that indicate using constructor mapping (use field to reduce memory usage)
     private boolean useConstructorMappings;
-    private final BoundSql boundSql;
-    private final ParameterHandler parameterHandler;
 
-    /**
-     * Instantiates a new Default reactive result handler.
-     *
-     * @param r2dbcMybatisConfiguration the R2dbc mybatis configuration
-     * @param mappedStatement           the mapped statement
-     */
-    public DefaultReactiveResultHandler(R2dbcMybatisConfiguration r2dbcMybatisConfiguration, MappedStatement mappedStatement,
-                                        BoundSql boundSql, ParameterHandler parameterHandler) {
+
+    public ResultRowDataParser(R2dbcMybatisConfiguration r2dbcMybatisConfiguration, MappedStatement mappedStatement) {
         this.mappedStatement = mappedStatement;
         this.r2dbcMybatisConfiguration = r2dbcMybatisConfiguration;
-        this.boundSql = boundSql;
-        this.parameterHandler = parameterHandler;
         this.objectFactory = r2dbcMybatisConfiguration.getObjectFactory();
         this.reflectorFactory = r2dbcMybatisConfiguration.getReflectorFactory();
         this.typeHandlerRegistry = r2dbcMybatisConfiguration.getTypeHandlerRegistry();
-        this.delegatedTypeHandler = this.initDelegateTypeHandler();
-    }
-
-    @Override
-    public Integer getResultRowTotalCount() {
-        return totalCount.intValue();
+        this.delegatedTypeHandler = ResultHandlerToolkit.initDelegateTypeHandler(this.r2dbcMybatisConfiguration);
     }
 
     @SuppressWarnings("unchecked")
-    @Override
-    public <T> Mono<T> handleResult(ReadableResultWrapper<? extends Readable> readableResultWrapper) {
+    public T handleResult(ReadableResultWrapper<Row> readableResultWrapper) {
         List<ResultMap> resultMaps = mappedStatement.getResultMaps();
         int resultMapCount = resultMaps.size();
         if (resultMapCount < 1) {
-            return Mono.error(new ExecutorException("A query was run and no Result Maps were found for the Mapped Statement '" + mappedStatement.getId()
-                    + "'.  It's likely that neither a Result Type nor a Result Map was specified."));
+            throw new ExecutorException("A query was run and no Result Maps were found for the Mapped Statement '" + mappedStatement.getId()
+                    + "'.  It's likely that neither a Result Type nor a Result Map was specified.");
         }
         ResultMap resultMap = resultMaps.get(0);
         if (!resultMap.hasNestedResultMaps()) {
             try {
                 ResultMap discriminatedResultMap = resolveDiscriminatedResultMap(readableResultWrapper, resultMap, null);
                 Object rowValue = getRowValueForSimpleResultMap(readableResultWrapper, discriminatedResultMap, null);
-                totalCount.increment();
-                return Mono.justOrEmpty((T) rowValue);
+                totalCount.incrementAndGet();
+                return (T) rowValue;
             } catch (SQLException e) {
-                return Mono.error(new R2dbcResultException(e));
+                throw new R2dbcResultException(e);
             }
         }
         try {
             Object rowValue = handleRowValuesForNestedResultMap(readableResultWrapper, resultMap);
-            totalCount.increment();
-            return Mono.justOrEmpty((T) rowValue);
+            totalCount.incrementAndGet();
+            return (T) rowValue;
         } catch (SQLException e) {
-            return Mono.error(new R2dbcResultException(e));
+            throw new R2dbcResultException(e);
         }
     }
 
-    @Override
-    public <T> Mono<T> handleOutputParameters(ReadableResultWrapper<? extends Readable> readableResultWrapper) {
-        final Object parameterObject = parameterHandler.getParameterObject();
-        final MetaObject metaParam = r2dbcMybatisConfiguration.newMetaObject(parameterObject);
-        final List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
-        final TypeHandler<?> outputDelegatedTypeHandler = this.initDelegateTypeHandler();
-        return Flux.fromIterable(parameterMappings)
-                .filter(parameterMapping -> parameterMapping.getMode() == ParameterMode.OUT || parameterMapping.getMode() == ParameterMode.INOUT)
-                .concatMap(parameterMapping -> {
-                    if (ResultSet.class.equals(parameterMapping.getJavaType())
-                            || Row.class.equals(parameterMapping.getJavaType())
-                            || Result.class.equals(parameterMapping.getJavaType())) {
-                        return Mono.error(new UnsupportedOperationException(
-                                "Unsupported Java type encountered: '" + parameterMapping.getJavaType() + "' during output parameter mapping." +
-                                        " To handle multiple rows of output parameters, " +
-                                        "consider using a query operation rather than an update operation." +
-                                        " Receiving output parameters with an update operation is only effective for single-row results."));
-                    }
-                    try {
-                        final TypeHandler<?> typeHandler = parameterMapping.getTypeHandler();
-                        ((TypeHandleContext) outputDelegatedTypeHandler).contextWith(parameterMapping.getJavaType(), typeHandler, readableResultWrapper);
-                        Object value = outputDelegatedTypeHandler.getResult(null, parameterMapping.getProperty());
-                        metaParam.setValue(parameterMapping.getProperty(), value);
-                    }catch (SQLException e) {
-                        return Mono.error(new R2dbcResultException(e));
-                    }
-                    return Mono.empty();
-                })
-                .then(Mono.empty());
+    /**
+     * Get total count of rows processed.
+     *
+     * @return the total count of rows processed.
+     */
+    public Long getTotalCount() {
+        return totalCount.get();
     }
 
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T> Flux<T> getRemainedResults() {
-        return (Flux<T>) Flux.fromStream(Stream.of(this.resultHolder.toArray()).filter(Objects::nonNull));
+    /**
+     * Get result holder
+     *
+     * @return the result holder Deque<Object>
+     */
+    public Deque<Object> getResultHolder() {
+        return this.resultHolder;
     }
 
-    @Override
     public void cleanup() {
         pendingRelations.clear();
         autoMappingsCache.clear();
@@ -199,12 +154,14 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         resultHolder.clear();
     }
 
+    // ==== Methods from original mybatis library ====
+
     /**
      * get row value for simple result map
      *
      * @param readableResultWrapper the RowResultWrapper<? extends Readable>
-     * @param resultMap        the ResultMap
-     * @param columnPrefix     the columnPrefix
+     * @param resultMap             the ResultMap
+     * @param columnPrefix          the columnPrefix
      * @return data
      * @throws SQLException SQLException
      */
@@ -226,7 +183,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
      * handle row values for nested resultMap
      *
      * @param readableResultWrapper the RowResultWrapper<? extends Readable>
-     * @param resultMap        the ResultMap
+     * @param resultMap             the ResultMap
      * @throws SQLException the SQLException
      */
     private Object handleRowValuesForNestedResultMap(ReadableResultWrapper<? extends Readable> readableResultWrapper, ResultMap resultMap) throws SQLException {
@@ -240,19 +197,19 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
             storeObject(resultHandler, resultContext, rowValue, null, readableResultWrapper);
         }
         List<Object> resultList = resultHandler.getResultList();
-        if(resultList == null || resultList.isEmpty()){
+        if (resultList == null || resultList.isEmpty()) {
             return null;
         }
         // if result is not ordered , then hold all results for nested result mapping
-        if(!mappedStatement.isResultOrdered()){
+        if (!mappedStatement.isResultOrdered()) {
             this.resultHolder.addAll(resultList);
             return null;
         }
         // result is ordered,then hold before next nested result mapping
 
         // result holder has value then return hold results and clear hold results
-        if(!this.resultHolder.isEmpty()){
-            Object resultRowValue = this.resultHolder.get(0);
+        if (!this.resultHolder.isEmpty()) {
+            Object resultRowValue = this.resultHolder.pop();
             this.resultHolder.clear();
             this.resultHolder.addAll(resultList);
             return resultRowValue;
@@ -262,7 +219,12 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         return null;
     }
 
-    private boolean applyNestedResultMappings(ReadableResultWrapper<? extends Readable> readableResultWrapper, ResultMap resultMap, MetaObject metaObject, String parentPrefix, CacheKey parentRowKey, boolean newObject) {
+    private boolean applyNestedResultMappings(ReadableResultWrapper<? extends Readable> readableResultWrapper,
+                                              ResultMap resultMap,
+                                              MetaObject metaObject,
+                                              String parentPrefix,
+                                              CacheKey parentRowKey,
+                                              boolean newObject) {
         boolean foundValues = false;
         for (ResultMapping resultMapping : resultMap.getPropertyResultMappings()) {
             final String nestedResultMapId = resultMapping.getNestedResultMapId();
@@ -301,7 +263,11 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         return foundValues;
     }
 
-    private Object getRowValueForNestedResultMap(ReadableResultWrapper<? extends Readable> readableResultWrapper, ResultMap resultMap, CacheKey combinedKey, String columnPrefix, Object partialObject) throws SQLException {
+    private Object getRowValueForNestedResultMap(ReadableResultWrapper<? extends Readable> readableResultWrapper,
+                                                 ResultMap resultMap,
+                                                 CacheKey combinedKey,
+                                                 String columnPrefix,
+                                                 Object partialObject) throws SQLException {
         final String resultMapId = resultMap.getId();
         Object rowValue = partialObject;
         if (rowValue != null) {
@@ -362,23 +328,29 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         return foundValues;
     }
 
-    private Object getPropertyMappingValue(ReadableResultWrapper<? extends Readable> readableResultWrapper, MetaObject metaResultObject, ResultMapping propertyMapping, String columnPrefix)
+    private Object getPropertyMappingValue(ReadableResultWrapper<? extends Readable> readableResultWrapper,
+                                           MetaObject metaResultObject,
+                                           ResultMapping propertyMapping,
+                                           String columnPrefix)
             throws SQLException {
         if (propertyMapping.getNestedQueryId() != null) {
             throw new UnsupportedOperationException("Not supported Nested query ");
         } else {
             final TypeHandler<?> typeHandler = propertyMapping.getTypeHandler();
             final String column = prependPrefix(propertyMapping.getColumn(), columnPrefix);
-            ((TypeHandleContext) this.delegatedTypeHandler).contextWith(propertyMapping.getJavaType(),typeHandler,
+            ((TypeHandleContext) this.delegatedTypeHandler).contextWith(propertyMapping.getJavaType(), typeHandler,
                     readableResultWrapper
             );
             return this.delegatedTypeHandler.getResult(null, column);
         }
     }
 
-    private List<DefaultReactiveResultHandler.UnMappedColumnAutoMapping> createAutomaticMappings(ReadableResultWrapper<? extends Readable> readableResultWrapper, ResultMap resultMap, MetaObject metaObject, String columnPrefix) throws SQLException {
+    private List<UnMappedColumnAutoMapping> createAutomaticMappings(ReadableResultWrapper<? extends Readable> readableResultWrapper,
+                                                                    ResultMap resultMap,
+                                                                    MetaObject metaObject,
+                                                                    String columnPrefix) throws SQLException {
         final String mapKey = resultMap.getId() + ":" + columnPrefix;
-        List<DefaultReactiveResultHandler.UnMappedColumnAutoMapping> autoMapping = autoMappingsCache.get(mapKey);
+        List<UnMappedColumnAutoMapping> autoMapping = autoMappingsCache.get(mapKey);
         if (autoMapping == null) {
             autoMapping = new ArrayList<>();
             final List<String> unmappedColumnNames = readableResultWrapper.getUnmappedColumnNames(resultMap, columnPrefix);
@@ -406,7 +378,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
                     final Class<?> propertyType = metaObject.getSetterType(property);
                     if (typeHandlerRegistry.hasTypeHandler(propertyType)) {
                         final TypeHandler<?> typeHandler = readableResultWrapper.getTypeHandler(propertyType, columnName);
-                        autoMapping.add(new DefaultReactiveResultHandler.UnMappedColumnAutoMapping(columnName, property, propertyType, typeHandler, propertyType.isPrimitive()));
+                        autoMapping.add(new UnMappedColumnAutoMapping(columnName, property, propertyType, typeHandler, propertyType.isPrimitive()));
                     } else {
                         r2dbcMybatisConfiguration.getAutoMappingUnknownColumnBehavior()
                                 .doAction(mappedStatement, columnName, property, propertyType);
@@ -421,14 +393,17 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         return autoMapping;
     }
 
-    private boolean applyAutomaticMappings(ReadableResultWrapper<? extends Readable> readableResultWrapper, ResultMap resultMap, MetaObject metaObject, String columnPrefix) throws SQLException {
-        List<DefaultReactiveResultHandler.UnMappedColumnAutoMapping> autoMapping = createAutomaticMappings(
+    private boolean applyAutomaticMappings(ReadableResultWrapper<? extends Readable> readableResultWrapper,
+                                           ResultMap resultMap,
+                                           MetaObject metaObject,
+                                           String columnPrefix) throws SQLException {
+        List<UnMappedColumnAutoMapping> autoMapping = createAutomaticMappings(
                 readableResultWrapper, resultMap, metaObject, columnPrefix);
         boolean foundValues = false;
         if (!autoMapping.isEmpty()) {
-            for (DefaultReactiveResultHandler.UnMappedColumnAutoMapping mapping : autoMapping) {
+            for (UnMappedColumnAutoMapping mapping : autoMapping) {
                 TypeHandler<?> typeHandler = mapping.typeHandler;
-                ((TypeHandleContext) this.delegatedTypeHandler).contextWith(mapping.propertyType,typeHandler,
+                ((TypeHandleContext) this.delegatedTypeHandler).contextWith(mapping.propertyType, typeHandler,
                         readableResultWrapper
                 );
                 final Object value = this.delegatedTypeHandler.getResult(null, mapping.column);
@@ -453,16 +428,21 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         return resultObject;
     }
 
-    private Object createResultObject(ReadableResultWrapper<? extends Readable> readableResultWrapper, ResultMap resultMap, List<Class<?>> constructorArgTypes, List<Object> constructorArgs, String columnPrefix)
+    private Object createResultObject(ReadableResultWrapper<? extends Readable> readableResultWrapper,
+                                      ResultMap resultMap,
+                                      List<Class<?>> constructorArgTypes,
+                                      List<Object> constructorArgs,
+                                      String columnPrefix)
             throws SQLException {
         final Class<?> resultType = resultMap.getType();
         final MetaClass metaType = MetaClass.forClass(resultType, reflectorFactory);
         final List<ResultMapping> constructorMappings = resultMap.getConstructorResultMappings();
         if (hasTypeHandlerForResultObject(resultType)) {
             return createPrimitiveResultObject(readableResultWrapper, resultMap, columnPrefix);
-        } else if(hasR2dbcTypeHandlerAdapterForResultObject(resultType)){
+        } else if (hasR2dbcTypeHandlerAdapterForResultObject(resultType)) {
             return createResultObjectFromR2dbcTypeHandlerAdapter(readableResultWrapper, resultMap, columnPrefix);
-        } if (!constructorMappings.isEmpty()) {
+        }
+        if (!constructorMappings.isEmpty()) {
             return createParameterizedResultObject(readableResultWrapper, resultType, constructorMappings, constructorArgTypes, constructorArgs, columnPrefix);
         } else if (resultType.isInterface() || metaType.hasDefaultConstructor()) {
             return objectFactory.create(resultType);
@@ -485,11 +465,12 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
                 } else if (constructorMapping.getNestedResultMapId() != null) {
                     String constructorColumnPrefix = getColumnPrefix(columnPrefix, constructorMapping);
                     final ResultMap resultMap = resolveDiscriminatedResultMap(readableResultWrapper,
-                            r2dbcMybatisConfiguration.getResultMap(constructorMapping.getNestedResultMapId()), constructorColumnPrefix);
+                            r2dbcMybatisConfiguration.getResultMap(constructorMapping.getNestedResultMapId()), constructorColumnPrefix
+                    );
                     value = getRowValueForSimpleResultMap(readableResultWrapper, resultMap, constructorColumnPrefix);
                 } else {
                     final TypeHandler<?> typeHandler = constructorMapping.getTypeHandler();
-                    ((TypeHandleContext) this.delegatedTypeHandler).contextWith(constructorMapping.getJavaType(),typeHandler,
+                    ((TypeHandleContext) this.delegatedTypeHandler).contextWith(constructorMapping.getJavaType(), typeHandler,
                             readableResultWrapper
                     );
                     value = this.delegatedTypeHandler.getResult(null, prependPrefix(column, columnPrefix));
@@ -508,7 +489,8 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
                                                 List<Class<?>> constructorArgTypes, List<Object> constructorArgs) throws SQLException {
         return applyConstructorAutomapping(readableResultWrapper, resultMap, columnPrefix, resultType, constructorArgTypes, constructorArgs,
                 findConstructorForAutomapping(resultType).orElseThrow(() -> new ExecutorException(
-                        "No constructor found in " + resultType.getName() + " matching " + readableResultWrapper.getClassNames())));
+                        "No constructor found in " + resultType.getName() + " matching " + readableResultWrapper.getClassNames()))
+        );
     }
 
     private Optional<Constructor<?>> findConstructorForAutomapping(final Class<?> resultType) {
@@ -528,7 +510,8 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
             // but using @AutomapConstructor seems sufficient.
             throw new ExecutorException(MessageFormat.format(
                     "'argNameBasedConstructorAutoMapping' is enabled and the class ''{0}'' has multiple constructors, so @AutomapConstructor must be added to one of the constructors.",
-                    resultType.getName()));
+                    resultType.getName()
+            ));
         } else {
             return Arrays.stream(constructors).filter(this::findUsableConstructorByArgTypes).findAny();
         }
@@ -544,14 +527,22 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         return true;
     }
 
-    private Object applyConstructorAutomapping(ReadableResultWrapper<? extends Readable> readableResultWrapper, ResultMap resultMap, String columnPrefix, Class<?> resultType, List<Class<?>> constructorArgTypes, List<Object> constructorArgs, Constructor<?> constructor) throws SQLException {
+    private Object applyConstructorAutomapping(ReadableResultWrapper<? extends Readable> readableResultWrapper,
+                                               ResultMap resultMap,
+                                               String columnPrefix,
+                                               Class<?> resultType,
+                                               List<Class<?>> constructorArgTypes,
+                                               List<Object> constructorArgs,
+                                               Constructor<?> constructor) throws SQLException {
         boolean foundValues = false;
         if (r2dbcMybatisConfiguration.isArgNameBasedConstructorAutoMapping()) {
             foundValues = applyArgNameBasedConstructorAutoMapping(readableResultWrapper, resultMap, columnPrefix, constructorArgTypes, constructorArgs,
-                    constructor, foundValues);
+                    constructor, foundValues
+            );
         } else {
             foundValues = applyColumnOrderBasedConstructorAutomapping(readableResultWrapper, constructorArgTypes, constructorArgs, constructor,
-                    foundValues);
+                    foundValues
+            );
         }
         return foundValues ? objectFactory.create(resultType, constructorArgTypes, constructorArgs) : null;
     }
@@ -572,7 +563,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
             Class<?> parameterType = parameterTypes[i];
             String columnName = readableResultWrapper.getColumnNames().get(i);
             final TypeHandler<?> typeHandler = readableResultWrapper.getTypeHandler(parameterType, columnName);
-            ((TypeHandleContext) this.delegatedTypeHandler).contextWith(parameterType,typeHandler,
+            ((TypeHandleContext) this.delegatedTypeHandler).contextWith(parameterType, typeHandler,
                     readableResultWrapper
             );
             Object value = delegatedTypeHandler.getResult(null, columnName);
@@ -596,7 +587,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
                 if (columnMatchesParam(columnName, paramName, columnPrefix)) {
                     Class<?> paramType = param.getType();
                     TypeHandler<?> typeHandler = readableResultWrapper.getTypeHandler(paramType, columnName);
-                    ((TypeHandleContext) this.delegatedTypeHandler).contextWith(paramType,typeHandler,
+                    ((TypeHandleContext) this.delegatedTypeHandler).contextWith(paramType, typeHandler,
                             readableResultWrapper
                     );
                     Object value = this.delegatedTypeHandler.getResult(null, columnName);
@@ -621,7 +612,8 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
             throw new ExecutorException(MessageFormat.format("Constructor auto-mapping of ''{1}'' failed "
                             + "because ''{0}'' were not found in the result set; "
                             + "Available columns are ''{2}'' and mapUnderscoreToCamelCase is ''{3}''.",
-                    missingArgs, constructor, readableResultWrapper.getColumnNames(), r2dbcMybatisConfiguration.isMapUnderscoreToCamelCase()));
+                    missingArgs, constructor, readableResultWrapper.getColumnNames(), r2dbcMybatisConfiguration.isMapUnderscoreToCamelCase()
+            ));
         }
         return foundValues;
     }
@@ -657,7 +649,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
             columnName = readableResultWrapper.getColumnNames().get(0);
         }
         final TypeHandler<?> typeHandler = readableResultWrapper.getTypeHandler(resultType, columnName);
-        ((TypeHandleContext) this.delegatedTypeHandler).contextWith(resultType,typeHandler, readableResultWrapper);
+        ((TypeHandleContext) this.delegatedTypeHandler).contextWith(resultType, typeHandler, readableResultWrapper);
         return delegatedTypeHandler.getResult(null, columnName);
     }
 
@@ -680,8 +672,8 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
      * resolve Discriminated ResultMap
      *
      * @param readableResultWrapper the row result wrapper
-     * @param resultMap        the result map
-     * @param columnPrefix     the column prefix
+     * @param resultMap             the result map
+     * @param columnPrefix          the column prefix
      * @return result map
      * @throws SQLException the sql exception
      */
@@ -717,7 +709,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
     private Object getDiscriminatorValue(ReadableResultWrapper<? extends Readable> readableResultWrapper, Discriminator discriminator, String columnPrefix) throws SQLException {
         final ResultMapping resultMapping = discriminator.getResultMapping();
         final TypeHandler<?> typeHandler = resultMapping.getTypeHandler();
-        ((TypeHandleContext) this.delegatedTypeHandler).contextWith(resultMapping.getJavaType(),typeHandler,
+        ((TypeHandleContext) this.delegatedTypeHandler).contextWith(resultMapping.getJavaType(), typeHandler,
                 readableResultWrapper
         );
         return delegatedTypeHandler.getResult(null, prependPrefix(resultMapping.getColumn(), columnPrefix));
@@ -733,7 +725,11 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
      * @param readableResultWrapper
      */
     @SuppressWarnings("unchecked" /* because ResultHandler<?> is always ResultHandler<Object>*/)
-    private void storeObject(ResultHandler<?> resultHandler, DefaultResultContext<Object> resultContext, Object rowValue, ResultMapping parentMapping, ReadableResultWrapper<? extends Readable> readableResultWrapper) {
+    private void storeObject(ResultHandler<?> resultHandler,
+                             DefaultResultContext<Object> resultContext,
+                             Object rowValue,
+                             ResultMapping parentMapping,
+                             ReadableResultWrapper<? extends Readable> readableResultWrapper) {
         if (parentMapping != null) {
             linkToParents(readableResultWrapper, parentMapping, rowValue);
         } else {
@@ -746,15 +742,15 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         return typeHandlerRegistry.hasTypeHandler(resultType);
     }
 
-    private boolean hasR2dbcTypeHandlerAdapterForResultObject(Class<?> resultType){
+    private boolean hasR2dbcTypeHandlerAdapterForResultObject(Class<?> resultType) {
         return r2dbcMybatisConfiguration.getR2dbcTypeHandlerAdapterRegistry().hasR2dbcTypeHandlerAdapter(resultType);
     }
 
     private void linkToParents(ReadableResultWrapper<? extends Readable> readableResultWrapper, ResultMapping parentMapping, Object rowValue) {
         CacheKey parentKey = createKeyForMultipleResults(readableResultWrapper, parentMapping, parentMapping.getColumn(), parentMapping.getForeignColumn());
-        List<DefaultReactiveResultHandler.PendingRelation> parents = pendingRelations.get(parentKey);
+        List<PendingRelation> parents = pendingRelations.get(parentKey);
         if (parents != null) {
-            for (DefaultReactiveResultHandler.PendingRelation parent : parents) {
+            for (PendingRelation parent : parents) {
                 if (parent != null && rowValue != null) {
                     linkObjects(parent.metaObject, parent.propertyMapping, rowValue);
                 }
@@ -881,7 +877,11 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         return resultMappings;
     }
 
-    private void createRowKeyForMappedProperties(ResultMap resultMap, ReadableResultWrapper<? extends Readable> readableResultWrapper, CacheKey cacheKey, List<ResultMapping> resultMappings, String columnPrefix) throws SQLException {
+    private void createRowKeyForMappedProperties(ResultMap resultMap,
+                                                 ReadableResultWrapper<? extends Readable> readableResultWrapper,
+                                                 CacheKey cacheKey,
+                                                 List<ResultMapping> resultMappings,
+                                                 String columnPrefix) throws SQLException {
         for (ResultMapping resultMapping : resultMappings) {
             if (resultMapping.isSimple()) {
                 final String column = prependPrefix(resultMapping.getColumn(), columnPrefix);
@@ -889,7 +889,7 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
                 List<String> mappedColumnNames = readableResultWrapper.getMappedColumnNames(resultMap, columnPrefix);
                 // Issue #114
                 if (column != null && mappedColumnNames.contains(column.toUpperCase(Locale.ENGLISH))) {
-                    ((TypeHandleContext) this.delegatedTypeHandler).contextWith(resultMapping.getJavaType(),typeHandler,
+                    ((TypeHandleContext) this.delegatedTypeHandler).contextWith(resultMapping.getJavaType(), typeHandler,
                             readableResultWrapper
                     );
                     final Object value = this.delegatedTypeHandler.getResult(null, column);
@@ -902,7 +902,10 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
         }
     }
 
-    private void createRowKeyForUnmappedProperties(ResultMap resultMap, ReadableResultWrapper<? extends Readable> readableResultWrapper, CacheKey cacheKey, String columnPrefix) throws SQLException {
+    private void createRowKeyForUnmappedProperties(ResultMap resultMap,
+                                                   ReadableResultWrapper<? extends Readable> readableResultWrapper,
+                                                   CacheKey cacheKey,
+                                                   String columnPrefix) throws SQLException {
         final MetaClass metaType = MetaClass.forClass(resultMap.getType(), reflectorFactory);
         List<String> unmappedColumnNames = readableResultWrapper.getUnmappedColumnNames(resultMap, columnPrefix);
         for (String column : unmappedColumnNames) {
@@ -967,22 +970,6 @@ public class DefaultReactiveResultHandler implements ReactiveResultHandler {
             return propertyValue;
         }
         return null;
-    }
-
-    /**
-     * get delegate type handler
-     *
-     * @return TypeHandler
-     */
-    private TypeHandler<?> initDelegateTypeHandler() {
-        return ProxyInstanceFactory.newInstanceOfInterfaces(
-                TypeHandler.class,
-                () -> new DelegateR2dbcResultRowDataHandler(
-                        this.r2dbcMybatisConfiguration.getNotSupportedDataTypes(),
-                        this.r2dbcMybatisConfiguration.getR2dbcTypeHandlerAdapterRegistry()
-                ),
-                TypeHandleContext.class
-        );
     }
 
     private static class PendingRelation {

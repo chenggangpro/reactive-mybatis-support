@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2024 the original author or authors.
+ *    Copyright 2009-2025 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -139,20 +139,13 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
         Optional<ReactiveExecutorContext> optionalContext = context.getOrEmpty(ReactiveExecutorContext.class)
                 .map(ReactiveExecutorContext.class::cast);
         if (optionalContext.isPresent()) {
-            ReactiveExecutorContext reactiveExecutorContext = optionalContext.get();
-            if (this.reactiveSqlSessionProfile.isEnableTransaction()) {
-                reactiveExecutorContext.setWithTransaction();
-            }
-            reactiveExecutorContext.setR2dbcStatementLog(r2dbcStatementLog);
+            optionalContext.ifPresent(reactiveExecutorContext -> {
+                reactiveExecutorContext.resetWithR2dbcStatementLog(r2dbcStatementLog);
+            });
             return context;
         }
-        ReactiveExecutorContext newContext = new ReactiveExecutorContext(this.reactiveSqlSessionProfile.isAutoCommit(),
-                this.reactiveSqlSessionProfile.getIsolationLevel()
-        );
-        newContext.setR2dbcStatementLog(r2dbcStatementLog);
-        if (this.reactiveSqlSessionProfile.isEnableTransaction()) {
-            newContext.setWithTransaction();
-        }
+        ReactiveExecutorContext newContext = new ReactiveExecutorContext(this.reactiveSqlSessionProfile);
+        newContext.withCurrentR2dbcStatementLog(r2dbcStatementLog);
         return context.put(ReactiveExecutorContext.class, newContext);
     }
 
@@ -169,12 +162,7 @@ public class DefaultReactiveSqlSession implements ReactiveSqlSession {
         if (log.isTraceEnabled()) {
             log.trace("Initialize reactive executor context,context not exist,create new one");
         }
-        ReactiveExecutorContext newContext = new ReactiveExecutorContext(this.reactiveSqlSessionProfile.isAutoCommit(),
-                this.reactiveSqlSessionProfile.getIsolationLevel()
-        );
-        if (this.reactiveSqlSessionProfile.isEnableTransaction()) {
-            newContext.setWithTransaction();
-        }
+        ReactiveExecutorContext newContext = new ReactiveExecutorContext(this.reactiveSqlSessionProfile);
         return context.put(ReactiveExecutorContext.class, newContext);
     }
 }

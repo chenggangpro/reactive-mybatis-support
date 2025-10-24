@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2024 the original author or authors.
+ *    Copyright 2009-2025 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.ReactiveSqlSessionProfile.DEFAULT_PROFILE;
 
 /**
  * @author Gang Cheng
@@ -50,7 +51,7 @@ public class BindingSimpleTests {
     );
     ReactiveSqlSession mockReactiveSqlSession = new DefaultReactiveSqlSession(r2dbcMybatisConfiguration,
             new DefaultReactiveMybatisExecutor(r2dbcMybatisConfiguration),
-            ReactiveSqlSession.DEFAULT_PROFILE
+            DEFAULT_PROFILE
     );
 
     @Test

@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2023 the original author or authors.
+ *    Copyright 2009-2025 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -16,232 +16,274 @@
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.support;
 
 import io.r2dbc.spi.Connection;
-import io.r2dbc.spi.IsolationLevel;
+import org.apache.ibatis.logging.Log;
+import org.apache.ibatis.logging.LogFactory;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.defaults.ReactiveSqlSessionProfile;
+import reactor.core.publisher.Mono;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 /**
- * The type Reactive executor context.
+ * A context class that manages the execution state and resources for reactive MyBatis operations.
+ * This class provides thread-safe management of R2DBC connections, transaction states, and logging
+ * within a reactive SQL session. It maintains atomic references to ensure consistency in concurrent
+ * environments and tracks various operational flags such as commit, rollback, and close requirements.
  *
  * @author Gang Cheng
- * @version 1.0.0
+ * @version 2.0.0
  */
+
 public class ReactiveExecutorContext {
 
-    private final AtomicBoolean activeTransaction = new AtomicBoolean(false);
-    private final AtomicReference<Connection> connectionReference = new AtomicReference<>();
-    private final AtomicBoolean forceCommit = new AtomicBoolean(false);
-    private final AtomicBoolean forceRollback = new AtomicBoolean(false);
-    private final AtomicBoolean requireClosed = new AtomicBoolean(false);
-    private final AtomicBoolean dirty = new AtomicBoolean(false);
-    private final AtomicBoolean withTransaction = new AtomicBoolean(false);
-    private final boolean autoCommit;
-    private final IsolationLevel isolationLevel;
-    private R2dbcStatementLog r2dbcStatementLog;
+    private static final Log log = LogFactory.getLog(ReactiveExecutorContext.class);
+
+    private final AtomicBoolean connectionBind = new AtomicBoolean(false);
+    private final AtomicReference<Connection> currentConnection = new AtomicReference<>();
+    private final AtomicBoolean requireToCommit = new AtomicBoolean(false);
+    private final AtomicBoolean requireToRollback = new AtomicBoolean(false);
+    private final AtomicBoolean requireToClose = new AtomicBoolean(false);
+    private final AtomicBoolean inTransaction = new AtomicBoolean(false);
+    private final AtomicBoolean isDirty = new AtomicBoolean(false);
+    private final AtomicReference<R2dbcStatementLog> currentR2dbcStatementLog = new AtomicReference<>();
+    private final ReactiveSqlSessionProfile reactiveSqlSessionProfile;
 
     /**
-     * Instantiates a new Reactive executor context.
+     * Constructs a new ReactiveExecutorContext with the specified reactive SQL session profile.
      *
-     * @param autoCommit     the auto commit
-     * @param isolationLevel the isolation level
+     * @param reactiveSqlSessionProfile the reactive SQL session profile to be associated with this context
      */
-    public ReactiveExecutorContext(boolean autoCommit, IsolationLevel isolationLevel) {
-        this.autoCommit = autoCommit;
-        this.isolationLevel = isolationLevel;
+    public ReactiveExecutorContext(ReactiveSqlSessionProfile reactiveSqlSessionProfile) {
+        if (Objects.isNull(reactiveSqlSessionProfile)) {
+            throw new IllegalArgumentException("reactiveSqlSessionProfile can't be null");
+        }
+        this.reactiveSqlSessionProfile = reactiveSqlSessionProfile;
+        this.inTransaction.set(reactiveSqlSessionProfile.isEnableTransaction());
     }
 
     /**
-     * Is auto commit boolean.
+     * Retrieves the current R2DBC statement log associated with this context.
      *
-     * @return the boolean
+     * @return the current R2DBC statement log, or null if none is set
      */
-    public boolean isAutoCommit() {
-        return autoCommit;
+    public R2dbcStatementLog getCurrentR2dbcStatementLog() {
+        return this.currentR2dbcStatementLog.get();
     }
 
     /**
-     * Is force commit boolean.
-     *
-     * @return the boolean
-     */
-    public boolean isForceCommit() {
-        return forceCommit.get();
-    }
-
-    /**
-     * Set force commit.
-     *
-     * @param forceCommit the force commit
-     */
-    public void setForceCommit(boolean forceCommit) {
-        this.forceCommit.getAndSet(forceCommit);
-    }
-
-    /**
-     * Is force rollback boolean.
-     *
-     * @return the boolean
-     */
-    public boolean isForceRollback() {
-        return forceRollback.get();
-    }
-
-    /**
-     * Set force rollback.
-     *
-     * @param forceRollback the force rollback
-     */
-    public void setForceRollback(boolean forceRollback) {
-        this.forceRollback.getAndSet(forceRollback);
-    }
-
-    /**
-     * Is dirty boolean.
-     *
-     * @return the boolean
-     */
-    public boolean isDirty() {
-        return dirty.get();
-    }
-
-    /**
-     * Set dirty.
+     * Marks this context as dirty, indicating that there are multiple statements executed within current context.
+     * Once set to dirty, the context may allow additional connection binding attempts even when not in a transaction.
      */
     public void setDirty() {
-        this.dirty.compareAndSet(false, true);
+        this.isDirty.set(true);
     }
 
     /**
-     * Reset dirty.
-     */
-    public void resetDirty() {
-        this.dirty.compareAndSet(true, false);
-    }
-
-    /**
-     * Set with transaction.
-     */
-    public void setWithTransaction() {
-        this.withTransaction.compareAndSet(false, true);
-    }
-
-    /**
-     * Reset with transaction.
-     */
-    public void resetWithTransaction() {
-        this.withTransaction.compareAndSet(true, false);
-    }
-
-    /**
-     * Is with transaction.
+     * Checks whether this context is marked as dirty.
+     * A dirty context indicates that multiple statements have been executed within the current context,
+     * which may allow additional connection binding attempts even when not in a transaction.
      *
-     * @return the boolean
+     * @return true if the context is dirty, false otherwise
      */
-    public boolean isWithTransaction() {
-        return this.withTransaction.get();
+    public boolean isDirty() {
+        return this.isDirty.get();
     }
 
     /**
-     * Set active transaction.
+     * Sets the current R2DBC statement log for this context.
      *
-     * @return the boolean
+     * @param r2dbcStatementLog the R2DBC statement log to be set as current
+     * @throws IllegalArgumentException if the provided r2dbcStatementLog is null
      */
-    public boolean setActiveTransaction() {
-        return this.activeTransaction.compareAndSet(false, true);
+    public void withCurrentR2dbcStatementLog(R2dbcStatementLog r2dbcStatementLog) {
+        if (Objects.isNull(r2dbcStatementLog)) {
+            throw new IllegalArgumentException("r2dbcStatementLog can't be null");
+        }
+        this.currentR2dbcStatementLog.set(r2dbcStatementLog);
     }
 
     /**
-     * Is in active transaction.
+     * Binds a new R2DBC connection to this context using the provided connection creator.
+     * This method handles connection binding differently based on the transaction state:
+     * <ul>
+     *   <li>If in a transaction: allows multiple bind attempts, returning false for subsequent calls</li>
+     *   <li>If not in a transaction: only allows one bind attempt, throwing an exception for subsequent calls</li>
+     * </ul>
+     * <p>
+     * The method atomically checks and sets the connection binding state to ensure thread safety
+     * in concurrent environments. Once a connection is successfully bound, it becomes the current
+     * connection for this context.
      *
-     * @return the boolean
+     * @param connectionCreator a Supplier that provides a Mono which emits the R2DBC connection to be bound;
+     *                          must not be null and should return a Mono that emits a valid Connection instance
+     * @return a Mono that emits {@code true} if the connection was successfully bound for the first time,
+     * {@code false} if already bound and in a transaction or the context is dirty, or an error
+     * if already bound without an active transaction and the context is not dirty
+     * @throws IllegalStateException if connection is already bound and no transaction is enabled
+     *                               and the context is not dirty (emitted through the Mono)
      */
-    public boolean isInActiveTransaction(){
-        return this.activeTransaction.get();
+    public Mono<Boolean> bindConnection(Supplier<Mono<? extends Connection>> connectionCreator) {
+        if (connectionBind.compareAndSet(false, true)) {
+            return Mono.fromSupplier(connectionCreator)
+                    .flatMap(Mono::from)
+                    .flatMap(connection -> Mono.fromCallable(() -> {
+                        this.currentConnection.set(connection);
+                        log.debug("[Bind connection] Bind new connection to context : " + connection);
+                        return true;
+                    }));
+        } else if (!this.inTransaction.get() && !isDirty.get()) {
+            return Mono.error(new IllegalStateException("Connection is already bound to this context and no transaction is enabled or the context is dirty"));
+        }
+        return Mono.just(false);
     }
 
     /**
-     * Is require closed boolean.
-     *
-     * @return the boolean
+     * Resets the context to its initial state by clearing the bound connection and resetting the dirty flag.
+     * This method atomically unbinds any currently bound connection and clears the connection reference,
+     * then resets the dirty flag to false. This operation is useful for cleaning up the context state
+     * after completing operations or when preparing the context for reuse.
+     * <p>
+     * The method performs the following operations:
+     * <ul>
+     *   <li>Atomically checks if a connection is bound and unbinds it if present</li>
+     *   <li>Clears the current connection reference</li>
+     *   <li>Resets the dirty flag to false</li>
+     * </ul>
      */
-    public boolean isRequireClosed() {
-        return this.requireClosed.get();
+    public void reset() {
+        log.debug("Reset reactive executor context");
+        if (this.connectionBind.compareAndSet(true, false)) {
+            this.currentConnection.getAndSet(null);
+        }
+        this.isDirty.set(false);
     }
 
     /**
-     * Set require closed.
-     *
-     * @param requireClosed the require closed
+     * Resets the commit requirement flag to false.
+     * This method clears the flag that indicates whether a commit operation is required,
+     * effectively canceling any pending commit requirement for this context.
      */
-    public void setRequireClosed(boolean requireClosed) {
-        this.requireClosed.getAndSet(requireClosed);
+    public void resetRequireToCommit() {
+        this.requireToCommit.set(false);
     }
 
     /**
-     * Gets isolation level.
-     *
-     * @return the isolation level
+     * Resets the rollback requirement flag to false.
+     * This method clears the flag that indicates whether a rollback operation is required,
+     * effectively canceling any pending rollback requirement for this context.
      */
-    public IsolationLevel getIsolationLevel() {
-        return isolationLevel;
+    public void resetRequireToRollback() {
+        this.requireToRollback.set(false);
     }
 
     /**
-     * Gets r2dbc statement log.
+     * Retrieves the currently bound connection from this context.
      *
-     * @return the statement log helper
+     * @return an Optional containing the current connection, or empty if no connection is bound
      */
-    public R2dbcStatementLog getR2dbcStatementLog() {
-        return r2dbcStatementLog;
+    public Optional<Connection> getCurrentConnection() {
+        return Optional.ofNullable(this.currentConnection.get());
     }
 
     /**
-     * Sets r2dbc statement log.
+     * Retrieves the current SQL session profile associated with this context.
      *
-     * @param r2dbcStatementLog the statement log helper
+     * @return the current SQL session profile that was provided during construction
      */
-    public void setR2dbcStatementLog(R2dbcStatementLog r2dbcStatementLog) {
-        this.r2dbcStatementLog = r2dbcStatementLog;
+    public ReactiveSqlSessionProfile getCurrentSessionProfile() {
+        return this.reactiveSqlSessionProfile;
     }
 
     /**
-     * Bind connection boolean.
-     *
-     * @param connection the connection
-     * @return the boolean
+     * Marks this context as requiring a commit operation.
+     * Sets the internal flag to indicate that a commit should be performed on the current transaction.
      */
-    public boolean bindConnection(Connection connection) {
-        return this.connectionReference.compareAndSet(null, connection);
+    public void requireToCommit() {
+        this.requireToCommit.set(true);
     }
 
     /**
-     * Clear connection optional.
+     * Checks whether this context requires a commit operation.
      *
-     * @return the optional
+     * @return true if a commit is required, false otherwise
      */
-    public Optional<Connection> clearConnection() {
-        return Optional.ofNullable(this.connectionReference.getAndSet(null));
+    public boolean isRequireToCommit() {
+        return this.requireToCommit.get();
     }
 
     /**
-     * Gets connection.
-     *
-     * @return the connection
+     * Marks this context as requiring a rollback operation.
+     * Sets the internal flag to indicate that a rollback should be performed on the current transaction.
      */
-    public Optional<Connection> getConnection() {
-        return Optional.ofNullable(this.connectionReference.get());
+    public void requireToRollback() {
+        this.requireToRollback.set(true);
+    }
+
+    /**
+     * Checks whether this context requires a rollback operation.
+     *
+     * @return true if a rollback is required, false otherwise
+     */
+    public boolean isRequireToRollback() {
+        return this.requireToRollback.get();
+    }
+
+    /**
+     * Marks this context as requiring a close operation.
+     * Sets the internal flag to indicate t`hat resources should be closed.
+     */
+    public void requireToClose() {
+        this.requireToClose.set(true);
+    }
+
+    /**
+     * Checks whether this context requires a close operation.
+     *
+     * @return true if a close operation is required, false otherwise
+     */
+    public boolean isRequireToClose() {
+        return this.requireToClose.get();
+    }
+
+    /**
+     * Checks whether this context is currently within a transaction.
+     *
+     * @return true if the context is in a transaction, false otherwise
+     */
+    public boolean isInTransaction() {
+        return this.inTransaction.get();
+    }
+
+    /**
+     * Resets the context state with a new R2DBC statement log and restores default operational flags.
+     * This method atomically updates the current statement log and resets all transaction-related
+     * flags to their initial state. The transaction state is restored based on the session profile's
+     * transaction enablement setting.
+     *
+     * @param r2dbcStatementLog the new R2DBC statement log to be associated with this context
+     */
+    public void resetWithR2dbcStatementLog(R2dbcStatementLog r2dbcStatementLog) {
+        this.currentR2dbcStatementLog.set(r2dbcStatementLog);
+        this.requireToCommit.set(false);
+        this.requireToRollback.set(false);
+        this.requireToClose.set(false);
+        this.inTransaction.set(this.reactiveSqlSessionProfile.isEnableTransaction());
     }
 
     @Override
     public String toString() {
-        return "ReactiveExecutorContext [" +
-                ", connectionReference=" + connectionReference +
-                ", forceCommit=" + forceCommit +
-                ", forceRollback=" + forceRollback +
-                ", requireClosed=" + requireClosed +
-                ", r2dbcStatementLog=" + r2dbcStatementLog +
-                " ]";
+        return "ReactiveExecutorContext{" +
+                "connectionBind=" + connectionBind +
+                ", currentConnection=" + currentConnection +
+                ", requireToCommit=" + requireToCommit +
+                ", requireToRollback=" + requireToRollback +
+                ", requireToClose=" + requireToClose +
+                ", inTransaction=" + inTransaction +
+                ", currentR2dbcStatementLog=" + currentR2dbcStatementLog +
+                ", reactiveSqlSessionProfile=" + reactiveSqlSessionProfile +
+                '}';
     }
 }
