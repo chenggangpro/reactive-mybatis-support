@@ -87,7 +87,7 @@
         <junit-jupiter.version>5.12.1</junit-jupiter.version>
         <testcontainers.version>1.21.3</testcontainers.version>
         <assertj.version>3.27.3</assertj.version>
-        <byte-buddy.version>1.17.6</byte-buddy.version>
+        <byte-buddy.version>1.17.8</byte-buddy.version>
         <caffeine.version>3.2.2</caffeine.version>
         <license-maven-plugin.version>4.6</license-maven-plugin.version>
         <slf4j.version>2.0.17</slf4j.version>
