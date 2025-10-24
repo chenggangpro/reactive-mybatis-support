@@ -1,5 +1,3 @@
-[![Build and Test With Maven [2.x]](https://github.com/chenggangpro/reactive-mybatis-support/actions/workflows/workflow-2.x.yml/badge.svg?branch=2.x)](https://github.com/chenggangpro/reactive-mybatis-support/actions/workflows/workflow-2.x.yml) [![Maven Central](https://img.shields.io/maven-central/v/pro.chenggang/mybatis-r2dbc?versionSuffix=RELEASE&versionPrefix=2&color=%2352c82c)](https://search.maven.org/artifact/pro.chenggang/reactive-mybatis-support)
-
 [![Build and Test With Maven [3.x]](https://github.com/chenggangpro/reactive-mybatis-support/actions/workflows/workflow-3.x.yml/badge.svg?branch=3.x)](https://github.com/chenggangpro/reactive-mybatis-support/actions/workflows/workflow-3.x.yml) [![Maven Central](https://img.shields.io/maven-central/v/pro.chenggang/mybatis-r2dbc?versionSuffix=RELEASE&versionPrefix=3&color=%2352c82c)](https://search.maven.org/artifact/pro.chenggang/reactive-mybatis-support)
 
 # [Reactive Mybatis Support](https://github.com/chenggangpro/reactive-mybatis-support/wiki)
@@ -26,7 +24,7 @@
 
 * Reactive Mybatis Support is aimed to adapt original mybatis to reactive project (aka WebFlux/Reactor3) with r2dbc drivers.
 * `mybatis-r2dbc` module is inspired by [linux-china/mybatis-r2dbc](https://github.com/linux-china/mybatis-r2dbc) and based on `mybatis3`'s original source code.
-* `mybatis-generator` module is used to adapt `mybatis-dynamic-sql` to reactive project.
+* `mybatis-generator` module is used to generate `mybatis-dynamic-sql` code with reactive types.
 * Most of the MyBatis3 features are applicable, but there are a few features that are not supported:
     * ❌ 1 . mybatis-plugin
     * ❌ 2 . multi ResultSets or Results
