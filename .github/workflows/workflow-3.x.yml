@@ -1,4 +1,4 @@
-name: Build and Test With Maven [3.1.x]
+name: Build and Test With Maven [3.x]
 
 on:
   workflow_dispatch:
