@@ -56,9 +56,9 @@ public class DefaultPlaceholderFormatter implements PlaceholderFormatter {
     //Class<? extends PlaceholderDialect --> Cache< original SQL , formatted SQL >
     private final ConcurrentHashMap<Class<? extends PlaceholderDialect>, Cache<String, String>> formattedSqlCache;
 
-    public DefaultPlaceholderFormatter(PlaceholderDialectRegistry placeholderDialectRegistry, Boolean enableDialectSqlCache, Integer sqlCacheMaxSize, Duration sqlCacheExpireDuration) {
+    public DefaultPlaceholderFormatter(PlaceholderDialectRegistry placeholderDialectRegistry, boolean isDialectSqlCacheEnabled, Integer sqlCacheMaxSize, Duration sqlCacheExpireDuration) {
         this.placeholderDialectRegistry = placeholderDialectRegistry;
-        if (!Boolean.TRUE.equals(enableDialectSqlCache)) {
+        if (!isDialectSqlCacheEnabled) {
             this.formattedSqlCache = null;
             return;
         }
