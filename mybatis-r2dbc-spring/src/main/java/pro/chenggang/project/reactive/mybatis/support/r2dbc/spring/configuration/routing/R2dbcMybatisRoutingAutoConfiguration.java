@@ -20,10 +20,9 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
-import org.springframework.boot.autoconfigure.r2dbc.R2dbcTransactionManagerAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.r2dbc.autoconfigure.R2dbcAutoConfiguration;
+import org.springframework.boot.r2dbc.autoconfigure.R2dbcTransactionManagerAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -47,7 +46,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.routing.R2dbc
  */
 @Slf4j
 @Configuration(proxyBeanMethods = false)
-@AutoConfigureBefore({DataSourceAutoConfiguration.class, R2dbcAutoConfiguration.class, R2dbcTransactionManagerAutoConfiguration.class})
+@AutoConfigureBefore({R2dbcAutoConfiguration.class, R2dbcTransactionManagerAutoConfiguration.class})
 @AutoConfigureAfter({MybatisLanguageDriverAutoConfiguration.class})
 @ConditionalOnProperty(value = "spring.r2dbc.mybatis.routing.enabled", havingValue = "true")
 public class R2dbcMybatisRoutingAutoConfiguration {

@@ -44,9 +44,8 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.r2dbc.autoconfigure.R2dbcAutoConfiguration;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -111,7 +110,7 @@ import static org.springframework.util.StringUtils.tokenizeToStringArray;
  */
 @Slf4j
 @Configuration
-@AutoConfigureBefore({DataSourceAutoConfiguration.class, R2dbcAutoConfiguration.class})
+@AutoConfigureBefore(R2dbcAutoConfiguration.class)
 @AutoConfigureAfter({MybatisLanguageDriverAutoConfiguration.class})
 @ConditionalOnClass({ConnectionFactory.class, ReactiveSqlSessionFactory.class, Flux.class})
 public class R2dbcMybatisAutoConfiguration {
@@ -199,15 +198,15 @@ public class R2dbcMybatisAutoConfiguration {
                                                    ObjectProvider<R2dbcDatabaseIdProvider> databaseIdProviderObjectProvider) throws Exception {
         final R2dbcMybatisConfiguration r2dbcMybatisConfiguration;
         R2dbcXMLConfigBuilder r2dbcXMLConfigBuilder = null;
-        if(r2dbcMybatisProperties.getConfiguration() != null){
+        if (r2dbcMybatisProperties.getConfiguration() != null) {
             r2dbcMybatisConfiguration = r2dbcMybatisProperties.getConfiguration();
-        }else if (r2dbcMybatisProperties.getConfigLocation() != null) {
+        } else if (r2dbcMybatisProperties.getConfigLocation() != null) {
             r2dbcXMLConfigBuilder = new R2dbcXMLConfigBuilder(r2dbcMybatisProperties.resolveConfigLocation().getInputStream(),
                     null,
                     r2dbcMybatisProperties.getConfigurationProperties()
             );
-            r2dbcMybatisConfiguration= r2dbcXMLConfigBuilder.getR2dbcMybatisConfiguration();
-        }else {
+            r2dbcMybatisConfiguration = r2dbcXMLConfigBuilder.getR2dbcMybatisConfiguration();
+        } else {
             log.debug("Property 'configuration' or 'configLocation' not specified, using default MyBatis Configuration");
             r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
             Optional.ofNullable(r2dbcMybatisProperties.getConfigurationProperties()).ifPresent(r2dbcMybatisConfiguration::setVariables);
@@ -302,7 +301,7 @@ public class R2dbcMybatisAutoConfiguration {
             );
         }
         // parse config file if present
-        if(r2dbcXMLConfigBuilder != null){
+        if (r2dbcXMLConfigBuilder != null) {
             r2dbcXMLConfigBuilder.parse();
             log.debug("Parsed configuration file: '" + r2dbcMybatisProperties.getConfigLocation() + "'");
         }
