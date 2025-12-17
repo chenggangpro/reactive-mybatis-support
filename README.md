@@ -1,4 +1,4 @@
-[![Build and Test With Maven](https://github.com/chenggangpro/reactive-mybatis-support/actions/workflows/workflow.yml/badge.svg?branch=4.x)](https://github.com/chenggangpro/reactive-mybatis-support/actions/workflows/workflow.yml) [![Maven Central](https://img.shields.io/maven-central/v/pro.chenggang/mybatis-r2dbc?versionSuffix=RELEASE&versionPrefix=4&color=%2352c82c)](https://central.sonatype.com/artifact/pro.chenggang/reactive-mybatis-support)
+[![Maven Central](https://img.shields.io/maven-central/v/pro.chenggang/mybatis-r2dbc?versionSuffix=RELEASE&versionPrefix=4&color=%2352c82c)](https://central.sonatype.com/artifact/pro.chenggang/reactive-mybatis-support)
 
 # [Reactive Mybatis Support](https://github.com/chenggangpro/reactive-mybatis-support/wiki)
 
