@@ -20,6 +20,8 @@ import io.r2dbc.pool.ConnectionPoolConfiguration;
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
+import io.r2dbc.spi.ConnectionFactoryOptions.Builder;
+import io.r2dbc.spi.Option;
 import io.r2dbc.spi.ValidationDepth;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -39,11 +41,11 @@ import org.springframework.util.CollectionUtils;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcMybatisConnectionFactoryProperties;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcMybatisRoutingConnectionFactoryProperties;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.ConnectionFactoryOptionsCustomizer;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.ConnectionPoolConfigurationCustomizer;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static org.springframework.util.StringUtils.hasText;
 
@@ -61,6 +63,7 @@ public class R2dbcMybatisMultiConnectionFactoryAutoInitializer implements Applic
 
     private R2dbcMybatisRoutingConnectionFactoryProperties r2dbcMybatisRoutingConnectionFactoryProperties;
     private ObjectProvider<ConnectionFactoryOptionsCustomizer> connectionFactoryOptionsCustomizerProvider;
+    private ObjectProvider<ConnectionPoolConfigurationCustomizer> connectionPoolConfigurationCustomizerProvider;
     private ConfigurableApplicationContext applicationContext;
 
     @Override
@@ -69,28 +72,48 @@ public class R2dbcMybatisMultiConnectionFactoryAutoInitializer implements Applic
                 .stream()
                 .filter(R2dbcMybatisConnectionFactoryProperties::isAsDefault)
                 .findFirst();
-        if(!optionalDefaultR2dbcMybatisConnectionFactoryProperties.isPresent()){
-            throw new IllegalStateException("When configuration using routing datasource , it should be set one to default at least , the property is : spring.r2dbc.mybatis.routing.definitions[?].as-default");
+        if (optionalDefaultR2dbcMybatisConnectionFactoryProperties.isEmpty()) {
+            throw new IllegalStateException(
+                    "When configuration using routing datasource , it should be set one to default at least , the property is : spring.r2dbc.mybatis.routing.definitions[?].as-default");
         }
-        this.registerConnectionFactoryBean(optionalDefaultR2dbcMybatisConnectionFactoryProperties.get(),
-                connectionFactoryOptionsCustomizerProvider,
+        this.registerDefaultConnectionFactoryBean(optionalDefaultR2dbcMybatisConnectionFactoryProperties.get());
+        for (R2dbcMybatisConnectionFactoryProperties properties : this.r2dbcMybatisRoutingConnectionFactoryProperties.getDefinitions()) {
+            List<ConnectionFactoryOptionsCustomizer> connectionFactoryOptionsCustomizers = connectionFactoryOptionsCustomizerProvider.orderedStream()
+                    .filter(customizer -> customizer.routingName().isEmpty() || customizer.routingName().get().equals(properties.getName()))
+                    .toList();
+            List<ConnectionPoolConfigurationCustomizer> connectionPoolConfigurationCustomizers = connectionPoolConfigurationCustomizerProvider.orderedStream()
+                    .filter(customizer -> customizer.routingName().isEmpty() || customizer.routingName().get().equals(properties.getName()))
+                    .toList();
+            this.registerConnectionFactoryBean(properties, connectionFactoryOptionsCustomizers, connectionPoolConfigurationCustomizers, null);
+        }
+    }
+
+    private void registerDefaultConnectionFactoryBean(R2dbcMybatisConnectionFactoryProperties defaultConnectionFactoryProperties) {
+        List<ConnectionFactoryOptionsCustomizer> connectionFactoryOptionsCustomizers = connectionFactoryOptionsCustomizerProvider.orderedStream()
+                .filter(customizer -> customizer.routingName().isEmpty() || customizer.routingName().get().equals(defaultConnectionFactoryProperties.getName()))
+                .toList();
+        List<ConnectionPoolConfigurationCustomizer> connectionPoolConfigurationCustomizers = connectionPoolConfigurationCustomizerProvider.orderedStream()
+                .filter(customizer -> customizer.routingName().isEmpty() || customizer.routingName().get().equals(defaultConnectionFactoryProperties.getName()))
+                .toList();
+        this.registerConnectionFactoryBean(defaultConnectionFactoryProperties,
+                connectionFactoryOptionsCustomizers,
+                connectionPoolConfigurationCustomizers,
                 StringUtils.uncapitalize(ConnectionFactory.class.getSimpleName())
         );
-        for (R2dbcMybatisConnectionFactoryProperties properties : this.r2dbcMybatisRoutingConnectionFactoryProperties.getDefinitions()) {
-            this.registerConnectionFactoryBean(properties, connectionFactoryOptionsCustomizerProvider, null);
-        }
     }
 
 
     /**
      * Register connection factory bean.
      *
-     * @param r2dbcMybatisConnectionFactoryProperties    the r2dbc mybatis connection factory properties
-     * @param connectionFactoryOptionsCustomizerProvider the connection factory options customizer provider
-     * @param specificBeanName                           the specific bean name
+     * @param r2dbcMybatisConnectionFactoryProperties the r2dbc mybatis connection factory properties
+     * @param connectionFactoryOptionsCustomizers     the connection factory options customizers
+     * @param connectionPoolConfigurationCustomizers  the connection pool configuration customizers
+     * @param specificBeanName                        the specific bean name
      */
     protected void registerConnectionFactoryBean(R2dbcMybatisConnectionFactoryProperties r2dbcMybatisConnectionFactoryProperties,
-                                                 ObjectProvider<ConnectionFactoryOptionsCustomizer> connectionFactoryOptionsCustomizerProvider,
+                                                 List<ConnectionFactoryOptionsCustomizer> connectionFactoryOptionsCustomizers,
+                                                 List<ConnectionPoolConfigurationCustomizer> connectionPoolConfigurationCustomizers,
                                                  String specificBeanName) {
         if (StringUtils.equals(r2dbcMybatisConnectionFactoryProperties.getName(), "defaultConnectionFactory")) {
             throw new IllegalStateException(
@@ -100,7 +123,8 @@ public class R2dbcMybatisMultiConnectionFactoryAutoInitializer implements Applic
         BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.rootBeanDefinition(ConnectionPool.class);
         ConnectionPoolConfiguration connectionPoolConfiguration = this.getConnectionPoolConfiguration(
                 r2dbcMybatisConnectionFactoryProperties,
-                connectionFactoryOptionsCustomizerProvider
+                connectionFactoryOptionsCustomizers,
+                connectionPoolConfigurationCustomizers
         );
         beanDefinitionBuilder.addConstructorArgValue(connectionPoolConfiguration);
         beanDefinitionBuilder.setDestroyMethodName("dispose");
@@ -120,31 +144,38 @@ public class R2dbcMybatisMultiConnectionFactoryAutoInitializer implements Applic
     /**
      * Gets connection pool configuration.
      *
-     * @param r2DbcMybatisConnectionFactoryProperties    the r2dbc mybatis connection factory properties
-     * @param connectionFactoryOptionsCustomizerProvider the connection factory options customizer provider
+     * @param r2dbcMybatisConnectionFactoryProperties the r2dbc mybatis connection factory properties
+     * @param connectionFactoryOptionsCustomizers     the connection factory options customizers
+     * @param connectionPoolConfigurationCustomizers  the connection pool configuration customizers
      * @return the connection pool configuration
      */
-    protected ConnectionPoolConfiguration getConnectionPoolConfiguration(R2dbcMybatisConnectionFactoryProperties r2DbcMybatisConnectionFactoryProperties,
-                                                                         ObjectProvider<ConnectionFactoryOptionsCustomizer> connectionFactoryOptionsCustomizerProvider) {
-        String determineConnectionFactoryUrl = r2DbcMybatisConnectionFactoryProperties.determineConnectionFactoryUrl();
-        Assert.notNull(determineConnectionFactoryUrl, "R2DBC Connection URL must not be null");
-        ConnectionFactoryOptions connectionFactoryOptions = ConnectionFactoryOptions.parse(determineConnectionFactoryUrl);
-        //ConnectionFactoryOptionsCustomizer
-        if (Objects.nonNull(connectionFactoryOptionsCustomizerProvider)) {
-            List<ConnectionFactoryOptionsCustomizer> connectionFactoryOptionsCustomizers = connectionFactoryOptionsCustomizerProvider
-                    .orderedStream()
-                    .collect(Collectors.toList());
-            if (!CollectionUtils.isEmpty(connectionFactoryOptionsCustomizers)) {
-                ConnectionFactoryOptions.Builder builder = connectionFactoryOptions.mutate();
-                connectionFactoryOptionsCustomizers.forEach(
-                        connectionFactoryOptionsCustomizer -> connectionFactoryOptionsCustomizer.customize(builder));
-                connectionFactoryOptions = builder.build();
-            }
+    protected ConnectionPoolConfiguration getConnectionPoolConfiguration(R2dbcMybatisConnectionFactoryProperties r2dbcMybatisConnectionFactoryProperties,
+                                                                         List<ConnectionFactoryOptionsCustomizer> connectionFactoryOptionsCustomizers,
+                                                                         List<ConnectionPoolConfigurationCustomizer> connectionPoolConfigurationCustomizers) {
+        String r2dbcUrl = r2dbcMybatisConnectionFactoryProperties.getR2dbcUrl();
+        Assert.notNull(r2dbcUrl, "R2DBC Connection URL must not be null");
+        Builder connectionFactoryOptionsBuilder = ConnectionFactoryOptions.parse(r2dbcUrl).mutate();
+        if (Objects.nonNull(r2dbcMybatisConnectionFactoryProperties.getUsername())) {
+            connectionFactoryOptionsBuilder.option(ConnectionFactoryOptions.USER, r2dbcMybatisConnectionFactoryProperties.getUsername());
         }
+        if (Objects.nonNull(r2dbcMybatisConnectionFactoryProperties.getPassword())) {
+            connectionFactoryOptionsBuilder.option(ConnectionFactoryOptions.PASSWORD, r2dbcMybatisConnectionFactoryProperties.getPassword());
+        }
+        if (!CollectionUtils.isEmpty(r2dbcMybatisConnectionFactoryProperties.getOptions())) {
+            r2dbcMybatisConnectionFactoryProperties.getOptions()
+                    .forEach((key, value) -> {
+                        connectionFactoryOptionsBuilder.option(Option.valueOf(key), value);
+                    });
+        }
+        //ConnectionFactoryOptionsCustomizer
+        if (!CollectionUtils.isEmpty(connectionFactoryOptionsCustomizers)) {
+            connectionFactoryOptionsCustomizers.forEach(customizer -> customizer.customize(connectionFactoryOptionsBuilder));
+        }
+        ConnectionFactoryOptions connectionFactoryOptions = connectionFactoryOptionsBuilder.build();
         ConnectionFactory connectionFactory = ConnectionFactories.get(connectionFactoryOptions);
-        R2dbcMybatisConnectionFactoryProperties.Pool pool = r2DbcMybatisConnectionFactoryProperties.getPool();
+        R2dbcMybatisConnectionFactoryProperties.Pool pool = r2dbcMybatisConnectionFactoryProperties.getPool();
         ConnectionPoolConfiguration.Builder builder = ConnectionPoolConfiguration.builder(connectionFactory)
-                .name(r2DbcMybatisConnectionFactoryProperties.determineConnectionFactoryName())
+                .name(r2dbcMybatisConnectionFactoryProperties.determineConnectionFactoryName())
                 .maxSize(pool.getMaxSize())
                 .initialSize(pool.getInitialSize())
                 .maxIdleTime(pool.getMaxIdleTime())
@@ -159,6 +190,9 @@ public class R2dbcMybatisMultiConnectionFactoryAutoInitializer implements Applic
         } else {
             builder.validationDepth(ValidationDepth.LOCAL);
         }
+        if (!CollectionUtils.isEmpty(connectionPoolConfigurationCustomizers)) {
+            connectionPoolConfigurationCustomizers.forEach(customizer -> customizer.customize(builder));
+        }
         return builder.build();
     }
 
@@ -169,6 +203,8 @@ public class R2dbcMybatisMultiConnectionFactoryAutoInitializer implements Applic
                 R2dbcMybatisRoutingConnectionFactoryProperties.class);
         this.connectionFactoryOptionsCustomizerProvider = applicationContext.getBeanProvider(
                 ConnectionFactoryOptionsCustomizer.class);
+        this.connectionPoolConfigurationCustomizerProvider = applicationContext.getBeanProvider(
+                ConnectionPoolConfigurationCustomizer.class);
     }
 
 }
