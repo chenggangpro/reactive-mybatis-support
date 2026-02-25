@@ -20,6 +20,8 @@ import io.r2dbc.pool.ConnectionPoolConfiguration;
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
+import io.r2dbc.spi.ConnectionFactoryOptions.Builder;
+import io.r2dbc.spi.Option;
 import io.r2dbc.spi.ValidationDepth;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.annotations.Mapper;
@@ -84,6 +86,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.mapper.R2dbcM
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcMybatisConnectionFactoryProperties;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.properties.R2dbcMybatisProperties;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.ConnectionFactoryOptionsCustomizer;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.ConnectionPoolConfigurationCustomizer;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.R2dbcMybatisConfigurationCustomizer;
 import reactor.core.publisher.Flux;
 
@@ -92,6 +95,7 @@ import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -141,20 +145,31 @@ public class R2dbcMybatisAutoConfiguration {
     @ConditionalOnMissingBean(ConnectionFactory.class)
     @Bean(destroyMethod = "dispose")
     public ConnectionPool connectionFactory(R2dbcMybatisConnectionFactoryProperties r2dbcMybatisConnectionFactoryProperties,
-                                            ObjectProvider<ConnectionFactoryOptionsCustomizer> connectionFactoryOptionsCustomizerProvider) {
-        String determineConnectionFactoryUrl = r2dbcMybatisConnectionFactoryProperties.determineConnectionFactoryUrl();
-        Assert.notNull(determineConnectionFactoryUrl, "R2DBC Connection URL must not be null");
-        ConnectionFactoryOptions connectionFactoryOptions = ConnectionFactoryOptions.parse(determineConnectionFactoryUrl);
+                                            ObjectProvider<ConnectionFactoryOptionsCustomizer> connectionFactoryOptionsCustomizerProvider,
+                                            ObjectProvider<ConnectionPoolConfigurationCustomizer> connectionPoolConfigurationCustomizerProvider) {
+        String r2dbcUrl = r2dbcMybatisConnectionFactoryProperties.getR2dbcUrl();
+        Assert.notNull(r2dbcUrl, "R2DBC Connection URL must not be null");
+        Builder connectionFactoryOptionsBuilder = ConnectionFactoryOptions.parse(r2dbcUrl).mutate();
+        if (Objects.nonNull(r2dbcMybatisConnectionFactoryProperties.getUsername())) {
+            connectionFactoryOptionsBuilder.option(ConnectionFactoryOptions.USER, r2dbcMybatisConnectionFactoryProperties.getUsername());
+        }
+        if (Objects.nonNull(r2dbcMybatisConnectionFactoryProperties.getPassword())) {
+            connectionFactoryOptionsBuilder.option(ConnectionFactoryOptions.PASSWORD, r2dbcMybatisConnectionFactoryProperties.getPassword());
+        }
+        if (!CollectionUtils.isEmpty(r2dbcMybatisConnectionFactoryProperties.getOptions())) {
+            r2dbcMybatisConnectionFactoryProperties.getOptions()
+                    .forEach((key, value) -> {
+                        connectionFactoryOptionsBuilder.option(Option.valueOf(key), value);
+                    });
+        }
         //ConnectionFactoryOptionsCustomizer
         List<ConnectionFactoryOptionsCustomizer> connectionFactoryOptionsCustomizers = connectionFactoryOptionsCustomizerProvider
                 .orderedStream()
-                .collect(Collectors.toList());
+                .toList();
         if (!CollectionUtils.isEmpty(connectionFactoryOptionsCustomizers)) {
-            ConnectionFactoryOptions.Builder builder = connectionFactoryOptions.mutate();
-            connectionFactoryOptionsCustomizers.forEach(connectionFactoryOptionsCustomizer -> connectionFactoryOptionsCustomizer.customize(
-                    builder));
-            connectionFactoryOptions = builder.build();
+            connectionFactoryOptionsCustomizers.forEach(customizer -> customizer.customize(connectionFactoryOptionsBuilder));
         }
+        ConnectionFactoryOptions connectionFactoryOptions = connectionFactoryOptionsBuilder.build();
         ConnectionFactory connectionFactory = ConnectionFactories.get(connectionFactoryOptions);
         if (connectionFactory instanceof ConnectionPool) {
             return (ConnectionPool) connectionFactory;
@@ -176,6 +191,11 @@ public class R2dbcMybatisAutoConfiguration {
             builder.validationQuery(pool.getValidationQuery());
         } else {
             builder.validationDepth(ValidationDepth.LOCAL);
+        }
+        List<ConnectionPoolConfigurationCustomizer> poolConfigurationCustomizers = connectionPoolConfigurationCustomizerProvider.orderedStream()
+                .toList();
+        if(!CollectionUtils.isEmpty(poolConfigurationCustomizers)) {
+            poolConfigurationCustomizers.forEach(customizer -> customizer.customize(builder));
         }
         ConnectionPool connectionPool = new ConnectionPool(builder.build());
         log.info("Initialize Connection Pool Success");
@@ -199,15 +219,15 @@ public class R2dbcMybatisAutoConfiguration {
                                                    ObjectProvider<R2dbcDatabaseIdProvider> databaseIdProviderObjectProvider) throws Exception {
         final R2dbcMybatisConfiguration r2dbcMybatisConfiguration;
         R2dbcXMLConfigBuilder r2dbcXMLConfigBuilder = null;
-        if(r2dbcMybatisProperties.getConfiguration() != null){
+        if (r2dbcMybatisProperties.getConfiguration() != null) {
             r2dbcMybatisConfiguration = r2dbcMybatisProperties.getConfiguration();
-        }else if (r2dbcMybatisProperties.getConfigLocation() != null) {
+        } else if (r2dbcMybatisProperties.getConfigLocation() != null) {
             r2dbcXMLConfigBuilder = new R2dbcXMLConfigBuilder(r2dbcMybatisProperties.resolveConfigLocation().getInputStream(),
                     null,
                     r2dbcMybatisProperties.getConfigurationProperties()
             );
-            r2dbcMybatisConfiguration= r2dbcXMLConfigBuilder.getR2dbcMybatisConfiguration();
-        }else {
+            r2dbcMybatisConfiguration = r2dbcXMLConfigBuilder.getR2dbcMybatisConfiguration();
+        } else {
             log.debug("Property 'configuration' or 'configLocation' not specified, using default MyBatis Configuration");
             r2dbcMybatisConfiguration = new R2dbcMybatisConfiguration();
             Optional.ofNullable(r2dbcMybatisProperties.getConfigurationProperties()).ifPresent(r2dbcMybatisConfiguration::setVariables);
@@ -302,7 +322,7 @@ public class R2dbcMybatisAutoConfiguration {
             );
         }
         // parse config file if present
-        if(r2dbcXMLConfigBuilder != null){
+        if (r2dbcXMLConfigBuilder != null) {
             r2dbcXMLConfigBuilder.parse();
             log.debug("Parsed configuration file: '" + r2dbcMybatisProperties.getConfigLocation() + "'");
         }

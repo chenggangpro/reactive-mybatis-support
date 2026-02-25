@@ -15,19 +15,19 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support;
 
-import io.r2dbc.spi.ConnectionFactoryOptions;
+import io.r2dbc.pool.ConnectionPoolConfiguration;
 
 import java.util.Optional;
 
 /**
- * ConnectionFactoryOptions customizer
+ * ConnectionPoolConfiguration customizer
  *
  * @author Gang Cheng
  * @version 1.0.3
  * @since 1.0.3
  */
 @FunctionalInterface
-public interface ConnectionFactoryOptionsCustomizer {
+public interface ConnectionPoolConfigurationCustomizer {
 
     /**
      * The routing name of the connection factory, this is used for dynamic routing.
@@ -40,9 +40,9 @@ public interface ConnectionFactoryOptionsCustomizer {
     }
 
     /**
-     * customize ConnectionFactoryOptions
+     * customize ConnectionPoolConfiguration
      *
-     * @param connectionFactoryOptionsBuilder the original ConnectionFactoryOptions.Builder
+     * @param connectionPoolConfigurationBuilder the ConnectionPoolConfiguration.Builder
      */
-    void customize(ConnectionFactoryOptions.Builder connectionFactoryOptionsBuilder);
+    void customize(ConnectionPoolConfiguration.Builder connectionPoolConfigurationBuilder);
 }
