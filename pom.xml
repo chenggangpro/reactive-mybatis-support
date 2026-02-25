@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-       Copyright 2009-2025 the original author or authors.
+       Copyright 2009-2026 the original author or authors.
 
        Licensed under the Apache License, Version 2.0 (the "License");
        you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 
     <groupId>pro.chenggang</groupId>
     <artifactId>reactive-mybatis-support</artifactId>
-    <version>4.1.0-SNAPSHOT</version>
+    <version>4.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>reactive-mybatis-support</name>
@@ -68,25 +68,25 @@
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <reactor-bom.version>2025.0.1</reactor-bom.version>
+        <reactor-bom.version>2025.0.3</reactor-bom.version>
         <r2dbc-mysql.version>1.4.1</r2dbc-mysql.version>
         <r2dbc-mariadb.version>1.3.0</r2dbc-mariadb.version>
         <r2dbc-postgresql.version>1.1.1.RELEASE</r2dbc-postgresql.version>
-        <r2dbc-mssql.version>1.0.3.RELEASE</r2dbc-mssql.version>
+        <r2dbc-mssql.version>1.0.4.RELEASE</r2dbc-mssql.version>
         <oracle-r2dbc.version>1.3.0</oracle-r2dbc.version>
         <mybatis.version>3.5.19</mybatis.version>
         <mybatis-spring.version>4.0.0</mybatis-spring.version>
-        <mybatis-freemarker.version>1.3.0</mybatis-freemarker.version>
-        <mybatis-velocity.version>2.3.0</mybatis-velocity.version>
-        <mybatis-thymeleaf.version>1.1.0</mybatis-thymeleaf.version>
+        <mybatis-freemarker.version>1.3.1</mybatis-freemarker.version>
+        <mybatis-velocity.version>2.3.1</mybatis-velocity.version>
+        <mybatis-thymeleaf.version>1.1.1</mybatis-thymeleaf.version>
         <mybatis-generator-core.version>1.4.2</mybatis-generator-core.version>
         <mybatis-dynamic-sql.version>1.5.2</mybatis-dynamic-sql.version>
         <lombok.version>1.18.42</lombok.version>
-        <spring-boot-starter-parent.version>4.0.0</spring-boot-starter-parent.version>
-        <blockhound.version>1.0.13.RELEASE</blockhound.version>
+        <spring-boot-starter-parent.version>4.0.3</spring-boot-starter-parent.version>
+        <blockhound.version>1.0.16.RELEASE</blockhound.version>
         <junit-jupiter.version>5.12.1</junit-jupiter.version>
         <testcontainers.version>2.0.2</testcontainers.version>
-        <assertj.version>3.27.3</assertj.version>
+        <assertj.version>3.27.7</assertj.version>
         <hamcrest.version>3.0</hamcrest.version>
         <byte-buddy.version>1.18.2</byte-buddy.version>
         <caffeine.version>3.2.3</caffeine.version>
@@ -95,7 +95,7 @@
         <postgresql.version>42.7.7</postgresql.version>
         <mysql-connector-j.version>8.2.0</mysql-connector-j.version>
         <mariadb-java-client.version>3.5.5</mariadb-java-client.version>
-        <mssql-jdbc.version>12.10.1.jre11</mssql-jdbc.version>
+        <mssql-jdbc.version>12.10.2.jre11</mssql-jdbc.version>
         <ojdbc11.version>23.9.0.25.07</ojdbc11.version>
         <central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
     </properties>

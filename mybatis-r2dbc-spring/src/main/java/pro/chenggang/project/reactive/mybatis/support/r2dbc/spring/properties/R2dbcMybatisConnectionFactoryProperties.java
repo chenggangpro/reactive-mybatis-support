@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2024 the original author or authors.
+ *    Copyright 2009-2026 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -23,10 +23,8 @@ import lombok.ToString;
 import reactor.pool.PoolMetricsRecorder;
 import reactor.util.annotation.Nullable;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Map;
 import java.util.UUID;
 
 import static io.r2dbc.pool.ConnectionPoolConfiguration.NO_TIMEOUT;
@@ -89,6 +87,11 @@ public class R2dbcMybatisConnectionFactoryProperties {
     private Boolean enableMetrics = Boolean.FALSE;
 
     /**
+     * r2dbc connection factory options
+     */
+    private Map<String, Object> options;
+
+    /**
      * r2dbc connection factory name based on configuration
      *
      * @return the connection factory name to use or {@code null}
@@ -98,35 +101,6 @@ public class R2dbcMybatisConnectionFactoryProperties {
             this.name = UUID.randomUUID().toString();
         }
         return this.name;
-    }
-
-    /**
-     * r2dbc connection url
-     *
-     * @return string
-     */
-    public String determineConnectionFactoryUrl() {
-        if (!hasText(this.r2dbcUrl)) {
-            return null;
-        }
-        String r2dbcUrl = this.r2dbcUrl;
-        String encodedUsername;
-        try {
-            encodedUsername = URLEncoder.encode(username, StandardCharsets.UTF_8.name());
-        } catch (UnsupportedEncodingException e) {
-            //fallback to original username
-            encodedUsername = username;
-        }
-        String encodedPassword;
-        try {
-            encodedPassword = URLEncoder.encode(password, StandardCharsets.UTF_8.name());
-        } catch (UnsupportedEncodingException e) {
-            //fallback to original password
-            encodedPassword = password;
-        }
-        String credential = encodedUsername + (password == null || password.isEmpty() ? "" : ":" + encodedPassword);
-        r2dbcUrl = r2dbcUrl.replace("//", "//" + credential + "@");
-        return r2dbcUrl;
     }
 
     /**
