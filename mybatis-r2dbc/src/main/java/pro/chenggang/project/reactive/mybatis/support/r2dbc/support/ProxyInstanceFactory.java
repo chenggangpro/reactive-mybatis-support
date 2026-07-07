@@ -15,12 +15,8 @@
  */
 package pro.chenggang.project.reactive.mybatis.support.r2dbc.support;
 
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.implementation.InvocationHandlerAdapter;
-import net.bytebuddy.matcher.ElementMatchers;
-
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -58,18 +54,13 @@ public class ProxyInstanceFactory {
         if (null != otherInterfaces && otherInterfaces.length != 0) {
             targetInterfaces.addAll(Arrays.asList(otherInterfaces));
         }
+        InvocationHandler invocationHandler = invocationHandlerSupplier.get();
         try {
-            return (T) new ByteBuddy()
-                    .subclass(Object.class)
-                    .implement(targetInterfaces)
-                    .method(ElementMatchers.isPublic())
-                    .intercept(InvocationHandlerAdapter.of(invocationHandlerSupplier.get()))
-                    .make()
-                    .load(interfaceType.getClassLoader())
-                    .getLoaded()
-                    .getDeclaredConstructor()
-                    .newInstance();
-        } catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
+            return (T) Proxy.newProxyInstance(
+                    interfaceType.getClassLoader(),
+                    targetInterfaces.toArray(new Class<?>[0]),
+                    invocationHandler);
+        } catch (IllegalArgumentException e) {
             throw new IllegalStateException("Unable create target interface Proxy Class", e);
         }
     }
