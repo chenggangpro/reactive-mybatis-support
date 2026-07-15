@@ -1,5 +1,5 @@
 /*
- *    Copyright 2009-2025 the original author or authors.
+ *    Copyright 2009-2026 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -61,6 +61,7 @@ public class QueryResultHandler<R> {
     private final AtomicLong totalReceivedCount = new AtomicLong();
     private final boolean anyOutParameterExist;
     private final boolean isDefaultRowBounds;
+    private final boolean isPostgresqlNoticeResponsePresent;
 
     private QueryResultHandler(R2dbcMybatisConfiguration r2dbcMybatisConfiguration,
                                MappedStatement mappedStatement,
@@ -77,6 +78,7 @@ public class QueryResultHandler<R> {
         this.resultRowDataParser = new ResultRowDataParser<>(r2dbcMybatisConfiguration, mappedStatement);
         this.anyOutParameterExist = this.determineIfAnyOutParameterExist(boundSql);
         this.isDefaultRowBounds = this.determineIfDefaultRowBounds(rowBounds);
+        this.isPostgresqlNoticeResponsePresent = this.determineIfPostgresqlNoticeResponseIsPresent();
     }
 
     public static <R> QueryResultHandler<R> of(R2dbcMybatisConfiguration r2dbcMybatisConfiguration,
@@ -103,6 +105,15 @@ public class QueryResultHandler<R> {
         return RowBounds.DEFAULT.equals(rowBounds);
     }
 
+    private boolean determineIfPostgresqlNoticeResponseIsPresent() {
+        try {
+            Class.forName("io.r2dbc.postgresql.message.backend.NoticeResponse");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
     // ==== Methods for initialization end ====
 
     public Flux<R> handle(Publisher<? extends Result> resultPublisher) {
@@ -127,16 +138,16 @@ public class QueryResultHandler<R> {
                         || segment instanceof OutSegment
                 )
                 .flatMap(segment -> {
-                    if (segment instanceof Message) {
-                        return Mono.error(((Message) segment).exception());
+                    if (segment instanceof Message messageSegment) {
+                        return this.processingMessageSegment(messageSegment);
                     }
                     // output parameters
-                    if (segment instanceof OutSegment) {
-                        return ResultHandlerToolkit.handleOutputParameters((OutSegment) segment, r2dbcMybatisConfiguration, boundSql, parameterHandler)
+                    if (segment instanceof OutSegment outSegment) {
+                        return ResultHandlerToolkit.handleOutputParameters(outSegment, r2dbcMybatisConfiguration, boundSql, parameterHandler)
                                 .then(Mono.empty());
                     }
                     // row data
-                    if (segment instanceof RowSegment) {
+                    if (segment instanceof RowSegment rowSegment) {
                         long receivedCount = totalReceivedCount.incrementAndGet();
                         if (!isDefaultRowBounds) {
                             if (receivedCount < rowBounds.getOffset()) {
@@ -155,7 +166,7 @@ public class QueryResultHandler<R> {
                         // RowSegment must be consumed within the flatMap function body, so the process of handle result can not be inside the Mono.create() or Mono.fromCallable()
                         R result = null;
                         try {
-                            result = resultRowDataParser.handleResult(ReadableResultWrapper.ofRow(((RowSegment) segment).row(), r2dbcMybatisConfiguration));
+                            result = resultRowDataParser.handleResult(ReadableResultWrapper.ofRow(rowSegment.row(), r2dbcMybatisConfiguration));
                         } catch (Exception e) {
                             return Mono.error(e);
                         }
@@ -171,8 +182,8 @@ public class QueryResultHandler<R> {
                         || segment instanceof RowSegment
                 )
                 .flatMap(segment -> {
-                    if (segment instanceof Message) {
-                        return Mono.error(((Message) segment).exception());
+                    if (segment instanceof Message messageSegment) {
+                        return this.processingMessageSegment(messageSegment);
                     }
                     long receivedCount = totalReceivedCount.incrementAndGet();
                     if (!isDefaultRowBounds) {
@@ -198,6 +209,15 @@ public class QueryResultHandler<R> {
                     }
                     return Mono.justOrEmpty(result);
                 });
+    }
+
+    private Mono<R> processingMessageSegment(Message messageSegment) {
+        if (isPostgresqlNoticeResponsePresent && Objects.nonNull(messageSegment.sqlState()) && messageSegment.sqlState().startsWith("00")) {
+            String message = messageSegment.message();
+            log.debug(message);
+            return Mono.empty();
+        }
+        return Mono.error(messageSegment.exception());
     }
 
     private Flux<R> getRemainingParsedValues() {
