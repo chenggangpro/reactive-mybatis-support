@@ -101,3 +101,18 @@ CREATE TABLE subject_content
 
 INSERT INTO subject_content VALUES (1,'This is a blob content1'::bytea,'This is a clob content1');
 INSERT INTO subject_content VALUES (2,'This is a blob content2'::bytea,'This is a clob content2');
+
+-- @DELIMITER //
+
+CREATE OR REPLACE FUNCTION noticeWithReturn()
+RETURNS TEXT AS $$
+DECLARE
+    username TEXT := 'Alice';
+BEGIN
+    RAISE NOTICE 'Processing status %', username;
+    RAISE NOTICE 'Processing completed';
+RETURN 'Success: Operation completed.';
+END;
+$$ LANGUAGE plpgsql //
+
+-- @DELIMITER ;
